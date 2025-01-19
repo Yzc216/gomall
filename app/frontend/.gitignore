@@ -32,4 +32,4 @@ _testmain.go
 /.idea
 /.vscode
 /output
-*.local.yml
+*.local.yml!/.env
