@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"github.com/Yzc216/gomall/app/frontend/infra/rpc"
+	"github.com/Yzc216/gomall/app/user/kitex_gen/user"
 	"github.com/hertz-contrib/sessions"
 
 	auth "github.com/Yzc216/gomall/app/frontend/hertz_gen/frontend/auth"
@@ -22,10 +24,19 @@ func (h *LoginService) Run(req *auth.LoginReq) (redirect string, err error) {
 	// hlog.CtxInfof(h.Context, "req = %+v", req)
 	// hlog.CtxInfof(h.Context, "resp = %+v", resp)
 	//}()
-	// todo edit your code
 
+	// user服务
+	resp, err := rpc.UserClient.Login(h.Context, &user.LoginReq{
+		Email:    req.Email,
+		Password: req.Password,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	//session存UserId
 	session := sessions.Default(h.RequestContext)
-	session.Set("user_id", 1)
+	session.Set("user_id", resp.UserId)
 	err = session.Save()
 	if err != nil {
 		return "", err

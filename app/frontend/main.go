@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"github.com/Yzc216/gomall/app/frontend/infra/rpc"
 	"github.com/Yzc216/gomall/app/frontend/middleware"
 	"github.com/hertz-contrib/sessions"
 	"github.com/hertz-contrib/sessions/redis"
@@ -36,6 +37,8 @@ func main() {
 	}
 	// init dal
 	// dal.Init()
+	rpc.Init()
+
 	address := conf.GetConf().Hertz.Address
 	h := server.New(server.WithHostPorts(address))
 

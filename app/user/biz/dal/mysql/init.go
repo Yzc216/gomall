@@ -1,7 +1,9 @@
 package mysql
 
 import (
-	"github.com/Yzc216/gomall/app/user/conf"
+	"fmt"
+	"github.com/Yzc216/gomall/app/user/biz/model"
+	"os"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -13,7 +15,12 @@ var (
 )
 
 func Init() {
-	DB, err = gorm.Open(mysql.Open(conf.GetConf().MySQL.DSN),
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:3306)/user?charset=utf8mb4&parseTime=True&loc=Local",
+		os.Getenv("MYSQL_USER"),
+		os.Getenv("MYSQL_PASSWORD"),
+		os.Getenv("MYSQL_HOST"),
+	)
+	DB, err = gorm.Open(mysql.Open(dsn),
 		&gorm.Config{
 			PrepareStmt:            true,
 			SkipDefaultTransaction: true,
@@ -21,5 +28,11 @@ func Init() {
 	)
 	if err != nil {
 		panic(err)
+	}
+
+	//自动迁移
+	err = DB.AutoMigrate(&model.User{})
+	if err != nil {
+		return
 	}
 }
