@@ -5,7 +5,6 @@ import (
 
 	"github.com/Yzc216/gomall/app/frontend/biz/service"
 	"github.com/Yzc216/gomall/app/frontend/biz/utils"
-	common "github.com/Yzc216/gomall/app/frontend/hertz_gen/frontend/common"
 	product "github.com/Yzc216/gomall/app/frontend/hertz_gen/frontend/product"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -22,14 +21,13 @@ func GetProduct(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := &common.Empty{}
-	resp, err = service.NewGetProductService(ctx, c).Run(&req)
+	resp, err := service.NewGetProductService(ctx, c).Run(&req)
 	if err != nil {
 		utils.SendErrResponse(ctx, c, consts.StatusOK, err)
 		return
 	}
 
-	utils.SendSuccessResponse(ctx, c, consts.StatusOK, resp)
+	c.HTML(consts.StatusOK, "product", resp)
 }
 
 // SearchProducts .
@@ -43,12 +41,11 @@ func SearchProducts(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := &common.Empty{}
-	resp, err = service.NewSearchProductsService(ctx, c).Run(&req)
+	resp, err := service.NewSearchProductsService(ctx, c).Run(&req)
 	if err != nil {
 		utils.SendErrResponse(ctx, c, consts.StatusOK, err)
 		return
 	}
 
-	utils.SendSuccessResponse(ctx, c, consts.StatusOK, resp)
+	c.HTML(consts.StatusOK, "search", resp)
 }

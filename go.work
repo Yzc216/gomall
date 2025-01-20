@@ -3,6 +3,7 @@ go 1.22.11
 use app/frontend
 
 use (
-	./app/product
+	app/product
 	app/user
+	rpc_gen
 )
