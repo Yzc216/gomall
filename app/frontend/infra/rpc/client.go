@@ -3,8 +3,8 @@ package rpc
 import (
 	"github.com/Yzc216/gomall/app/frontend/conf"
 	frontendUtils "github.com/Yzc216/gomall/app/frontend/utils"
-	"github.com/Yzc216/gomall/app/user/kitex_gen/user/userservice"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/product/productcatalogservice"
+	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/user/userservice"
 	"github.com/cloudwego/kitex/client"
 	consul "github.com/kitex-contrib/registry-consul"
 	"sync"

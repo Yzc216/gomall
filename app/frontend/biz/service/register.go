@@ -2,13 +2,12 @@ package service
 
 import (
 	"context"
-	"github.com/Yzc216/gomall/app/frontend/infra/rpc"
-	"github.com/Yzc216/gomall/app/user/kitex_gen/user"
-	"github.com/hertz-contrib/sessions"
-
 	auth "github.com/Yzc216/gomall/app/frontend/hertz_gen/frontend/auth"
 	common "github.com/Yzc216/gomall/app/frontend/hertz_gen/frontend/common"
+	"github.com/Yzc216/gomall/app/frontend/infra/rpc"
+	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/user"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/hertz-contrib/sessions"
 )
 
 type RegisterService struct {

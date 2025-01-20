@@ -1,18 +1,18 @@
 package main
 
 import (
-	"github.com/Yzc216/gomall/app/user/biz/dal"
+	"github.com/Yzc216/gomall/app/cart/biz/dal"
 	"github.com/joho/godotenv"
+	consul "github.com/kitex-contrib/registry-consul"
 	"net"
 	"time"
 
-	"github.com/Yzc216/gomall/app/user/conf"
-	"github.com/Yzc216/gomall/app/user/kitex_gen/user/userservice"
+	"github.com/Yzc216/gomall/app/cart/conf"
+	"github.com/Yzc216/gomall/app/cart/kitex_gen/cart/cartservice"
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
 	kitexlogrus "github.com/kitex-contrib/obs-opentelemetry/logging/logrus"
-	consul "github.com/kitex-contrib/registry-consul"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
@@ -21,7 +21,7 @@ func main() {
 	//加载环境变量
 	err := godotenv.Load()
 	if err != nil {
-		panic("Error loading .env file")
+		return
 	}
 
 	//数据库初始化
@@ -29,7 +29,7 @@ func main() {
 
 	opts := kitexInit()
 
-	svr := userservice.NewServer(new(UserServiceImpl), opts...)
+	svr := cartservice.NewServer(new(CartServiceImpl), opts...)
 
 	err = svr.Run()
 	if err != nil {
@@ -45,17 +45,17 @@ func kitexInit() (opts []server.Option) {
 	}
 	opts = append(opts, server.WithServiceAddr(addr))
 
-	// service info
-	opts = append(opts, server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
-		ServiceName: conf.GetConf().Kitex.Service,
-	}))
-
 	//consul注册中心
 	r, err := consul.NewConsulRegister(conf.GetConf().Registry.RegistryAddress[0])
 	if err != nil {
 		klog.Fatal(err)
 	}
 	opts = append(opts, server.WithRegistry(r))
+
+	// service info
+	opts = append(opts, server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
+		ServiceName: conf.GetConf().Kitex.Service,
+	}))
 
 	// klog
 	logger := kitexlogrus.NewLogger()

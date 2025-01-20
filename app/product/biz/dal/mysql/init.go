@@ -26,10 +26,13 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
-	DB.AutoMigrate( //nolint:errcheck
+	err = DB.AutoMigrate( //nolint:errcheck
 		&model.Product{},
 		&model.Category{},
 	)
+	if err != nil {
+		return
+	}
 
 	//categories := []*model.Category{
 	//	{Name: "T-Shirt", Description: "T-Shirt"},
@@ -81,7 +84,7 @@ func Init() {
 	//	},
 	//}
 	//DB.CreateInBatches(products, len(products))
-	DB.Exec("INSERT INTO `product`.`product_category` (product_id,category_id) VALUES ( 1, 2 ), ( 2, 2 ), ( 3, 1 ), ( 4, 1 ), ( 5, 1 ), ( 6, 1 ),( 7, 2 )")
+	//DB.Exec("INSERT INTO `product`.`product_category` (product_id,category_id) VALUES ( 1, 2 ), ( 2, 2 ), ( 3, 1 ), ( 4, 1 ), ( 5, 1 ), ( 6, 1 ),( 7, 2 )")
 
 	//if os.Getenv("GO_ENV") != "online" {
 	//	//needDemoData := !DB.Migrator().HasTable(&model.Product{})
