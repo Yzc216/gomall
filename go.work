@@ -1,5 +1,8 @@
 go 1.22.11
 
 use app/frontend
-use app/user
-use app/product
+
+use (
+	./app/product
+	app/user
+)
