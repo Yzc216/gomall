@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/Yzc216/gomall/app/frontend/infra/rpc"
 	"github.com/Yzc216/gomall/app/frontend/middleware"
+	frontendUtils "github.com/Yzc216/gomall/app/frontend/utils"
 	"github.com/hertz-contrib/sessions"
 	"github.com/hertz-contrib/sessions/redis"
 	"github.com/joho/godotenv"
@@ -54,7 +55,7 @@ func main() {
 	h.Static("/static", "./")
 
 	h.GET("/about", middleware.Auth(), func(c context.Context, ctx *app.RequestContext) {
-		ctx.HTML(consts.StatusOK, "about", utils.H{"title": "About"})
+		ctx.HTML(consts.StatusOK, "about", frontendUtils.WarpResponse(c, ctx, utils.H{"title": "About"}))
 	})
 
 	h.GET("/sign-in", func(c context.Context, ctx *app.RequestContext) {

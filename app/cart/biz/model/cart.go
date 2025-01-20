@@ -18,14 +18,18 @@ func (Cart) TableName() string {
 }
 
 func AddItem(ctx context.Context, db *gorm.DB, item *Cart) error {
-	var row Cart
+	var row *Cart
 	err := db.WithContext(ctx).
 		Model(&Cart{}).
 		Where(&Cart{UserId: item.UserId, ProductId: item.ProductId}).
 		First(&row).Error
+
+	//未找到则row.ID为0，直接最后创建
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
+
+	//找到则更新库存
 	if row.ID > 0 {
 		return db.WithContext(ctx).
 			Model(&Cart{}).
