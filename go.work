@@ -3,7 +3,7 @@ go 1.22.11
 use app/frontend
 
 use (
+	./app/cart
 	app/product
 	app/user
-	app/cart
 )

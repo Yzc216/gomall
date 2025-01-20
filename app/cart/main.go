@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Yzc216/gomall/app/cart/biz/dal"
+	"github.com/Yzc216/gomall/app/cart/infra/rpc"
 	"github.com/joho/godotenv"
 	consul "github.com/kitex-contrib/registry-consul"
 	"net"
@@ -26,6 +27,9 @@ func main() {
 
 	//数据库初始化
 	dal.Init()
+
+	//rpc客户端初始化
+	rpc.Init()
 
 	opts := kitexInit()
 
