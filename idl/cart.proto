@@ -16,14 +16,14 @@ message CartItem {
 }
 
 message AddItemReq {
-  uint32 user_id = 1;
+  uint64 user_id = 1;
   CartItem item = 2;
 }
 
 message AddItemResp {}
 
 message GetCartReq {
-  uint32 user_id = 1;
+  uint64 user_id = 1;
 }
 
 message GetCartResp {
@@ -31,7 +31,7 @@ message GetCartResp {
 }
 
 message EmptyCartReq {
-  uint32 user_id = 1;
+  uint64 user_id = 1;
 }
 
 message EmptyCartResp {}

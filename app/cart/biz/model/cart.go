@@ -8,7 +8,7 @@ import (
 
 type Cart struct {
 	gorm.Model
-	UserId    uint32 `gorm:"type:int(11);not null;index:idx_user_id"`
+	UserId    uint64 `gorm:"type:bigint(11);not null;index:idx_user_id"`
 	ProductId uint32 `gorm:"type:int(11);not null;"`
 	Qty       uint32 `gorm:"type:int(11);not null;"`
 }
@@ -40,14 +40,14 @@ func AddItem(ctx context.Context, db *gorm.DB, item *Cart) error {
 	return db.WithContext(ctx).Create(item).Error
 }
 
-func EmptyCart(ctx context.Context, db *gorm.DB, userId uint32) error {
+func EmptyCart(ctx context.Context, db *gorm.DB, userId uint64) error {
 	if userId == 0 {
 		return errors.New("user id is required")
 	}
 	return db.WithContext(ctx).Delete(&Cart{}, "user_id = ?", userId).Error
 }
 
-func GetCartByUserId(ctx context.Context, db *gorm.DB, userId uint32) ([]*Cart, error) {
+func GetCartByUserId(ctx context.Context, db *gorm.DB, userId uint64) ([]*Cart, error) {
 	var rows []*Cart
 	err := db.WithContext(ctx).
 		Model(&Cart{}).

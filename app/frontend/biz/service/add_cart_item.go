@@ -22,7 +22,7 @@ func NewAddCartItemService(Context context.Context, RequestContext *app.RequestC
 func (h *AddCartItemService) Run(req *cart.AddCartItemReq) (resp map[string]any, err error) {
 
 	_, err = rpc.CartClient.AddItem(h.Context, &rpccart.AddItemReq{
-		UserId: uint32(frontendUtils.GetUserIdFromCtx(h.Context)),
+		UserId: frontendUtils.GetUserIdFromCtx(h.Context),
 		Item: &rpccart.CartItem{
 			ProductId: req.ProductId,
 			Quantity:  uint32(req.ProductNum),

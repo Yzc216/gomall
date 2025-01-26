@@ -1,4 +1,4 @@
-syntax="proto3";
+syntax = "proto3";
 
 package auth;
 
@@ -6,21 +6,30 @@ option go_package="/auth";
 
 service AuthService {
 	rpc DeliverTokenByRPC(DeliverTokenReq) returns (DeliveryResp) {}
+	rpc RefreshTokenByRPC(RefreshTokenReq) returns (RefreshTokenResp){}
 	rpc VerifyTokenByRPC(VerifyTokenReq) returns (VerifyResp) {}
 }
 
 message DeliverTokenReq {
-int32  user_id= 0;
-}
-
-message VerifyTokenReq {
-string token = "emtp";
+	int32  user_id= 1;
 }
 
 message DeliveryResp {
-string token = "emtp";
+	string token = 1;
+}
+
+message RefreshTokenReq{
+
+}
+
+message RefreshTokenResp{
+
+}
+
+message VerifyTokenReq {
+	string token = 1;
 }
 
 message VerifyResp {
-bool res = false;
+	bool res = 1;
 }

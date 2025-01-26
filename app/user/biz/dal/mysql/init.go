@@ -31,7 +31,7 @@ func Init() {
 	}
 
 	//自动迁移
-	err = DB.AutoMigrate(&model.User{})
+	err = DB.AutoMigrate(&model.User{}, &model.Authority{})
 	if err != nil {
 		return
 	}

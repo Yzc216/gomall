@@ -13,6 +13,12 @@ import (
 type Client interface {
 	Register(ctx context.Context, Req *user.RegisterReq, callOptions ...callopt.Option) (r *user.RegisterResp, err error)
 	Login(ctx context.Context, Req *user.LoginReq, callOptions ...callopt.Option) (r *user.LoginResp, err error)
+	ResetPassword(ctx context.Context, Req *user.ResetPasswordReq, callOptions ...callopt.Option) (r *user.ResetPasswordResp, err error)
+	UpdateUserInfo(ctx context.Context, Req *user.UpdateUserInfoReq, callOptions ...callopt.Option) (r *user.UpdateUserInfoResp, err error)
+	SetUserRole(ctx context.Context, Req *user.SetUserRoleReq, callOptions ...callopt.Option) (r *user.SetUserRoleResp, err error)
+	GetUserInfo(ctx context.Context, Req *user.GetUserInfoReq, callOptions ...callopt.Option) (r *user.GetUserInfoResp, err error)
+	GetUserInfoList(ctx context.Context, Req *user.GetUserInfoListReq, callOptions ...callopt.Option) (r *user.GetUserInfoListResp, err error)
+	BanUser(ctx context.Context, Req *user.BanUserReq, callOptions ...callopt.Option) (r *user.BanUserResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -52,4 +58,34 @@ func (p *kUserServiceClient) Register(ctx context.Context, Req *user.RegisterReq
 func (p *kUserServiceClient) Login(ctx context.Context, Req *user.LoginReq, callOptions ...callopt.Option) (r *user.LoginResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.Login(ctx, Req)
+}
+
+func (p *kUserServiceClient) ResetPassword(ctx context.Context, Req *user.ResetPasswordReq, callOptions ...callopt.Option) (r *user.ResetPasswordResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.ResetPassword(ctx, Req)
+}
+
+func (p *kUserServiceClient) UpdateUserInfo(ctx context.Context, Req *user.UpdateUserInfoReq, callOptions ...callopt.Option) (r *user.UpdateUserInfoResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.UpdateUserInfo(ctx, Req)
+}
+
+func (p *kUserServiceClient) SetUserRole(ctx context.Context, Req *user.SetUserRoleReq, callOptions ...callopt.Option) (r *user.SetUserRoleResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.SetUserRole(ctx, Req)
+}
+
+func (p *kUserServiceClient) GetUserInfo(ctx context.Context, Req *user.GetUserInfoReq, callOptions ...callopt.Option) (r *user.GetUserInfoResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.GetUserInfo(ctx, Req)
+}
+
+func (p *kUserServiceClient) GetUserInfoList(ctx context.Context, Req *user.GetUserInfoListReq, callOptions ...callopt.Option) (r *user.GetUserInfoListResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.GetUserInfoList(ctx, Req)
+}
+
+func (p *kUserServiceClient) BanUser(ctx context.Context, Req *user.BanUserReq, callOptions ...callopt.Option) (r *user.BanUserResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.BanUser(ctx, Req)
 }

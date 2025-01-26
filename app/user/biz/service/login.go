@@ -18,24 +18,58 @@ func NewLoginService(ctx context.Context) *LoginService {
 
 // Run create note info
 func (s *LoginService) Run(req *user.LoginReq) (resp *user.LoginResp, err error) {
-	// Finish your business logic.
-	if req.Email == "" || req.Password == "" {
-		return nil, errors.New("email or password is empty")
+
+	if req.LoginInfo == "" {
+		return nil, errors.New("username, email or password is required")
+	}
+	if req.Password == "" {
+		return nil, errors.New("email or password is required")
 	}
 
-	row, err := model.GetByEmail(context.Background(), mysql.DB, req.Email)
-	if err != nil {
-		return nil, err
+	var row = &model.User{}
+	switch req.LoginType {
+	case "username":
+		row, err = model.GetByUsername(context.Background(), mysql.DB, req.LoginInfo)
+		if err != nil {
+			return nil, err
+		}
+		if row.Enable != 1 {
+			return nil, errors.New("用户已被封禁")
+		}
+
+	case "email":
+		row, err = model.GetByEmail(context.Background(), mysql.DB, req.LoginInfo)
+		if err != nil {
+			return nil, err
+
+		}
+		if row.Enable != 1 {
+			return nil, errors.New("用户已被封禁")
+		}
+	case "phone":
+		row, err = model.GetByPhone(context.Background(), mysql.DB, req.LoginInfo)
+		if err != nil {
+			return nil, err
+		}
+		if row.Enable != 1 {
+			return nil, errors.New("用户已被封禁")
+		}
 	}
 
 	//比对密码
-	err = bcrypt.CompareHashAndPassword([]byte(row.PasswordHashed), []byte(req.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(row.Password), []byte(req.Password))
 	if err != nil {
 		return nil, err
 	}
 
+	var auths []uint32
+	for _, v := range row.Authority {
+		auths = append(auths, v.AuthorityId)
+	}
+
 	resp = &user.LoginResp{
-		UserId: int32(row.ID),
+		UserId: row.ID,
+		Role:   auths,
 	}
 
 	return

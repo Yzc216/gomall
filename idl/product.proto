@@ -5,8 +5,12 @@ package product;
 option go_package ="/product";
 
 service ProductCatalogService {
+  rpc CreateProduct(CreateProductsReq) returns (CreateProductsResp);
+  rpc UpdateProduct(UpdateProductsReq) returns (UpdateProductsResp);
+  rpc RemoveProduct(RemoveProductsReq) returns (RemoveProductsResp);
   rpc ListProducts(ListProductsReq) returns (ListProductsResp) {} ;
   rpc GetProduct(GetProductReq) returns (GetProductResp) {};
+  rpc BatchGetProductsReq (BatchGetProductReq) returns (BatchGetProductResp) {};
   rpc SearchProducts (SearchProductsReq) returns (SearchProductsResp) {} ;
 }
 
@@ -18,6 +22,30 @@ message Product {
   float price = 5;
 
   repeated string categories = 6;
+}
+
+message CreateProductsReq {
+  Product product = 1;
+}
+
+message CreateProductsResp {
+  uint32 id = 1;
+}
+
+message UpdateProductsReq {
+  Product product = 1;
+}
+
+message UpdateProductsResp {
+  bool success = 1;
+}
+
+message RemoveProductsReq {
+  uint32 id = 1;
+}
+
+message RemoveProductsResp {
+  bool success = 1;
 }
 
 message ListProductsReq {
@@ -36,6 +64,14 @@ message GetProductReq {
 
 message GetProductResp {
   Product product = 1;
+}
+
+message BatchGetProductReq {
+  repeated uint32 ids = 1;
+}
+
+message BatchGetProductResp {
+  repeated Product products = 1;
 }
 
 message SearchProductsReq {

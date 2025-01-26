@@ -6,7 +6,7 @@ import (
 	"github.com/Yzc216/gomall/app/user/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/user/biz/model"
 	user "github.com/Yzc216/gomall/app/user/kitex_gen/user"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/cloudwego/kitex/pkg/kerrors"
 )
 
 type RegisterService struct {
@@ -20,26 +20,66 @@ func NewRegisterService(ctx context.Context) *RegisterService {
 func (s *RegisterService) Run(req *user.RegisterReq) (resp *user.RegisterResp, err error) {
 	// Finish your business logic.
 
-	if req.Email == "" || req.Password == "" || req.ConfirmPassword == "" {
-		return nil, errors.New("email or password is empty")
+	if req.UserInfo.Username == "" {
+		return nil, kerrors.NewBizStatusError(400, "username is required")
 	}
-	if req.Password != req.ConfirmPassword {
+	if req.UserInfo.Phone == "" || req.UserInfo.Email == "" {
+		return nil, errors.New("email or phone is required")
+	}
+	if req.UserInfo.Password == "" || req.PasswordConfirm == "" {
+		return nil, errors.New("password is empty")
+	}
+	if req.UserInfo.Password != req.PasswordConfirm {
 		return nil, errors.New("password confirmation failed")
 	}
 
-	passwordHashed, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, err
+	var Auths []model.Authority
+	for _, val := range req.UserInfo.Role {
+		switch val {
+		case model.AdminType:
+			Auths = append(Auths, model.Authority{
+				AuthorityId:   model.AdminType,
+				AuthorityName: "管理员",
+			})
+		case model.UserType:
+			Auths = append(Auths, model.Authority{
+				AuthorityId:   model.UserType,
+				AuthorityName: "普通用户",
+			})
+		case model.MerchantType:
+			Auths = append(Auths, model.Authority{
+				AuthorityId:   model.MerchantType,
+				AuthorityName: "商家",
+			})
+		default:
+			Auths = append(Auths, model.Authority{
+				AuthorityId:   model.UserType,
+				AuthorityName: "普通用户",
+			})
+		}
 	}
 
 	newUser := &model.User{
-		Email:          req.Email,
-		PasswordHashed: string(passwordHashed),
+		Username:  req.UserInfo.Username,
+		Password:  req.UserInfo.Password,
+		Phone:     req.UserInfo.Phone,
+		Email:     req.UserInfo.Email,
+		Avatar:    req.UserInfo.Avatar,
+		Authority: Auths,
 	}
 
-	err = model.Create(context.Background(), mysql.DB, newUser)
+	userInter, err := model.CreateUser(context.Background(), mysql.DB, newUser)
 	if err != nil {
 		return nil, err
 	}
-	return &user.RegisterResp{UserId: int32(newUser.ID)}, nil
+
+	var roles []uint32
+	for _, val := range userInter.Authority {
+		roles = append(roles, val.AuthorityId)
+	}
+
+	return &user.RegisterResp{
+		UserId: userInter.ID,
+		Role:   roles,
+	}, nil
 }

@@ -2,11 +2,15 @@ package service
 
 import (
 	"context"
-	"testing"
+	"github.com/Yzc216/gomall/app/user/biz/dal/mysql"
 	user "github.com/Yzc216/gomall/app/user/kitex_gen/user"
+	"github.com/joho/godotenv"
+	"testing"
 )
 
 func TestLogin_Run(t *testing.T) {
+	godotenv.Load("../../.env")
+	mysql.Init()
 	ctx := context.Background()
 	s := NewLoginService(ctx)
 	// init req and assert value

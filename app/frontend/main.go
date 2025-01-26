@@ -4,9 +4,9 @@ package main
 
 import (
 	"context"
+	frontendUtils "github.com/Yzc216/gomall/app/frontend/biz/utils"
 	"github.com/Yzc216/gomall/app/frontend/infra/rpc"
 	"github.com/Yzc216/gomall/app/frontend/middleware"
-	frontendUtils "github.com/Yzc216/gomall/app/frontend/utils"
 	"github.com/hertz-contrib/sessions"
 	"github.com/hertz-contrib/sessions/redis"
 	"github.com/joho/godotenv"

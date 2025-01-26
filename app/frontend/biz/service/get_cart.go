@@ -24,7 +24,7 @@ func NewGetCartService(Context context.Context, RequestContext *app.RequestConte
 
 func (h *GetCartService) Run(req *common.Empty) (resp map[string]any, err error) {
 	cartResp, err := rpc.CartClient.GetCart(h.Context, &rpccart.GetCartReq{
-		UserId: uint32(frontendUtils.GetUserIdFromCtx(h.Context)),
+		UserId: frontendUtils.GetUserIdFromCtx(h.Context),
 	})
 	if err != nil {
 		return nil, err

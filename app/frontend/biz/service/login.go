@@ -26,8 +26,9 @@ func (h *LoginService) Run(req *auth.LoginReq) (redirect string, err error) {
 
 	// user服务
 	resp, err := rpc.UserClient.Login(h.Context, &user.LoginReq{
-		Email:    req.Email,
-		Password: req.Password,
+		LoginInfo: req.Email,
+		LoginType: "email",
+		Password:  req.Password,
 	})
 	if err != nil {
 		return "", err
@@ -35,7 +36,7 @@ func (h *LoginService) Run(req *auth.LoginReq) (redirect string, err error) {
 
 	//session存UserId
 	session := sessions.Default(h.RequestContext)
-	session.Set("user_id", resp.UserId)
+	session.Set("user_id", uint64(resp.UserId))
 	err = session.Save()
 	if err != nil {
 		return "", err

@@ -5,25 +5,109 @@ package user;
 option go_package="/user";
 
 service UserService {
+  //注册
   rpc Register(RegisterReq) returns (RegisterResp) {}
+  //登录
   rpc Login(LoginReq) returns (LoginResp) {}
+  //修改密码
+  rpc ResetPassword(ResetPasswordReq) returns (ResetPasswordResp){}
+  //更新用户信息
+  rpc UpdateUserInfo (UpdateUserInfoReq) returns(UpdateUserInfoResp){}
+
+  //设置权限
+  rpc SetUserRole (SetUserRoleReq) returns (SetUserRoleResp){}
+  //获取用户信息
+  rpc GetUserInfo(GetUserInfoReq) returns(GetUserInfoResp){}
+  //批量获取用户信息
+  rpc GetUserInfoList(GetUserInfoListReq) returns(GetUserInfoListResp){}
+  //封禁用户
+  rpc BanUser(BanUserReq) returns (BanUserResp){}
+}
+
+message User{
+  string username = 1 ;
+  string password = 2 ;
+  string avatar = 4 ;
+  string phone = 5 ;
+  string email = 6 ;
+  repeated uint32 role = 7 ;
 }
 
 message RegisterReq {
-  string email = 1;
-  string password = 2;
-  string confirm_password = 3;
+  User userInfo = 1 ;
+  string password_confirm = 3 ;
 }
 
 message RegisterResp {
-  int32 user_id = 1;
+  uint64 user_id = 1;
+  repeated uint32 role =2;
 }
 
 message LoginReq {
-  string email= 1;
-  string password = 2;
+  string login_info = 1 ;
+  string login_type = 2; //username email phone
+//  string phone = 3 ;
+  string password = 4;
 }
 
 message LoginResp {
-  int32 user_id = 1;
+  uint64 user_id = 1;
+  repeated uint32 role =2;
+}
+
+message ResetPasswordReq{
+  uint64 user_id= 1;
+  string password = 2;
+  string new_password=3;
+}
+
+message ResetPasswordResp{
+  bool is_reset =1;
+}
+
+message SetUserRoleReq{
+  uint64 user_id= 1;
+  uint32 set_type=3; //0:添加 1:修改
+  repeated uint32 new_role=2;
+}
+
+message SetUserRoleResp{
+  bool is_set =1;
+}
+
+message UpdateUserInfoReq{
+  User user_info=1;
+}
+
+message UpdateUserInfoResp{
+  bool is_updated =1;
+}
+
+message GetUserInfoReq{
+  uint64 user_id= 1;
+}
+
+message GetUserInfoResp{
+  User user_info=1;
+}
+
+message GetUserInfoListReq{
+  int32 page = 1;
+  int32 page_size = 2;
+  repeated uint64 user_ids =3;
+}
+
+message GetUserInfoListResp{
+  repeated User user_infos =1;
+  int32 total=2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message BanUserReq{
+  uint64 user_id=1;
+}
+
+message BanUserResp{
+    bool is_ban = 1;
 }

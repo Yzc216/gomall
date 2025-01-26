@@ -14,9 +14,13 @@ message LoginReq {
 }
 
 message RegisterReq {
-    string email = 1 [(api.form)="email"];
+    string username = 1 [(api.form)="username"];
     string password = 2 [(api.form)="password"];
     string password_confirm = 3 [(api.form)="password_confirm"];
+    string avatar = 4 [(api.form)="avatar"];
+    string phone = 5 [(api.form)="phone"];
+    string email = 6 [(api.form)="email"];
+    uint32 role = 7 [(api.form)="role"];
 }
 
 service AuthService {
