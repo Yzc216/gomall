@@ -18,7 +18,7 @@ func NewGetUserInfoService(ctx context.Context) *GetUserInfoService {
 // Run create note info
 func (s *GetUserInfoService) Run(req *user.GetUserInfoReq) (resp *user.GetUserInfoResp, err error) {
 	if req.UserId == 0 {
-		return nil, errors.New("user id is empty")
+		return nil, errors.New("user id is required")
 	}
 
 	u, err := model.GetById(s.ctx, mysql.DB, req.UserId)

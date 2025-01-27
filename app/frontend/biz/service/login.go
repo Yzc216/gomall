@@ -26,8 +26,7 @@ func (h *LoginService) Run(req *auth.LoginReq) (redirect string, err error) {
 
 	// user服务
 	resp, err := rpc.UserClient.Login(h.Context, &user.LoginReq{
-		LoginInfo: req.Email,
-		LoginType: "email",
+		LoginInfo: req.LoginInfo,
 		Password:  req.Password,
 	})
 	if err != nil {

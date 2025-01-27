@@ -20,6 +20,6 @@ func (s *BanUserService) Run(req *user.BanUserReq) (resp *user.BanUserResp, err 
 	if err != nil {
 		return nil, err
 	}
-	resp.IsBan = true
-	return resp, nil
+
+	return &user.BanUserResp{IsBan: true}, nil
 }

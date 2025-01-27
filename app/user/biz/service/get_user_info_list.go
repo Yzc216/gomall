@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"github.com/Yzc216/gomall/app/user/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/user/biz/model"
 	user "github.com/Yzc216/gomall/app/user/kitex_gen/user"
@@ -17,9 +16,6 @@ func NewGetUserInfoListService(ctx context.Context) *GetUserInfoListService {
 
 // Run create note info
 func (s *GetUserInfoListService) Run(req *user.GetUserInfoListReq) (resp *user.GetUserInfoListResp, err error) {
-	if req.UserIds == nil {
-		return nil, errors.New("request param error")
-	}
 
 	users, err := model.GetBatchById(s.ctx, mysql.DB, int(req.Page), int(req.PageSize), req.UserIds)
 	if err != nil {

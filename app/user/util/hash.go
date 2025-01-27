@@ -1,6 +1,8 @@
 package util
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"golang.org/x/crypto/bcrypt"
+)
 
 // BcryptHash 使用 bcrypt 对密码进行加密
 func BcryptHash(password string) (passwordHashed string, err error) {

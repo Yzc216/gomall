@@ -68,7 +68,7 @@ func (s *RegisterService) Run(req *user.RegisterReq) (resp *user.RegisterResp, e
 		Authority: Auths,
 	}
 
-	userInter, err := model.CreateUser(context.Background(), mysql.DB, newUser)
+	userInter, err := model.CreateUser(s.ctx, mysql.DB, newUser)
 	if err != nil {
 		return nil, err
 	}

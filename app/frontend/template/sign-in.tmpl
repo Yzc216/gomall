@@ -4,8 +4,8 @@
         <div class="col-4">
             <form method="post" action="/auth/login?next={{ .next }}"> {{/* ?next={{ .next }} */}}
                 <div class="mb-3">
-                    <label for="email" class="form-label">Email {{template "required"}}</label>
-                    <input type="email" class="form-control" id="email" name="email">
+                    <label for="login_info" class="form-label">Username/Email/Phone {{template "required"}}</label>
+                    <input type="text" class="form-control" id="login_info" name="login_info">
                 </div>
                 <div class="mb-3">
                     <label for="password" class="form-label">Password {{template "required"}}</label>

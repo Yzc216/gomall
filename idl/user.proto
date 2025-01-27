@@ -13,11 +13,11 @@ service UserService {
   rpc ResetPassword(ResetPasswordReq) returns (ResetPasswordResp){}
   //更新用户信息
   rpc UpdateUserInfo (UpdateUserInfoReq) returns(UpdateUserInfoResp){}
+  //获取用户信息
+  rpc GetUserInfo(GetUserInfoReq) returns(GetUserInfoResp){}
 
   //设置权限
   rpc SetUserRole (SetUserRoleReq) returns (SetUserRoleResp){}
-  //获取用户信息
-  rpc GetUserInfo(GetUserInfoReq) returns(GetUserInfoResp){}
   //批量获取用户信息
   rpc GetUserInfoList(GetUserInfoListReq) returns(GetUserInfoListResp){}
   //封禁用户
@@ -44,8 +44,8 @@ message RegisterResp {
 }
 
 message LoginReq {
-  string login_info = 1 ;
-  string login_type = 2; //username email phone
+  string login_info = 1 ;//username email phone
+//  string login_type = 2;
 //  string phone = 3 ;
   string password = 4;
 }
@@ -67,7 +67,6 @@ message ResetPasswordResp{
 
 message SetUserRoleReq{
   uint64 user_id= 1;
-  uint32 set_type=3; //0:添加 1:修改
   repeated uint32 new_role=2;
 }
 
@@ -77,6 +76,7 @@ message SetUserRoleResp{
 
 message UpdateUserInfoReq{
   User user_info=1;
+  uint64 user_id= 2;
 }
 
 message UpdateUserInfoResp{

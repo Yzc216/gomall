@@ -20,40 +20,15 @@ func NewLoginService(ctx context.Context) *LoginService {
 func (s *LoginService) Run(req *user.LoginReq) (resp *user.LoginResp, err error) {
 
 	if req.LoginInfo == "" {
-		return nil, errors.New("username, email or password is required")
+		return nil, errors.New("username, email or phone is required")
 	}
 	if req.Password == "" {
-		return nil, errors.New("email or password is required")
+		return nil, errors.New("password is required")
 	}
 
-	var row = &model.User{}
-	switch req.LoginType {
-	case "username":
-		row, err = model.GetByUsername(context.Background(), mysql.DB, req.LoginInfo)
-		if err != nil {
-			return nil, err
-		}
-		if row.Enable != 1 {
-			return nil, errors.New("用户已被封禁")
-		}
-
-	case "email":
-		row, err = model.GetByEmail(context.Background(), mysql.DB, req.LoginInfo)
-		if err != nil {
-			return nil, err
-
-		}
-		if row.Enable != 1 {
-			return nil, errors.New("用户已被封禁")
-		}
-	case "phone":
-		row, err = model.GetByPhone(context.Background(), mysql.DB, req.LoginInfo)
-		if err != nil {
-			return nil, err
-		}
-		if row.Enable != 1 {
-			return nil, errors.New("用户已被封禁")
-		}
+	row, err := model.Login(s.ctx, mysql.DB, req.LoginInfo)
+	if err != nil {
+		return nil, err
 	}
 
 	//比对密码

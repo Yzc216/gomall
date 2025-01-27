@@ -1,0 +1,266 @@
+{{ define "user" }}
+    {{ template "header" . }}
+
+    <div class="container mt-5">
+        <div class="row">
+            <!-- 左边栏：头像和基本信息 -->
+            <div class="col-md-4">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <!-- 头像和编辑图标 -->
+                        <div class="position-relative d-inline-block">
+                            <img src="{{ .item.Avatar }}" alt="用户头像" class="rounded-circle mb-3" width="150" height="150" id="userAvatar">
+                            <!-- 编辑图标 -->
+                            <button type="button" class="btn btn-sm btn-light position-absolute bottom-0 end-0 rounded-circle" data-bs-toggle="modal" data-bs-target="#changeAvatarModal">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                        </div>
+                        <h4>{{ .item.Username }}</h4>
+                        <p class="text-muted">这个家伙很懒，什么都没有留下</p>
+
+                        <!-- 角色显示 -->
+                        <div class="mt-4">
+                            <div>
+                                {{ range .item.Role }}
+                                    {{ if eq . 1 }}
+                                        <span class="badge bg-primary me-1">管理员</span>
+                                    {{ else if eq . 2 }}
+                                        <span class="badge bg-success me-1">普通用户</span>
+                                    {{ else if eq . 3 }}
+                                        <span class="badge bg-warning me-1">商家</span>
+                                    {{ end }}
+                                {{ end }}
+                            </div>
+                        </div>
+                        <!-- 预留信息栏 -->
+                        <div class="mt-4">
+                            <p><strong>预留信息1:</strong> 内容1</p>
+                            <p><strong>预留信息2:</strong> 内容2</p>
+                            <p><strong>预留信息3:</strong> 内容3</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右边栏：个人信息和修改功能 -->
+            <div class="col-md-8">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <!-- 用户名 -->
+                        <div class="mb-4">
+                            <label class="form-label"><strong>用户名 {{template "required"}}</strong></label>
+                            <input type="text" class="form-control" id="username" name="username" value="{{ .item.Username }}" required>
+                        </div>
+
+                        <!-- 邮箱 -->
+                        <div class="mb-4">
+                            <label class="form-label"><strong>邮箱 {{template "required"}}</strong></label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ .item.Email }}" required>
+                        </div>
+
+                        <!-- 电话 -->
+                        <div class="mb-4">
+                            <label class="form-label"><strong>电话 {{template "required"}}</strong></label>
+                            <input type="text" class="form-control" id="phone" name="phone" value="{{ .item.Phone }}" required>
+                        </div>
+
+                        <!-- 重置和保存按钮 -->
+                        <div class="text-center mt-4">
+                            <button type="button" class="btn btn-secondary" id="resetButton">重置</button>
+                            <button type="button" class="btn btn-primary" id="saveButton">保存</button>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- 修改密码 -->
+                        <div class="mb-4">
+                            <label class="form-label"><strong>修改密码</strong></label>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>修改个人密码</span>
+                                <button type="button" class="btn btn-link btn-sm" data-bs-toggle="modal" data-bs-target="#changePasswordModal">修改密码</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改头像模态框 -->
+    <div class="modal fade" id="changeAvatarModal" tabindex="-1" aria-labelledby="changeAvatarModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changeAvatarModalLabel">修改头像</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="avatarForm">
+                        <div class="form-group">
+                            <label for="new-avatar">选择新头像 {{template "required"}}</label>
+                            <input type="file" class="form-control" id="new-avatar" name="new-avatar" accept="image/*" required>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button type="button" class="btn btn-primary" id="uploadAvatarButton">上传</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改密码模态框 -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changePasswordModalLabel">修改密码</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="/user/password" method="POST">
+                        <div class="form-group">
+                            <label for="current-password">当前密码 {{template "required"}}</label>
+                            <input type="password" class="form-control" id="current_password" name="current_password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">新密码 {{template "required"}}</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-password">确认新密码 {{template "required"}}</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary">保存</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 通用弹窗 -->
+    <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="messageModalLabel">提示</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="messageModalBody">
+                    <!-- 消息内容动态填充 -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" href="/user" data-bs-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript 实现功能 -->
+    <script>
+        // 页面加载时检查 URL 参数
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const success = urlParams.get('success');
+            const message = urlParams.get('message');
+
+            if (success === 'true' && message) {
+                // 显示通用弹窗
+                document.getElementById('messageModalBody').textContent = message;
+                const messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+                messageModal.show();
+                // 监听弹窗关闭事件
+                document.getElementById('messageModal').addEventListener('hidden.bs.modal', function() {
+                    // 清理 URL，去掉查询参数
+                    history.replaceState({}, document.title, window.location.pathname);
+                });
+            }
+        });
+
+        // 重置按钮功能
+        document.getElementById('resetButton').addEventListener('click', function() {
+            document.getElementById('username').value = '{{ .item.Username }}';
+            document.getElementById('email').value = '{{ .item.Email }}';
+            document.getElementById('phone').value = '{{ .item.Phone }}';
+        });
+
+        // 保存按钮功能
+        document.getElementById('saveButton').addEventListener('click', function() {
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+
+            fetch('/user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, email, phone }),
+            })
+                .then(response => {
+                    if (response.redirected) {
+                        // 如果后端重定向，刷新页面
+                        window.location.href = response.url;
+                    } else {
+                        return response.json();
+                    }
+                })
+                .then(data => {
+                    if (data && !data.success) {
+                        // 显示错误信息
+                        document.getElementById('messageModalBody').textContent = data.message;
+                        const messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+                        messageModal.show();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+
+        // // 上传头像功能
+        // document.getElementById('uploadAvatarButton').addEventListener('click', function() {
+        //     const fileInput = document.getElementById('new-avatar');
+        //     if (fileInput.files.length === 0) {
+        //         alert('请选择头像文件！');
+        //         return;
+        //     }
+        //
+        //     const formData = new FormData();
+        //     formData.append('avatar', fileInput.files);
+        //     // 打印 FormData 对象的内容
+        //     for (let pair of formData.entries()) {
+        //         console.log(pair[0] + ': ' + pair[1]);
+        //     }
+        //
+        //     fetch('/user', {
+        //         method: 'POST',
+        //         body: formData,
+        //     })
+        //         .then(response => {
+        //             if (response.redirected) {
+        //                 // 如果后端重定向，刷新页面
+        //                 window.location.href = response.url;
+        //             } else {
+        //                 return response.json();
+        //             }
+        //         })
+        //         .then(data => {
+        //             if (data && !data.success) {
+        //                 // 显示错误信息
+        //                 document.getElementById('messageModalBody').textContent = data.message;
+        //                 const messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+        //                 messageModal.show();
+        //             }
+        //         })
+        //         .catch(error => {
+        //             console.error('Error:', error);
+        //         });
+        // });
+    </script>
+
+    {{ template "footer" . }}
+{{ end }}

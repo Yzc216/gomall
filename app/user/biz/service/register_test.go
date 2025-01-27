@@ -18,13 +18,13 @@ func TestRegister_Run(t *testing.T) {
 	// init req and assert value
 	req := &user.RegisterReq{
 		UserInfo: &user.User{
-			Username: "1",
-			Password: "bbb",
+			Username: "2",
+			Password: "123",
 			Phone:    "1",
-			Email:    "b@qq.com",
+			Email:    "bb@qq.com",
 			Role:     []uint32{2},
 		},
-		PasswordConfirm: "bbb",
+		PasswordConfirm: "123",
 	}
 
 	resp, err := s.Run(req)

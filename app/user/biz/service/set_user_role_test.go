@@ -17,9 +17,8 @@ func TestSetUserRole_Run(t *testing.T) {
 	// init req and assert value
 
 	req := &user.SetUserRoleReq{
-		UserId:  550607018575069182,
-		SetType: 1,
-		NewRole: []uint32{2, 3},
+		UserId:  551017802534813694,
+		NewRole: []uint32{1, 2, 3},
 	}
 	resp, err := s.Run(req)
 	t.Logf("err: %v", err)

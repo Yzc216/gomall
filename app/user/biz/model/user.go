@@ -62,16 +62,17 @@ func CreateUser(ctx context.Context, db *gorm.DB, u *User) (userInter *User, err
 //	@Author: YZC 2025-01-23 20:56:20
 //	@Description: 更新用户信息
 func UpdateUser(ctx context.Context, db *gorm.DB, u *User) error {
+	var user User
 	return db.WithContext(ctx).
-		Model(&User{}).
-		Select("updated_at", "avatar", "phone", "email", "username").
+		Model(&user).
+		Select("updated_at", "phone", "email", "username").
 		Where("id=?", u.ID).
 		Updates(map[string]interface{}{
 			"updated_at": time.Now(),
-			"avatar":     u.Avatar,
-			"phone":      u.Phone,
-			"email":      u.Email,
-			"username":   u.Username,
+			//"avatar":     u.Avatar,
+			"phone":    u.Phone,
+			"email":    u.Email,
+			"username": u.Username,
 		}).Error
 
 }
@@ -81,16 +82,22 @@ func UpdateUser(ctx context.Context, db *gorm.DB, u *User) error {
 //	@Author: YZC 2025-01-23 21:10:14
 //	@Description:  更新密码
 func UpdatePassword(ctx context.Context, db *gorm.DB, u *User, newPassword string) (err error) {
+	if db == nil {
+		return errors.New("database connection is nil")
+	}
 	var user User
 	if err = db.WithContext(ctx).Where("id = ?", u.ID).First(&user).Error; err != nil {
 		return err
 	}
-	if ok := util.BcryptCheck(u.Password, user.Password); !ok {
+	if !util.BcryptCheck(u.Password, user.Password) {
 		return errors.New("原密码错误")
 	}
-	user.Password, err = util.BcryptHash(newPassword)
+	newHash, err := util.BcryptHash(newPassword)
+	if err != nil {
+		return err
+	}
 
-	return db.WithContext(ctx).Save(&user).Error
+	return db.WithContext(ctx).Model(&user).Update("password", newHash).Error
 }
 
 // UpdateAuthority
@@ -106,7 +113,6 @@ func UpdateAuthority(ctx context.Context, db *gorm.DB, id uint64, auth []uint32)
 		}
 		return fmt.Errorf("查询用户失败: %w", err)
 	}
-	fmt.Println(user.Authority)
 
 	var NewAuths []Authority
 	for _, v := range auth {
@@ -117,7 +123,6 @@ func UpdateAuthority(ctx context.Context, db *gorm.DB, id uint64, auth []uint32)
 	}
 
 	user.Authority = NewAuths
-	fmt.Println(user.Authority)
 
 	return db.Model(&user).Association("Authority").Replace(NewAuths)
 }
@@ -174,6 +179,18 @@ func authContains(auth []Authority, id uint32) bool {
 	return false
 }
 
+func Login(ctx context.Context, db *gorm.DB, input string) (userInter *User, err error) {
+	var user User
+	err = db.WithContext(ctx).Where("username = ? OR email = ? OR phone = ?", input, input, input).Preload("Authority").First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	if user.Enable == 2 {
+		return nil, errors.New("用户已被封禁")
+	}
+	return &user, nil
+}
+
 // GetById
 //
 //	@Author: YZC 2025-01-23 21:10:25
@@ -187,10 +204,6 @@ func GetById(ctx context.Context, db *gorm.DB, id uint64) (user *User, err error
 }
 
 func GetBatchById(ctx context.Context, db *gorm.DB, page, pageSize int, ids []uint64) (users []*User, err error) {
-	if len(ids) == 0 {
-		return nil, nil
-	}
-
 	if page != 0 || pageSize != 0 {
 		offset := pageSize * (page - 1)
 		err = db.WithContext(ctx).Limit(pageSize).Offset(offset).Where(ids).Preload("Authority").Find(&users).Error

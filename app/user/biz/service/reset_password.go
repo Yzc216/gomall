@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/Yzc216/gomall/app/user/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/user/biz/model"
 	user "github.com/Yzc216/gomall/app/user/kitex_gen/user"
@@ -16,6 +17,9 @@ func NewResetPasswordService(ctx context.Context) *ResetPasswordService {
 
 // Run create note info
 func (s *ResetPasswordService) Run(req *user.ResetPasswordReq) (resp *user.ResetPasswordResp, err error) {
+	if req.UserId == 0 {
+		return nil, errors.New("user id is required")
+	}
 	u := &model.User{
 		ID:       req.UserId,
 		Password: req.Password,
@@ -26,7 +30,5 @@ func (s *ResetPasswordService) Run(req *user.ResetPasswordReq) (resp *user.Reset
 		return nil, err
 	}
 
-	resp.IsReset = true
-
-	return resp, nil
+	return &user.ResetPasswordResp{IsReset: true}, nil
 }

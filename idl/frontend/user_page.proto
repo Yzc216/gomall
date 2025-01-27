@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package frontend.user;
+
+import "api.proto";
+import "frontend/common.proto";
+
+option go_package = "frontend/user";
+
+service UserService {
+  //用户信息页面
+  rpc user(common.Empty) returns(common.Empty){
+    option (api.get) = "/user";
+  }
+  rpc updateUser(UpdateUserReq)returns(common.Empty){
+    option (api.post) = "/user";
+  }
+  rpc resetPassword(ResetPasswordReq) returns(common.Empty){
+    option (api.post) = "/user/password";
+  }
+
+
+  //管理员页面
+  rpc admin(common.Empty) returns(common.Empty){
+    option (api.get) = "/admin/user";
+  }
+  //封禁用户
+  rpc banUser(BanUserReq) returns(common.Empty) {
+    option (api.post) = "/admin/user";
+  }
+  //设置权限
+  rpc setRole(SetRoleReq) returns(common.Empty) {
+    option (api.post) = "/admin/user/role";
+  }
+}
+
+message UpdateUserReq {
+  string username = 1 [(api.form)="username"];
+  string avatar = 4 [(api.form)="avatar"];
+  string phone = 5 [(api.form)="phone"];
+  string email = 6 [(api.form)="email"];
+}
+
+message ResetPasswordReq{
+  string current_password=1[(api.form)="current_password"];
+  string new_password=2[(api.form)="new_password"];
+  string confirm_password=3[(api.form)="confirm_password"];
+}
+
+message BanUserReq{
+  uint64 user_id =1[(api.form)="userId"];
+}
+
+message SetRoleReq {
+  repeated uint32 role = 1 [(api.form)="role"];
+}
+

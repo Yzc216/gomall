@@ -26,7 +26,3 @@ type Authority struct {
 
 	Users []User `gorm:"many2many:user_authority"`
 }
-
-func (a *Authority) ToUint32() uint32 {
-	return a.AuthorityId
-}

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/Yzc216/gomall/app/user/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/user/biz/model"
 	user "github.com/Yzc216/gomall/app/user/kitex_gen/user"
@@ -21,16 +22,13 @@ func NewSetUserRoleService(ctx context.Context) *SetUserRoleService {
 
 // Run create note info
 func (s *SetUserRoleService) Run(req *user.SetUserRoleReq) (resp *user.SetUserRoleResp, err error) {
-	if req.SetType == AddAuthority { //0:添加
-		err = model.AddAuthority(s.ctx, mysql.DB, req.UserId, req.NewRole)
-		if err != nil {
-			return nil, err
-		}
-	} else if req.SetType == UpdateAuthority { //1:修改
-		err = model.UpdateAuthority(s.ctx, mysql.DB, req.UserId, req.NewRole)
-		if err != nil {
-			return nil, err
-		}
+	if req.UserId == 0 {
+		return nil, errors.New("user id is required")
 	}
-	return
+	err = model.UpdateAuthority(s.ctx, mysql.DB, req.UserId, req.NewRole)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user.SetUserRoleResp{IsSet: true}, nil
 }
