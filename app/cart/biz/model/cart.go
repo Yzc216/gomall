@@ -18,26 +18,17 @@ func (Cart) TableName() string {
 }
 
 func AddItem(ctx context.Context, db *gorm.DB, item *Cart) error {
-	var row *Cart
-	err := db.WithContext(ctx).
-		Model(&Cart{}).
-		Where(&Cart{UserId: item.UserId, ProductId: item.ProductId}).
-		First(&row).Error
-
-	//未找到则row.ID为0，直接最后创建
+	var find Cart
+	err := db.WithContext(ctx).Model(&Cart{}).Where(&Cart{UserId: item.UserId, ProductId: item.ProductId}).First(&find).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
-
-	//找到则更新库存
-	if row.ID > 0 {
-		return db.WithContext(ctx).
-			Model(&Cart{}).
-			Where(&Cart{UserId: item.UserId, ProductId: item.ProductId}).
-			UpdateColumn("qty", gorm.Expr("qty+?", item.Qty)).Error
+	if find.ID != 0 {
+		err = db.WithContext(ctx).Model(&Cart{}).Where(&Cart{UserId: item.UserId, ProductId: item.ProductId}).UpdateColumn("qty", gorm.Expr("qty+?", item.Qty)).Error
+	} else {
+		err = db.WithContext(ctx).Model(&Cart{}).Create(item).Error
 	}
-
-	return db.WithContext(ctx).Create(item).Error
+	return err
 }
 
 func EmptyCart(ctx context.Context, db *gorm.DB, userId uint64) error {
@@ -47,11 +38,7 @@ func EmptyCart(ctx context.Context, db *gorm.DB, userId uint64) error {
 	return db.WithContext(ctx).Delete(&Cart{}, "user_id = ?", userId).Error
 }
 
-func GetCartByUserId(ctx context.Context, db *gorm.DB, userId uint64) ([]*Cart, error) {
-	var rows []*Cart
-	err := db.WithContext(ctx).
-		Model(&Cart{}).
-		Where(&Cart{UserId: userId}).
-		Find(&rows).Error
-	return rows, err
+func GetCartByUserId(ctx context.Context, db *gorm.DB, userId uint64) (cartList []*Cart, err error) {
+	err = db.Debug().WithContext(ctx).Model(&Cart{}).Find(&cartList, "user_id = ?", userId).Error
+	return cartList, err
 }

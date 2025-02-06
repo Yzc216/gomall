@@ -10,10 +10,10 @@ option go_package = "frontend/user";
 service UserService {
   //用户信息页面
   rpc user(common.Empty) returns(common.Empty){
-    option (api.get) = "/user";
+    option (api.get) = "/user/profile";
   }
   rpc updateUser(UpdateUserReq)returns(common.Empty){
-    option (api.post) = "/user";
+    option (api.post) = "/user/profile";
   }
   rpc resetPassword(ResetPasswordReq) returns(common.Empty){
     option (api.post) = "/user/password";
@@ -22,15 +22,15 @@ service UserService {
 
   //管理员页面
   rpc admin(common.Empty) returns(common.Empty){
-    option (api.get) = "/admin/user";
+    option (api.get) = "/admin/users";
   }
   //封禁用户
   rpc banUser(BanUserReq) returns(common.Empty) {
-    option (api.post) = "/admin/user";
+    option (api.post) = "/admin/users/ban";
   }
   //设置权限
   rpc setRole(SetRoleReq) returns(common.Empty) {
-    option (api.post) = "/admin/user/role";
+    option (api.post) = "/admin/users/role";
   }
 }
 

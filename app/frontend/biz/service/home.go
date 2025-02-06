@@ -28,9 +28,10 @@ func (h *HomeService) Run(req *common.Empty) (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	var cartNum int
 	return utils.H{
-		"title": "Hot sale",
-		"items": products.Products,
+		"title":    "Hot sale",
+		"cart_num": cartNum,
+		"items":    products.Products,
 	}, nil
 }

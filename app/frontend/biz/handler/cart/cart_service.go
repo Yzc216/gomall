@@ -2,6 +2,7 @@ package cart
 
 import (
 	"context"
+	hertzUtils "github.com/cloudwego/hertz/pkg/common/utils"
 
 	"github.com/Yzc216/gomall/app/frontend/biz/service"
 	"github.com/Yzc216/gomall/app/frontend/biz/utils"
@@ -18,13 +19,13 @@ func AddCartItem(ctx context.Context, c *app.RequestContext) {
 	var req cart.AddCartItemReq
 	err = c.BindAndValidate(&req)
 	if err != nil {
-		utils.SendErrResponse(ctx, c, consts.StatusOK, err)
+		c.HTML(consts.StatusOK, "cart", utils.WarpResponse(ctx, c, hertzUtils.H{"warning": err}))
 		return
 	}
 
 	_, err = service.NewAddCartItemService(ctx, c).Run(&req)
 	if err != nil {
-		utils.SendErrResponse(ctx, c, consts.StatusOK, err)
+		c.HTML(consts.StatusOK, "cart", utils.WarpResponse(ctx, c, hertzUtils.H{"error": err}))
 		return
 	}
 

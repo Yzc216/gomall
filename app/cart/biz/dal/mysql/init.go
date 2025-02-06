@@ -26,10 +26,8 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
-
 	err = DB.AutoMigrate(&model.Cart{})
 	if err != nil {
 		return
 	}
-
 }

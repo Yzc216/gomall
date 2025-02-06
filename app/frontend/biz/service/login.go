@@ -40,6 +40,25 @@ func (h *LoginService) Run(req *auth.LoginReq) (redirect string, err error) {
 	if err != nil {
 		return "", err
 	}
+
+	//// 生成JWT Token
+	//token, err := utils.GenerateJWT(resp.UserId, resp.Role) // 假设RPC返回Role
+	//if err != nil {
+	//	return "", err
+	//}
+	//
+	//// 在生成JWT后设置Cookie
+	//h.RequestContext.SetCookie(
+	//	"token",                        // name
+	//	token,                          // value
+	//	3600,                           // maxAge (秒)
+	//	"/",                            // path
+	//	"",                             // domain
+	//	protocol.CookieSameSiteLaxMode, // sameSite
+	//	false,                          // secure (根据实际HTTPS配置调整)
+	//	true,                           // httpOnly
+	//)
+
 	redirect = "/"
 	if req.Next != "" {
 		redirect = req.Next

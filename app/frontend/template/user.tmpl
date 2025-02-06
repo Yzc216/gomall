@@ -33,11 +33,35 @@
                             </div>
                         </div>
                         <!-- 预留信息栏 -->
-                        <div class="mt-4">
-                            <p><strong>预留信息1:</strong> 内容1</p>
-                            <p><strong>预留信息2:</strong> 内容2</p>
-                            <p><strong>预留信息3:</strong> 内容3</p>
+                        <div class="mt-4 ps-5"> <!-- 添加左侧内边距 -->
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="icon-holder text-secondary me-3" style="width: 24px;"> <!-- 增加图标右侧间距 -->
+                                    <i class="fa-solid fa-map-marker-alt fa-fw fa-sm"></i>
+                                </div>
+                                <div>
+                                    <strong>所在地：</strong>上海市嘉定区
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="icon-holder text-secondary me-3" style="width: 24px;">
+                                    <i class="fa-solid fa-university fa-fw fa-sm"></i>
+                                </div>
+                                <div>
+                                    <strong>毕业院校：</strong>同济大学
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center">
+                                <div class="icon-holder text-secondary me-3" style="width: 24px;">
+                                    <i class="fa-solid fa-envelope fa-fw fa-sm"></i> <!-- 更换为更简洁的@符号图标 -->
+                                </div>
+                                <div>
+                                    <strong>联系邮箱：</strong>{{ .item.Email }}
+                                </div>
+                            </div>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -153,7 +177,7 @@
                     <!-- 消息内容动态填充 -->
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" href="/user" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" href="/user/profile" data-bs-dismiss="modal">关闭</button>
                 </div>
             </div>
         </div>
@@ -193,7 +217,7 @@
             const email = document.getElementById('email').value;
             const phone = document.getElementById('phone').value;
 
-            fetch('/user', {
+            fetch('/user/profile', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

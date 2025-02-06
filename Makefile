@@ -6,7 +6,7 @@ gen-demo-proto:
 
 .PHONY: gen-frontend
 gen-frontend:
-	@cd app/frontend && cwgo server --type HTTP --idl ../../idl/frontend/user_page.proto --service frontend -I ../../idl --module ${ROOT_MOD}/app/frontend
+	@cd app/frontend && cwgo server --type HTTP --idl ../../idl/frontend/checkout_page.proto --service frontend -I ../../idl --module ${ROOT_MOD}/app/frontend
 
 .PHONY: gen-user
 gen-user:
@@ -27,3 +27,8 @@ gen-cart:
 gen-payment:
 	@cd rpc_gen && cwgo client --type RPC  --service payment --module  ${ROOT_MOD}/rpc_gen --I ../idl --idl ../idl/payment.proto
 	@cd app/payment && cwgo server --type RPC  --service payment --module  ${ROOT_MOD}/app/payment  --pass "-use  ${ROOT_MOD}/rpc_gen/kitex_gen" -I ../../idl  --idl ../../idl/payment.proto
+
+.PHONY: gen-checkout
+gen-checkout:
+	@cd rpc_gen && cwgo client --type RPC  --service checkout --module  ${ROOT_MOD}/rpc_gen --I ../idl --idl ../idl/checkout.proto
+	@cd app/checkout && cwgo server --type RPC  --service checkout --module  ${ROOT_MOD}/app/checkout  --pass "-use  ${ROOT_MOD}/rpc_gen/kitex_gen" -I ../../idl  --idl ../../idl/checkout.proto

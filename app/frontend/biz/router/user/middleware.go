@@ -60,3 +60,8 @@ func _resetpasswordMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _usersMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}

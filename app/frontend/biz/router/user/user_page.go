@@ -17,15 +17,17 @@ import (
 func Register(r *server.Hertz) {
 
 	root := r.Group("/", rootMw()...)
-	root.POST("/user", append(_updateuserMw(), user.UpdateUser)...)
 	{
 		_admin := root.Group("/admin", _adminMw()...)
-		_admin.GET("/user", append(_admin0Mw(), user.Admin)...)
-		_user := _admin.Group("/user", _userMw()...)
-		_user.POST("/role", append(_setroleMw(), user.SetRole)...)
-		_admin.POST("/user", append(_banuserMw(), user.BanUser)...)
+		_admin.GET("/users", append(_admin0Mw(), user.Admin)...)
+		_users := _admin.Group("/users", _usersMw()...)
+		_users.POST("/ban", append(_banuserMw(), user.BanUser)...)
+		_users.POST("/role", append(_setroleMw(), user.SetRole)...)
 	}
-	root.GET("/user", append(_user1Mw(), user.User)...)
-	_user0 := root.Group("/user", _user0Mw()...)
-	_user0.POST("/password", append(_resetpasswordMw(), user.ResetPassword)...)
+	{
+		_user := root.Group("/user", _userMw()...)
+		_user.POST("/password", append(_resetpasswordMw(), user.ResetPassword)...)
+		_user.GET("/profile", append(_user0Mw(), user.User)...)
+		_user.POST("/profile", append(_updateuserMw(), user.UpdateUser)...)
+	}
 }

@@ -3,11 +3,42 @@ package middleware
 import (
 	"context"
 	"fmt"
+	jwtUtils "github.com/Yzc216/gomall/app/frontend/biz/utils"
 	frontendUtils "github.com/Yzc216/gomall/app/frontend/utils"
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/hertz-contrib/sessions"
+	"strings"
 )
+
+func JWTAuth() app.HandlerFunc {
+	return func(ctx context.Context, c *app.RequestContext) {
+		// 从Cookie或Header获取Token
+		tokenByte := c.Cookie("token")
+		tokenString := string(tokenByte)
+		if tokenString == "" {
+			authHeaderByte := c.GetHeader("Authorization")
+			authHeader := string(authHeaderByte)
+			if authHeader != "" {
+				tokenString = strings.Replace(authHeader, "Bearer ", "", 1)
+			}
+		}
+
+		// 解析Token
+		claims, err := jwtUtils.ParseJWT(tokenString)
+		if err != nil || claims == nil {
+			c.JSON(401, utils.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		// 存储用户信息到上下文
+		c.Set("user_id", claims.UserID)
+		c.Set("role", claims.Roles)
+		c.Next(ctx)
+	}
+}
 
 func GlobalAuth() app.HandlerFunc {
 	return func(ctx context.Context, c *app.RequestContext) {

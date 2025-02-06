@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/Yzc216/gomall/app/frontend/hertz_gen/frontend/common"
 	"github.com/Yzc216/gomall/app/frontend/infra/rpc"
 	frontendUtils "github.com/Yzc216/gomall/app/frontend/utils"
 
@@ -19,13 +20,13 @@ func NewAddCartItemService(Context context.Context, RequestContext *app.RequestC
 	return &AddCartItemService{RequestContext: RequestContext, Context: Context}
 }
 
-func (h *AddCartItemService) Run(req *cart.AddCartItemReq) (resp map[string]any, err error) {
+func (h *AddCartItemService) Run(req *cart.AddCartItemReq) (resp *common.Empty, err error) {
 
 	_, err = rpc.CartClient.AddItem(h.Context, &rpccart.AddItemReq{
 		UserId: frontendUtils.GetUserIdFromCtx(h.Context),
 		Item: &rpccart.CartItem{
 			ProductId: req.ProductId,
-			Quantity:  uint32(req.ProductNum),
+			Quantity:  req.ProductNum,
 		},
 	})
 	if err != nil {

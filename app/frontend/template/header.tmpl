@@ -4,6 +4,9 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        {{ if $.redirect }}
+            <meta http-equiv="refresh" content="5;url=/checkout/result"/>
+        {{ end}}
         <title>CloudWeGo Shop</title>
         <link href="/static/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
@@ -42,7 +45,9 @@
                         <button class="btn btn-outline-success" type="submit">Search</button>
                     </form>
 
-                    {{ template "cart-num" . }}
+                    <div class="ms-lg-3 d-none d-lg-block d-xl-block">
+                        {{ template "cart-num" . }}
+                    </div>
 
                     {{ if .user_id }}
                         <div class="dropdown">
@@ -51,15 +56,32 @@
                                 <span>Hello</span>
                             </div>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#">Order Center</a></li>
                                 <li>
-                                    <form action="/user" method="get">
-                                        <button class="dropdown-item" type="submit">Profile</button>
+                                    <a class="dropdown-item d-flex align-items-center px-3 py-2" href="#">
+                                        <div class="icon-wrapper" style="width: 24px;">
+                                            <i class="fa-solid fa-list-check fa-fw fa-sm"></i>
+                                        </div>
+                                        <span>Order Center</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <form action="/user/profile" method="get">
+                                        <button class="dropdown-item d-flex align-items-center px-3 py-2" type="submit">
+                                            <div class="icon-wrapper" style="width: 24px;">
+                                                <i class="fa-solid fa-user fa-fw fa-sm"></i>
+                                            </div>
+                                            <span>Profile</span>
+                                        </button>
                                     </form>
                                 </li>
                                 <li>
                                     <form action="/auth/logout" method="post">
-                                        <button class="dropdown-item" type="submit">Logout</button>
+                                        <button class="dropdown-item d-flex align-items-center px-3 py-2" type="submit">
+                                            <div class="icon-wrapper" style="width: 24px;">
+                                                <i class="fa-solid fa-arrow-right-from-bracket fa-fw fa-sm"></i>
+                                            </div>
+                                            <span>Logout</span>
+                                        </button>
                                     </form>
                                 </li>
                             </ul>
@@ -70,6 +92,7 @@
                         </div>
                     {{ end }}
                 </div>
+
             </div>
         </nav>
         <div class="text-bg-primary text-center">

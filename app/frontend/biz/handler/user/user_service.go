@@ -12,7 +12,7 @@ import (
 )
 
 // User .
-// @router /user [GET]
+// @router /user/profile [GET]
 func User(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req common.Empty
@@ -32,7 +32,7 @@ func User(ctx context.Context, c *app.RequestContext) {
 }
 
 // UpdateUser .
-// @router /user [POST]
+// @router /user/profile [POST]
 func UpdateUser(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req user.UpdateUserReq
@@ -52,7 +52,7 @@ func UpdateUser(ctx context.Context, c *app.RequestContext) {
 	if !resp {
 		utils.SendErrResponse(ctx, c, consts.StatusInternalServerError, errors.New("用户信息保存失败"))
 	}
-	c.Redirect(consts.StatusFound, []byte("/user?success=true&message=用户信息保存成功"))
+	c.Redirect(consts.StatusFound, []byte("/user/profile?success=true&message=用户信息保存成功"))
 }
 
 // ResetPassword .
@@ -77,12 +77,12 @@ func ResetPassword(ctx context.Context, c *app.RequestContext) {
 		utils.SendErrResponse(ctx, c, consts.StatusInternalServerError, errors.New("reset password failed"))
 	}
 
-	c.Redirect(consts.StatusFound, []byte("/user?success=true&message=密码修改成功"))
+	c.Redirect(consts.StatusFound, []byte("/user/profile?success=true&message=密码修改成功"))
 
 }
 
 // Admin .
-// @router /admin/user [GET]
+// @router /admin/users [GET]
 func Admin(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req common.Empty
@@ -92,18 +92,17 @@ func Admin(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := &common.Empty{}
-	resp, err = service.NewAdminService(ctx, c).Run(&req)
+	resp, err := service.NewAdminService(ctx, c).Run(&req)
 	if err != nil {
 		utils.SendErrResponse(ctx, c, consts.StatusOK, err)
 		return
 	}
 
-	utils.SendSuccessResponse(ctx, c, consts.StatusOK, resp)
+	c.HTML(consts.StatusOK, "admin", utils.WarpResponse(ctx, c, resp))
 }
 
 // BanUser .
-// @router /admin/user [POST]
+// @router /admin/users/ban [POST]
 func BanUser(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req user.BanUserReq
@@ -113,8 +112,7 @@ func BanUser(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	resp := &common.Empty{}
-	resp, err = service.NewBanUserService(ctx, c).Run(&req)
+	resp, err := service.NewBanUserService(ctx, c).Run(&req)
 	if err != nil {
 		utils.SendErrResponse(ctx, c, consts.StatusOK, err)
 		return
@@ -124,7 +122,7 @@ func BanUser(ctx context.Context, c *app.RequestContext) {
 }
 
 // SetRole .
-// @router /admin/user/role [POST]
+// @router /admin/users/role [POST]
 func SetRole(ctx context.Context, c *app.RequestContext) {
 	var err error
 	var req user.SetRoleReq

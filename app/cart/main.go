@@ -25,11 +25,10 @@ func main() {
 		return
 	}
 
-	//数据库初始化
 	dal.Init()
 
 	//rpc客户端初始化
-	rpc.Init()
+	rpc.InitClient()
 
 	opts := kitexInit()
 
