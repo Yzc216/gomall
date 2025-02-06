@@ -5,7 +5,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         {{ if $.redirect }}
-            <meta http-equiv="refresh" content="5;url=/checkout/result"/>
+            <meta http-equiv="refresh" content="5;url={{ $.redirect }}"/>
         {{ end}}
         <title>CloudWeGo Shop</title>
         <link href="/static/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -57,12 +57,14 @@
                             </div>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center px-3 py-2" href="#">
-                                        <div class="icon-wrapper" style="width: 24px;">
-                                            <i class="fa-solid fa-list-check fa-fw fa-sm"></i>
-                                        </div>
-                                        <span>Order Center</span>
-                                    </a>
+                                    <form action="/order" method="get">
+                                        <button class="dropdown-item d-flex align-items-center px-3 py-2" type="submit">
+                                            <div class="icon-wrapper" style="width: 24px;">
+                                                <i class="fa-solid fa-list-check fa-fw fa-sm"></i>
+                                            </div>
+                                            <span>Order Center</span>
+                                        </button>
+                                    </form>
                                 </li>
                                 <li>
                                     <form action="/user/profile" method="get">
