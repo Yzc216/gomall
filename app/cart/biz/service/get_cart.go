@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/Yzc216/gomall/app/cart/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/cart/biz/model"
-	cart "github.com/Yzc216/gomall/app/cart/kitex_gen/cart"
+	cart "github.com/Yzc216/gomall/rpc_gen/kitex_gen/cart"
 	"github.com/cloudwego/kitex/pkg/kerrors"
 )
 

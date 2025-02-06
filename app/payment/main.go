@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Yzc216/gomall/app/payment/conf"
-	"github.com/Yzc216/gomall/app/payment/kitex_gen/payment/paymentservice"
+	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/payment/paymentservice"
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"

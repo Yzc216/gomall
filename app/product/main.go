@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Yzc216/gomall/app/product/conf"
-	"github.com/Yzc216/gomall/app/product/kitex_gen/product/productcatalogservice"
+	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/product/productcatalogservice"
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"

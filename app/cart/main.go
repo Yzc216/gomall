@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Yzc216/gomall/app/cart/conf"
-	"github.com/Yzc216/gomall/app/cart/kitex_gen/cart/cartservice"
+	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/cart/cartservice"
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"

@@ -5,7 +5,7 @@ import (
 	"github.com/Yzc216/gomall/app/cart/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/cart/biz/model"
 	"github.com/Yzc216/gomall/app/cart/infra/rpc"
-	cart "github.com/Yzc216/gomall/app/cart/kitex_gen/cart"
+	cart "github.com/Yzc216/gomall/rpc_gen/kitex_gen/cart"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
 	"github.com/cloudwego/kitex/pkg/kerrors"
 )

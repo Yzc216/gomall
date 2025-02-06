@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/Yzc216/gomall/app/payment/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/payment/biz/model"
-	payment "github.com/Yzc216/gomall/app/payment/kitex_gen/payment"
+	payment "github.com/Yzc216/gomall/rpc_gen/kitex_gen/payment"
 	"github.com/cloudwego/kitex/pkg/kerrors"
 	creditcard "github.com/durango/go-credit-card"
 	"github.com/google/uuid"
