@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/Yzc216/gomall/app/product/biz/model"
 	"github.com/Yzc216/gomall/app/product/conf"
+	"github.com/Yzc216/gomall/common/mtl"
+	"gorm.io/plugin/opentelemetry/tracing"
 	"os"
 
 	"gorm.io/driver/mysql"
@@ -24,6 +26,9 @@ func Init() {
 		},
 	)
 	if err != nil {
+		panic(err)
+	}
+	if err = DB.Use(tracing.NewPlugin(tracing.WithoutMetrics(), tracing.WithTracerProvider(mtl.TracerProvider))); err != nil {
 		panic(err)
 	}
 	err = DB.AutoMigrate( //nolint:errcheck

@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"github.com/Yzc216/gomall/app/cart/biz/model"
 	"github.com/Yzc216/gomall/app/cart/conf"
+	"github.com/Yzc216/gomall/common/mtl"
 	"os"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/plugin/opentelemetry/tracing"
 )
 
 var (
@@ -26,8 +28,11 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
+	if err = DB.Use(tracing.NewPlugin(tracing.WithoutMetrics(), tracing.WithTracerProvider(mtl.TracerProvider))); err != nil {
+		panic(err)
+	}
 	err = DB.AutoMigrate(&model.Cart{})
 	if err != nil {
-		return
+		panic(err)
 	}
 }

@@ -25,11 +25,10 @@ func main() {
 	_ = godotenv.Load()
 	//初始化指标
 	mtl.InitMetric(serviceName, conf.GetConf().Kitex.MetricsPort, conf.GetConf().Registry.RegistryAddress[0])
+	//初始化trace
+	mtl.InitTracing(serviceName)
 
 	dal.Init()
-
-	//rpc客户端初始化
-	//rpc.InitClient()
 
 	opts := kitexInit()
 
