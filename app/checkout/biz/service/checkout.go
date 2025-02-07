@@ -13,6 +13,8 @@ import (
 	"github.com/cloudwego/kitex/pkg/kerrors"
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/nats-io/nats.go"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -23,8 +25,18 @@ func NewCheckoutService(ctx context.Context) *CheckoutService {
 	return &CheckoutService{ctx: ctx}
 }
 
-// Run create note info
+/*
+Run
+1. get cart
+2. calculate cart
+3. create order
+4. empty cart
+5. pay
+6. change order result
+7. finish
+*/
 func (s *CheckoutService) Run(req *checkout.CheckoutReq) (resp *checkout.CheckoutResp, err error) {
+	// get cart
 	cartResult, err := rpc.CartClient.GetCart(s.ctx, &cart.GetCartReq{UserId: req.UserId})
 	if err != nil {
 		return nil, kerrors.NewGRPCBizStatusError(5005001, err.Error())
@@ -65,6 +77,7 @@ func (s *CheckoutService) Run(req *checkout.CheckoutReq) (resp *checkout.Checkou
 		})
 	}
 
+	// create order
 	var orderId string
 
 	orderResp, err := rpc.OrderClient.PlaceOrder(s.ctx, &order.PlaceOrderReq{
@@ -116,12 +129,15 @@ func (s *CheckoutService) Run(req *checkout.CheckoutReq) (resp *checkout.Checkou
 		Subject:     "You just created an order in GoMall shop",
 		Content:     "You just created an order in GoMall shop",
 	})
-	msg := &nats.Msg{Subject: "email", Data: data}
+	msg := &nats.Msg{Subject: "email", Data: data, Header: make(nats.Header)}
+
+	// otel inject
+	otel.GetTextMapPropagator().Inject(s.ctx, propagation.HeaderCarrier(msg.Header))
+
 	err = mq.Nc.PublishMsg(msg)
 	if err != nil {
 		klog.Error(err.Error())
 	}
-	//fmt.Println("ttttt")
 
 	klog.Info(paymentResult)
 
