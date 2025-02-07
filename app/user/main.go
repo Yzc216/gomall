@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/Yzc216/gomall/app/cart/infra/rpc"
 	"github.com/Yzc216/gomall/app/user/biz/dal"
 	"github.com/Yzc216/gomall/common/mtl"
 	"github.com/Yzc216/gomall/common/serversuite"
@@ -29,8 +28,6 @@ func main() {
 
 	//数据库初始化
 	dal.Init()
-
-	rpc.InitClient()
 
 	opts := kitexInit()
 

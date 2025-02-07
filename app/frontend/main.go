@@ -7,6 +7,9 @@ import (
 	frontendUtils "github.com/Yzc216/gomall/app/frontend/biz/utils"
 	"github.com/Yzc216/gomall/app/frontend/infra/rpc"
 	"github.com/Yzc216/gomall/app/frontend/middleware"
+	frontendutils "github.com/Yzc216/gomall/app/frontend/utils"
+	"github.com/Yzc216/gomall/common/mtl"
+	hertzprom "github.com/hertz-contrib/monitor-prometheus"
 	"github.com/hertz-contrib/sessions"
 	"github.com/hertz-contrib/sessions/redis"
 	"github.com/joho/godotenv"
@@ -30,18 +33,24 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+var ServiceName = frontendutils.ServiceName
+
 func main() {
 
-	err := godotenv.Load()
-	if err != nil {
-		return
-	}
-	// init dal
-	// dal.Init()
+	_ = godotenv.Load()
+
+	consul, registryInfo := mtl.InitMetric(ServiceName, conf.GetConf().Hertz.MetricsPort, conf.GetConf().Hertz.RegistryAddr)
+	defer consul.Deregister(registryInfo) //停止服务时反注册
+
 	rpc.InitClient()
 
 	address := conf.GetConf().Hertz.Address
-	h := server.New(server.WithHostPorts(address))
+	h := server.New(server.WithHostPorts(address), server.WithTracer(hertzprom.NewServerTracer(
+		"",
+		"",
+		hertzprom.WithDisableServer(true),
+		hertzprom.WithRegistry(mtl.Registry),
+	)))
 
 	registerMiddleware(h)
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Yzc216/gomall/app/payment/biz/dal"
+	"github.com/Yzc216/gomall/app/payment/middleware"
 	"github.com/Yzc216/gomall/common/mtl"
 	"github.com/Yzc216/gomall/common/serversuite"
 	"github.com/joho/godotenv"
@@ -29,9 +30,6 @@ func main() {
 	//数据库初始化
 	dal.Init()
 
-	//rpc客户端初始化
-	//rpc.Init()
-
 	opts := kitexInit()
 
 	svr := paymentservice.NewServer(new(PaymentServiceImpl), opts...)
@@ -52,6 +50,10 @@ func kitexInit() (opts []server.Option) {
 		server.WithSuite(serversuite.CommonServerSuite{
 			CurrentServiceName: serviceName,
 			RegistryAddr:       conf.GetConf().Registry.RegistryAddress[0]}))
+
+	opts = append(opts,
+		server.WithMiddleware(middleware.ServerMiddleware),
+	)
 
 	// service info
 	opts = append(opts, server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
