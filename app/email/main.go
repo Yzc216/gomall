@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/Yzc216/gomall/app/email/biz/consumer"
 	"github.com/Yzc216/gomall/app/email/infra/mq"
 	"net"
 	"time"
@@ -17,7 +18,8 @@ import (
 
 func main() {
 	mq.Init()
-	
+	consumer.Init()
+
 	opts := kitexInit()
 
 	svr := emailservice.NewServer(new(EmailServiceImpl), opts...)

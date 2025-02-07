@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
+	email "github.com/Yzc216/gomall/rpc_gen/kitex_gen/email"
 	"testing"
-	email "github.com/Yzc216/gomall/app/email/kitex_gen/email"
 )
 
 func TestSend_Run(t *testing.T) {

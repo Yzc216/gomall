@@ -9,4 +9,5 @@ use (
 	./app/payment
 	./app/product
 	./app/user
+	./common
 )

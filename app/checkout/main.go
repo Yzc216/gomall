@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Yzc216/gomall/app/checkout/biz/dal"
+	"github.com/Yzc216/gomall/app/checkout/infra/mq"
 	"github.com/Yzc216/gomall/app/checkout/infra/rpc"
 	"github.com/joho/godotenv"
 	consul "github.com/kitex-contrib/registry-consul"
@@ -30,6 +31,8 @@ func main() {
 
 	//rpc客户端初始化
 	rpc.InitClient()
+
+	mq.Init()
 
 	opts := kitexInit()
 

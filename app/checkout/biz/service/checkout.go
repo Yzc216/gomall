@@ -2,14 +2,18 @@ package service
 
 import (
 	"context"
+	"github.com/Yzc216/gomall/app/checkout/infra/mq"
 	"github.com/Yzc216/gomall/app/checkout/infra/rpc"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/cart"
 	checkout "github.com/Yzc216/gomall/rpc_gen/kitex_gen/checkout"
+	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/email"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/order"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/payment"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
 	"github.com/cloudwego/kitex/pkg/kerrors"
 	"github.com/cloudwego/kitex/pkg/klog"
+	"github.com/nats-io/nats.go"
+	"google.golang.org/protobuf/proto"
 )
 
 type CheckoutService struct {
@@ -104,6 +108,20 @@ func (s *CheckoutService) Run(req *checkout.CheckoutReq) (resp *checkout.Checkou
 	if err != nil {
 		return nil, err
 	}
+
+	data, _ := proto.Marshal(&email.EmailReq{
+		From:        "from@example.com",
+		To:          req.Email,
+		ContentType: "text/plain",
+		Subject:     "You just created an order in GoMall shop",
+		Content:     "You just created an order in GoMall shop",
+	})
+	msg := &nats.Msg{Subject: "email", Data: data}
+	err = mq.Nc.PublishMsg(msg)
+	if err != nil {
+		klog.Error(err.Error())
+	}
+	//fmt.Println("ttttt")
 
 	klog.Info(paymentResult)
 

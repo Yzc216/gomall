@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"github.com/Yzc216/gomall/app/user/biz/dal/mysql"
-	user "github.com/Yzc216/gomall/app/user/kitex_gen/user"
+	user "github.com/Yzc216/gomall/rpc_gen/kitex_gen/user"
 	"github.com/joho/godotenv"
 
 	"testing"
