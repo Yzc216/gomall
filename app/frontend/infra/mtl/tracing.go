@@ -2,7 +2,9 @@ package mtl
 
 import (
 	"context"
-	"github.com/cloudwego/kitex/server"
+
+	"github.com/Yzc216/gomall/app/frontend/utils"
+	"github.com/cloudwego/hertz/pkg/route"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -12,20 +14,20 @@ import (
 
 var TracerProvider *tracesdk.TracerProvider
 
-func InitTracing(serviceName string) {
+func InitTracing() route.CtxCallback {
 	exporter, err := otlptracegrpc.New(context.Background())
 	if err != nil {
 		panic(err)
 	}
-	server.RegisterShutdownHook(func() {
-		exporter.Shutdown(context.Background()) //nolint:errcheck
-	})
 	processor := tracesdk.NewBatchSpanProcessor(exporter)
-	res, err := resource.New(context.Background(), resource.WithAttributes(semconv.ServiceNameKey.String(serviceName)))
+	res, err := resource.New(context.Background(), resource.WithAttributes(semconv.ServiceNameKey.String(utils.ServiceName)))
 	if err != nil {
 		res = resource.Default()
 	}
 	TracerProvider = tracesdk.NewTracerProvider(tracesdk.WithSpanProcessor(processor), tracesdk.WithResource(res))
 	otel.SetTracerProvider(TracerProvider)
-	//otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+
+	return route.CtxCallback(func(ctx context.Context) {
+		exporter.Shutdown(ctx) //nolint:errcheck
+	})
 }

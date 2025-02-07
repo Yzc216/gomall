@@ -1,23 +1,16 @@
 package rpc
 
 import (
-	"context"
 	"github.com/Yzc216/gomall/app/frontend/conf"
 	frontendUtils "github.com/Yzc216/gomall/app/frontend/utils"
 	frontendutils "github.com/Yzc216/gomall/app/frontend/utils"
 	"github.com/Yzc216/gomall/common/clientsuite"
-	"github.com/Yzc216/gomall/common/mtl"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/cart/cartservice"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/checkout/checkoutservice"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/order/orderservice"
-	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/product/productcatalogservice"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/user/userservice"
 	"github.com/cloudwego/kitex/client"
-	"github.com/cloudwego/kitex/pkg/circuitbreak"
-	"github.com/cloudwego/kitex/pkg/fallback"
-	"github.com/cloudwego/kitex/pkg/rpcinfo"
-	prometheus "github.com/kitex-contrib/monitor-prometheus"
 	"sync"
 )
 
@@ -54,38 +47,38 @@ func initUserClient() {
 }
 
 func initProductClient() {
-	var opts []client.Option
-
-	// 1. 配置熔断器
-	cbs := circuitbreak.NewCBSuite(func(ri rpcinfo.RPCInfo) string {
-		return circuitbreak.RPCInfo2Key(ri)
-	})
-	cbs.UpdateServiceCBConfig("shop-frontend/product/GetProduct", circuitbreak.CBConfig{Enable: true, ErrRate: 0.5, MinSample: 2})
-
-	// 2. 配置降级策略
-	opts = append(opts, commonSuite, client.WithCircuitBreaker(cbs), client.WithFallback(fallback.NewFallbackPolicy(fallback.UnwrapHelper(func(ctx context.Context, req, resp interface{}, err error) (fbResp interface{}, fbErr error) {
-		methodName := rpcinfo.GetRPCInfo(ctx).To().Method()
-		if err == nil {
-			return resp, err
-		}
-		if methodName != "ListProducts" {
-			return resp, err
-		}
-		return &product.ListProductsResp{
-			Products: []*product.Product{
-				{
-					Price:       6.6,
-					Id:          3,
-					Picture:     "/static/image/t-shirt.jpeg",
-					Name:        "T-Shirt",
-					Description: "CloudWeGo T-Shirt",
-				},
-			},
-		}, nil
-	}))))
-
-	// 3. 配置 Prometheus 监控
-	opts = append(opts, client.WithTracer(prometheus.NewClientTracer("", "", prometheus.WithDisableServer(true), prometheus.WithRegistry(mtl.Registry))))
+	//var opts []client.Option
+	//
+	//// 1. 配置熔断器
+	//cbs := circuitbreak.NewCBSuite(func(ri rpcinfo.RPCInfo) string {
+	//	return circuitbreak.RPCInfo2Key(ri)
+	//})
+	//cbs.UpdateServiceCBConfig("shop-frontend/product/GetProduct", circuitbreak.CBConfig{Enable: true, ErrRate: 0.5, MinSample: 2})
+	//
+	//// 2. 配置降级策略
+	//opts = append(opts, commonSuite, client.WithCircuitBreaker(cbs), client.WithFallback(fallback.NewFallbackPolicy(fallback.UnwrapHelper(func(ctx context.Context, req, resp interface{}, err error) (fbResp interface{}, fbErr error) {
+	//	methodName := rpcinfo.GetRPCInfo(ctx).To().Method()
+	//	if err == nil {
+	//		return resp, err
+	//	}
+	//	if methodName != "ListProducts" {
+	//		return resp, err
+	//	}
+	//	return &product.ListProductsResp{
+	//		Products: []*product.Product{
+	//			{
+	//				Price:       6.6,
+	//				Id:          3,
+	//				Picture:     "/static/image/t-shirt.jpeg",
+	//				Name:        "T-Shirt",
+	//				Description: "CloudWeGo T-Shirt",
+	//			},
+	//		},
+	//	}, nil
+	//}))))
+	//
+	//// 3. 配置 Prometheus 监控
+	//opts = append(opts, client.WithTracer(prometheus.NewClientTracer("", "", prometheus.WithDisableServer(true), prometheus.WithRegistry(mtl.Registry))))
 	ProductClient, err = productcatalogservice.NewClient("product", commonSuite)
 	frontendUtils.MustHandleError(err)
 

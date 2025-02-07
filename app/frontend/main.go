@@ -10,9 +10,11 @@ import (
 	frontendutils "github.com/Yzc216/gomall/app/frontend/utils"
 	"github.com/Yzc216/gomall/common/mtl"
 	hertzprom "github.com/hertz-contrib/monitor-prometheus"
+	hertzotelprovider "github.com/hertz-contrib/obs-opentelemetry/provider"
 	"github.com/hertz-contrib/sessions"
 	"github.com/hertz-contrib/sessions/redis"
 	"github.com/joho/godotenv"
+	oteltrace "go.opentelemetry.io/otel/trace"
 	"os"
 	"time"
 
@@ -28,6 +30,7 @@ import (
 	"github.com/hertz-contrib/gzip"
 	"github.com/hertz-contrib/logger/accesslog"
 	hertzlogrus "github.com/hertz-contrib/logger/logrus"
+	hertzoteltracing "github.com/hertz-contrib/obs-opentelemetry/tracing"
 	"github.com/hertz-contrib/pprof"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -40,18 +43,32 @@ func main() {
 	_ = godotenv.Load()
 
 	consul, registryInfo := mtl.InitMetric(ServiceName, conf.GetConf().Hertz.MetricsPort, conf.GetConf().Hertz.RegistryAddr)
-	defer consul.Deregister(registryInfo) //停止服务时反注册
+	defer consul.Deregister(registryInfo)
 
+	mtl.InitTracing(ServiceName)
+	//hertzmtl.InitMtl()
 	rpc.InitClient()
 
 	address := conf.GetConf().Hertz.Address
+
+	p := hertzotelprovider.NewOpenTelemetryProvider(
+		hertzotelprovider.WithSdkTracerProvider(mtl.TracerProvider),
+		hertzotelprovider.WithEnableMetrics(false),
+	)
+	defer p.Shutdown(context.Background())
+
+	tracer, cfg := hertzoteltracing.NewServerTracer(hertzoteltracing.WithCustomResponseHandler(func(ctx context.Context, c *app.RequestContext) {
+		c.Header("shop-trace-id", oteltrace.SpanFromContext(ctx).SpanContext().TraceID().String())
+	}))
+
 	h := server.New(server.WithHostPorts(address), server.WithTracer(hertzprom.NewServerTracer(
 		"",
 		"",
 		hertzprom.WithDisableServer(true),
 		hertzprom.WithRegistry(mtl.Registry),
-	)))
+	)), tracer)
 
+	h.Use(hertzoteltracing.ServerMiddleware(cfg))
 	registerMiddleware(h)
 
 	// add a ping route to test
@@ -61,6 +78,7 @@ func main() {
 
 	router.GeneratedRegister(h)
 	h.LoadHTMLGlob("template/*")
+	h.Delims("{{", "}}")
 	h.Static("/static", "./")
 
 	h.GET("/about", middleware.Auth(), func(c context.Context, ctx *app.RequestContext) {
