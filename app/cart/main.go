@@ -12,7 +12,6 @@ import (
 	"github.com/Yzc216/gomall/app/cart/conf"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/cart/cartservice"
 	"github.com/cloudwego/kitex/pkg/klog"
-	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
 	kitexlogrus "github.com/kitex-contrib/obs-opentelemetry/logging/logrus"
 	"go.uber.org/zap/zapcore"
@@ -54,11 +53,6 @@ func kitexInit() (opts []server.Option) {
 		server.WithSuite(serversuite.CommonServerSuite{
 			CurrentServiceName: serviceName,
 			RegistryAddr:       conf.GetConf().Registry.RegistryAddress[0]}))
-
-	// service info
-	opts = append(opts, server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
-		ServiceName: conf.GetConf().Kitex.Service,
-	}))
 
 	// klog
 	logger := kitexlogrus.NewLogger()
