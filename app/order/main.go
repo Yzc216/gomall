@@ -2,8 +2,9 @@ package main
 
 import (
 	"github.com/Yzc216/gomall/app/order/biz/dal"
+	"github.com/Yzc216/gomall/common/mtl"
+	"github.com/Yzc216/gomall/common/serversuite"
 	"github.com/joho/godotenv"
-	consul "github.com/kitex-contrib/registry-consul"
 	"net"
 	"time"
 
@@ -17,12 +18,13 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+var serviceName = conf.GetConf().Kitex.Service
+
 func main() {
 	//加载环境变量
-	err := godotenv.Load()
-	if err != nil {
-		return
-	}
+	_ = godotenv.Load()
+	//初始化指标
+	mtl.InitMetric(serviceName, conf.GetConf().Kitex.MetricsPort, conf.GetConf().Registry.RegistryAddress[0])
 
 	dal.Init()
 
@@ -33,7 +35,7 @@ func main() {
 
 	svr := orderservice.NewServer(new(OrderServiceImpl), opts...)
 
-	err = svr.Run()
+	err := svr.Run()
 	if err != nil {
 		klog.Error(err.Error())
 	}
@@ -45,14 +47,10 @@ func kitexInit() (opts []server.Option) {
 	if err != nil {
 		panic(err)
 	}
-	opts = append(opts, server.WithServiceAddr(addr))
-
-	//consul注册中心
-	r, err := consul.NewConsulRegister(conf.GetConf().Registry.RegistryAddress[0])
-	if err != nil {
-		klog.Fatal(err)
-	}
-	opts = append(opts, server.WithRegistry(r))
+	opts = append(opts, server.WithServiceAddr(addr),
+		server.WithSuite(serversuite.CommonServerSuite{
+			CurrentServiceName: serviceName,
+			RegistryAddr:       conf.GetConf().Registry.RegistryAddress[0]}))
 
 	// service info
 	opts = append(opts, server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{

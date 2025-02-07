@@ -3,6 +3,9 @@ package main
 import (
 	"github.com/Yzc216/gomall/app/email/biz/consumer"
 	"github.com/Yzc216/gomall/app/email/infra/mq"
+	"github.com/Yzc216/gomall/common/mtl"
+	"github.com/Yzc216/gomall/common/serversuite"
+	"github.com/joho/godotenv"
 	"net"
 	"time"
 
@@ -16,7 +19,15 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+var serviceName = conf.GetConf().Kitex.Service
+
 func main() {
+	//加载环境变量
+	_ = godotenv.Load()
+	//初始化指标
+	mtl.InitMetric(serviceName, conf.GetConf().Kitex.MetricsPort, conf.GetConf().Registry.RegistryAddress[0])
+
+	//消息队列
 	mq.Init()
 	consumer.Init()
 
@@ -36,7 +47,10 @@ func kitexInit() (opts []server.Option) {
 	if err != nil {
 		panic(err)
 	}
-	opts = append(opts, server.WithServiceAddr(addr))
+	opts = append(opts, server.WithServiceAddr(addr),
+		server.WithSuite(serversuite.CommonServerSuite{
+			CurrentServiceName: serviceName,
+			RegistryAddr:       conf.GetConf().Registry.RegistryAddress[0]}))
 
 	// service info
 	opts = append(opts, server.WithServerBasicInfo(&rpcinfo.EndpointBasicInfo{
