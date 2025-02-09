@@ -25,7 +25,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func initLog() {
+func InitLog() {
 	var opts []hertzzap.Option
 	var output zapcore.WriteSyncer
 	if os.Getenv("GO_ENV") != "online" {

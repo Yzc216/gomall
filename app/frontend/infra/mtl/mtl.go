@@ -13,8 +13,8 @@ var Hooks []route.CtxCallback
 func InitMtl() {
 	once.Do(
 		func() {
-			Hooks = append(Hooks, InitTracing())
-			initLog()
+			Hooks = append(Hooks, InitTracing(), InitMetric())
+			InitLog()
 		},
 	)
 }

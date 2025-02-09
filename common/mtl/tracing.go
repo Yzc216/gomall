@@ -27,5 +27,4 @@ func InitTracing(serviceName string) {
 	}
 	TracerProvider = tracesdk.NewTracerProvider(tracesdk.WithSpanProcessor(processor), tracesdk.WithResource(res))
 	otel.SetTracerProvider(TracerProvider)
-	//otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 }

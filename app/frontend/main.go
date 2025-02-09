@@ -5,10 +5,10 @@ package main
 import (
 	"context"
 	frontendUtils "github.com/Yzc216/gomall/app/frontend/biz/utils"
+	"github.com/Yzc216/gomall/app/frontend/infra/mtl"
 	"github.com/Yzc216/gomall/app/frontend/infra/rpc"
 	"github.com/Yzc216/gomall/app/frontend/middleware"
 	frontendutils "github.com/Yzc216/gomall/app/frontend/utils"
-	"github.com/Yzc216/gomall/common/mtl"
 	hertzprom "github.com/hertz-contrib/monitor-prometheus"
 	hertzotelprovider "github.com/hertz-contrib/obs-opentelemetry/provider"
 	"github.com/hertz-contrib/sessions"
@@ -42,11 +42,7 @@ func main() {
 
 	_ = godotenv.Load()
 
-	consul, registryInfo := mtl.InitMetric(ServiceName, conf.GetConf().Hertz.MetricsPort, conf.GetConf().Hertz.RegistryAddr)
-	defer consul.Deregister(registryInfo)
-
-	mtl.InitTracing(ServiceName)
-	//hertzmtl.InitMtl()
+	mtl.InitMtl()
 	rpc.InitClient()
 
 	address := conf.GetConf().Hertz.Address
@@ -143,6 +139,8 @@ func registerMiddleware(h *server.Hertz) {
 
 	// recovery
 	h.Use(recovery.Recovery())
+
+	h.OnShutdown = append(h.OnShutdown, mtl.Hooks...)
 
 	// cores
 	h.Use(cors.Default())
