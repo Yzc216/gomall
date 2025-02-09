@@ -35,4 +35,5 @@ _testmain.go
 /output
 *.local.yml
 app/*/.env
+app/*/tmp/
 .air.toml
