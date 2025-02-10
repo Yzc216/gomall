@@ -25,7 +25,8 @@ func (h *CategoryService) Run(req *category.CategoryReq) (resp map[string]any, e
 		return nil, err
 	}
 	return utils.H{
-		"title": "Category",
-		"items": products.Products,
+		"title":    "Category",
+		"category": req.Category,
+		"items":    products.Products,
 	}, nil
 }
