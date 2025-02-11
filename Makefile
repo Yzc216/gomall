@@ -42,3 +42,8 @@ gen-order:
 gen-email:
 	@cd rpc_gen && cwgo client --type RPC  --service email --module  ${ROOT_MOD}/rpc_gen --I ../idl --idl ../idl/email.proto
 	@cd app/email && cwgo server --type RPC  --service email --module  ${ROOT_MOD}/app/email  --pass "-use  ${ROOT_MOD}/rpc_gen/kitex_gen" -I ../../idl  --idl ../../idl/email.proto
+
+.PHONY: gen-inventory
+gen-inventory:
+	@cd rpc_gen && cwgo client --type RPC  --service inventory --module  ${ROOT_MOD}/rpc_gen --I ../idl --idl ../idl/inventory.proto
+	@cd app/inventory && cwgo server --type RPC  --service inventory --module  ${ROOT_MOD}/app/inventory  --pass "-use  ${ROOT_MOD}/rpc_gen/kitex_gen" -I ../../idl  --idl ../../idl/inventory.proto
