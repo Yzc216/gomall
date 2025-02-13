@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package inventory;
 
+//import "google/protobuf/timestamp.proto";
 option go_package = "/inventory";
 
 service InventoryService {
@@ -46,23 +47,19 @@ message InventoryResp{
 }
 
 
-  //    enum ErrorCode {
-  //      UNKNOWN = 0;
-  //      INSUFFICIENT_STOCK = 1;   // 库存不足
-  //      VERSION_MISMATCH = 2;      // 版本号过期
-  //      SERVICE_UNAVAILABLE = 3;   // 服务不可用
-  //    }
-// ================== 库存变更事件 ==================
-//message StockChangeEvent {
-//  int64 sku_id = 1;
-//  int32 delta = 2;  // 库存变化量（正数为增加，负数为减少）
-//  EventType event_type = 3;
-//  google.protobuf.Timestamp event_time = 4;
+//// 库存服务 → 商品服务
+//message StockChangedEvent {
+//  uint64 sku_id = 1;
+//  int32 delta = 2;             // 变化量（正数表示增加）
+//  int32 current_stock = 3;     // 最新库存
+//  string source = 4;           // 来源（order/cron/admin）
+//  google.protobuf.Timestamp event_time = 5;
+//  EventType event_type = 6;
 //
-//  enum EventType {
-//    RESERVE = 0;    // 预占
-//    CONFIRM = 1;    // 确认
-//    RELEASE = 2;    // 释放
-//    MANUAL = 3;     // 手动调整
-//  }
+//    enum EventType {
+//      RESERVE = 0;    // 预占
+//      CONFIRM = 1;    // 确认
+//      RELEASE = 2;    // 释放
+//      MANUAL = 3;     // 手动调整
+//    }
 //}
