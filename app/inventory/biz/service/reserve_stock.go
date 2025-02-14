@@ -29,8 +29,14 @@ func (s *ReserveStockService) Run(req *inventory.InventoryReq) (resp *inventory.
 		return nil, types.ErrInvalidSKU
 	}
 
+	//for _, item := range req.Items {
+	//	err = ReserveStockWithOptimistic(s.ctx, mysql.DB, req.OrderId, item)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//}
 	for _, item := range req.Items {
-		err = ReserveStockWithOptimistic(s.ctx, mysql.DB, req.OrderId, item)
+		err = model.ReserveStockWithLock(s.ctx, mysql.DB, item.SkuId, req.OrderId, item.Quantity)
 		if err != nil {
 			return nil, err
 		}
@@ -38,10 +44,6 @@ func (s *ReserveStockService) Run(req *inventory.InventoryReq) (resp *inventory.
 	return &inventory.InventoryResp{
 		Success: true,
 	}, nil
-}
-
-func (s *ReserveStockService) ReserveStockWithLock(ctx context.Context, db *gorm.DB, orderId string, item *inventory.InventoryReq_Item) {
-
 }
 
 func ReserveStockWithOptimistic(ctx context.Context, db *gorm.DB, orderId string, item *inventory.InventoryReq_Item) error {

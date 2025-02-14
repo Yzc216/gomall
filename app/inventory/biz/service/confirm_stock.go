@@ -25,7 +25,7 @@ func (s *ConfirmStockService) Run(req *inventory.InventoryReq) (resp *inventory.
 	}
 
 	for _, item := range req.Items {
-		err = model.ConfirmStock(s.ctx, mysql.DB, item.SkuId, req.OrderId, item.Quantity)
+		err = model.ConfirmStockWithLock(s.ctx, mysql.DB, item.SkuId, req.OrderId, item.Quantity)
 		if err != nil {
 			return nil, err
 		}

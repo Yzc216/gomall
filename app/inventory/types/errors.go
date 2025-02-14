@@ -9,4 +9,5 @@ var (
 	ErrReserveStockFailed         = kerrors.NewGRPCBizStatusError(5008004, "Reserve stock failed")
 	ErrAvailableStockInsufficient = kerrors.NewGRPCBizStatusError(5008005, "Available stock insufficient")
 	ErrLockedStockInsufficient    = kerrors.NewGRPCBizStatusError(5008006, "Locked stock insufficient")
+	ErrLockNotAcquired            = kerrors.NewGRPCBizStatusError(5008007, "Lock not acquired")
 )

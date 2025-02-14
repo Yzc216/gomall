@@ -25,7 +25,7 @@ func (s *ReleaseStockService) Run(req *inventory.InventoryReq) (resp *inventory.
 	}
 
 	for _, item := range req.Items {
-		err = model.ReleaseStock(s.ctx, mysql.DB, item.SkuId, req.OrderId, item.Quantity, req.Force)
+		err = model.ReleaseStockWithLock(s.ctx, mysql.DB, item.SkuId, req.OrderId, item.Quantity, req.Force)
 		if err != nil {
 			return nil, err
 		}
