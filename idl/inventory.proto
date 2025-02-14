@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package inventory;
 
-//import "google/protobuf/timestamp.proto";
+import "google/protobuf/timestamp.proto";
 option go_package = "/inventory";
 
 service InventoryService {
@@ -63,3 +63,12 @@ message InventoryResp{
 //      MANUAL = 3;     // 手动调整
 //    }
 //}
+
+//商品服务 → 库存服务
+message ProductCreatedEvent {
+  uint64 sku_id = 1;
+  string sku_name = 2;
+  int32 initial_stock = 3;
+  string operator = 4;
+  google.protobuf.Timestamp event_time = 5;
+}

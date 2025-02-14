@@ -1,7 +1,9 @@
 package main
 
 import (
+	"github.com/Yzc216/gomall/app/inventory/biz/consumer"
 	"github.com/Yzc216/gomall/app/inventory/biz/dal"
+	"github.com/Yzc216/gomall/app/inventory/infra/mq"
 	"github.com/Yzc216/gomall/common/mtl"
 	"github.com/Yzc216/gomall/common/serversuite"
 	"github.com/joho/godotenv"
@@ -28,6 +30,9 @@ func main() {
 	mtl.InitTracing(serviceName)
 
 	dal.Init()
+	//消息队列
+	mq.Init()
+	consumer.Init()
 
 	opts := kitexInit()
 
