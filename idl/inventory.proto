@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package inventory;
+
+//import "google/protobuf/timestamp.proto";
+option go_package = "/inventory";
+
+service InventoryService {
+  // 查询库存
+  rpc QueryStock(QueryStockReq) returns (QueryStockResp);
+  // 预占库存（创建订单时调用）
+  rpc ReserveStock(InventoryReq) returns (InventoryResp);
+  // 确认扣减（支付成功后调用）
+  rpc ConfirmStock(InventoryReq) returns (InventoryResp);
+  // 释放库存（订单取消/超时未支付时调用）
+  rpc ReleaseStock(InventoryReq) returns (InventoryResp);
+}
+
+//查询库存相关消息
+message QueryStockReq{
+  repeated uint64 sku_id = 1; // SKU ID
+}
+
+message QueryStockResp{
+  map<uint64,uint32> current_stock = 3;  //map[sku_id]stock
+}
+
+message InventoryReq{
+  string order_id = 1;   // 订单号（全局唯一）
+  repeated Item items = 2;
+  bool force =3;        //管理员强制操作
+
+  message Item {
+    uint64 sku_id = 1;    // SKU ID
+    int32 quantity = 2;   // 数量
+  }
+}
+
+message InventoryResp{
+  bool success = 1;
+  repeated Error errors = 2;
+
+  message Error {
+    uint64 sku_id = 1;   // 失败条目
+    string message = 2;  // 错误详情
+  }
+}
+
+
+//// 库存服务 → 商品服务
+//message StockChangedEvent {
+//  uint64 sku_id = 1;
+//  int32 delta = 2;             // 变化量（正数表示增加）
+//  int32 current_stock = 3;     // 最新库存
+//  string source = 4;           // 来源（order/cron/admin）
+//  google.protobuf.Timestamp event_time = 5;
+//  EventType event_type = 6;
+//
+//    enum EventType {
+//      RESERVE = 0;    // 预占
+//      CONFIRM = 1;    // 确认
+//      RELEASE = 2;    // 释放
+//      MANUAL = 3;     // 手动调整
+//    }
+//}
+
+//商品服务 → 库存服务
+message ProductCreatedEvent {
+  uint64 sku_id = 1;
+  string sku_name = 2;
+  int32 initial_stock = 3;
+  string operator = 4;
+//  google.protobuf.Timestamp event_time = 5;
+}

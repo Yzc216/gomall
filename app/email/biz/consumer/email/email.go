@@ -16,7 +16,7 @@ import (
 func ConsumerInit() {
 	// Connect to a server
 
-	tracer := otel.Tracer("shop-nats-consumer")
+	tracer := otel.Tracer("shop-email-nats-consumer")
 	sub, err := mq.Nc.Subscribe("email", func(m *nats.Msg) {
 		var req email.EmailReq
 		err := proto.Unmarshal(m.Data, &req)
@@ -29,7 +29,7 @@ func ConsumerInit() {
 		// consumer otel
 		ctx := context.Background()
 		ctx = otel.GetTextMapPropagator().Extract(ctx, propagation.HeaderCarrier(m.Header))
-		_, span := tracer.Start(ctx, "shop-email-consumer")
+		_, span := tracer.Start(ctx, "email.print")
 		defer span.End()
 	})
 	if err != nil {
