@@ -178,6 +178,61 @@ func (x *InventoryResp) fastReadField2(buf []byte, _type int8) (offset int, err 
 	return offset, nil
 }
 
+func (x *ProductCreatedEvent) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_ProductCreatedEvent[number], err)
+}
+
+func (x *ProductCreatedEvent) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.SkuId, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *ProductCreatedEvent) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.SkuName, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ProductCreatedEvent) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.InitialStock, offset, err = fastpb.ReadInt32(buf, _type)
+	return offset, err
+}
+
+func (x *ProductCreatedEvent) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.Operator, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
 func (x *InventoryReq_Item) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
 	switch number {
 	case 1:
@@ -356,6 +411,49 @@ func (x *InventoryResp) fastWriteField2(buf []byte) (offset int) {
 	return offset
 }
 
+func (x *ProductCreatedEvent) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	return offset
+}
+
+func (x *ProductCreatedEvent) fastWriteField1(buf []byte) (offset int) {
+	if x.SkuId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint64(buf[offset:], 1, x.GetSkuId())
+	return offset
+}
+
+func (x *ProductCreatedEvent) fastWriteField2(buf []byte) (offset int) {
+	if x.SkuName == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 2, x.GetSkuName())
+	return offset
+}
+
+func (x *ProductCreatedEvent) fastWriteField3(buf []byte) (offset int) {
+	if x.InitialStock == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt32(buf[offset:], 3, x.GetInitialStock())
+	return offset
+}
+
+func (x *ProductCreatedEvent) fastWriteField4(buf []byte) (offset int) {
+	if x.Operator == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 4, x.GetOperator())
+	return offset
+}
+
 func (x *InventoryReq_Item) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
@@ -514,6 +612,49 @@ func (x *InventoryResp) sizeField2() (n int) {
 	return n
 }
 
+func (x *ProductCreatedEvent) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
+	return n
+}
+
+func (x *ProductCreatedEvent) sizeField1() (n int) {
+	if x.SkuId == 0 {
+		return n
+	}
+	n += fastpb.SizeUint64(1, x.GetSkuId())
+	return n
+}
+
+func (x *ProductCreatedEvent) sizeField2() (n int) {
+	if x.SkuName == "" {
+		return n
+	}
+	n += fastpb.SizeString(2, x.GetSkuName())
+	return n
+}
+
+func (x *ProductCreatedEvent) sizeField3() (n int) {
+	if x.InitialStock == 0 {
+		return n
+	}
+	n += fastpb.SizeInt32(3, x.GetInitialStock())
+	return n
+}
+
+func (x *ProductCreatedEvent) sizeField4() (n int) {
+	if x.Operator == "" {
+		return n
+	}
+	n += fastpb.SizeString(4, x.GetOperator())
+	return n
+}
+
 func (x *InventoryReq_Item) Size() (n int) {
 	if x == nil {
 		return n
@@ -581,6 +722,13 @@ var fieldIDToName_InventoryReq = map[int32]string{
 var fieldIDToName_InventoryResp = map[int32]string{
 	1: "Success",
 	2: "Errors",
+}
+
+var fieldIDToName_ProductCreatedEvent = map[int32]string{
+	1: "SkuId",
+	2: "SkuName",
+	3: "InitialStock",
+	4: "Operator",
 }
 
 var fieldIDToName_InventoryReq_Item = map[int32]string{
