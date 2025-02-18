@@ -24,3 +24,9 @@
 sh build.sh
 sh output/bootstrap.sh
 ```
+
+## 待实现
+- 分桶
+- 热点检测切换锁？
+- redis缓存
+- 可观测性

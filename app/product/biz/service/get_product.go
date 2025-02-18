@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/Yzc216/gomall/app/product/biz/dal/mysql"
-	"github.com/Yzc216/gomall/app/product/biz/model"
 	product "github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
 	"github.com/cloudwego/kitex/pkg/kerrors"
 )
@@ -21,20 +19,21 @@ func (s *GetProductService) Run(req *product.GetProductReq) (resp *product.GetPr
 		return nil, kerrors.NewGRPCBizStatusError(2004001, "product id is required")
 	}
 
-	productQuery := model.NewProductQuery(s.ctx, mysql.DB)
-
-	productRes, err := productQuery.GetById(int(req.Id))
-	if err != nil {
-		return nil, err
-	}
-
-	return &product.GetProductResp{
-		Product: &product.Product{
-			Id:          uint32(productRes.ID),
-			Name:        productRes.Name,
-			Price:       productRes.Price,
-			Picture:     productRes.Picture,
-			Description: productRes.Description,
-		},
-	}, nil
+	//productQuery := model.NewProductQuery(s.ctx, mysql.DB)
+	//
+	//productRes, err := productQuery.GetById(int(req.Id))
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//return &product.GetProductResp{
+	//	Product: &product.Product{
+	//		Id:          uint32(productRes.ID),
+	//		Name:        productRes.Name,
+	//		Price:       productRes.Price,
+	//		Picture:     productRes.Picture,
+	//		Description: productRes.Description,
+	//	},
+	//}, nil
+	return &product.GetProductResp{}, nil
 }

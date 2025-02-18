@@ -6,11 +6,16 @@ import (
 )
 
 type Category struct {
-	gorm.Model
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID          uint64 `gorm:"primaryKey"`                   // 分类ID
+	Name        string `gorm:"type:varchar(50);uniqueIndex"` // 种类名
+	Description string `gorm:"type:text"`                    // 种类描述
+	ParentID    uint64 `gorm:"index"`                        // 父分类ID（0表示根节点）
+	Level       int    `gorm:"default:1"`                    // 层级（1-一级分类，2-二级分类）
+	IsLeaf      bool   `gorm:"default:true"`                 // 是否为叶子分类
+	Sort        int    `gorm:"default:1"`                    // 排序权重
+	Image       []byte `gorm:"type:blob"`                    // 分类图标
 
-	Products []Product `json:"products" gorm:"many2many:product_category;"`
+	SPUs []SPU `gorm:"many2many:SPU_category;"` // 关联spu，多对多
 }
 
 func (Category) TableName() string {
