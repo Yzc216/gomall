@@ -7,21 +7,21 @@ import (
 )
 
 type SPU struct {
-	ID          uint64   `gorm:"primaryKey"`                 // SPU ID（雪花算法生成）
-	Title       string   `gorm:"type:varchar(200);not null"` // 商品标题
-	SubTitle    string   `gorm:"type:varchar(200)"`          // 副标题
-	ShopID      uint64   `gorm:"type:bigint unsigned"`       // 店铺id
-	BrandID     uint64   `gorm:"type:bigint unsigned"`       // 关联品牌，多对一
-	MainImages  []string `gorm:"type:varchar(200)"`          // 主图URL列表
-	Video       string   `gorm:"type:varchar(200)"`          // 商品视频
-	Description string   `gorm:"type:text"`                  // 商品详情
-	Status      int      `gorm:"default:0"`                  // 状态（0-下架 1-上架 2-待审核）
-	IsDeleted   bool     `gorm:"default:false"`              // 软删除标记
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          uint64         `gorm:"primaryKey;comment:SPU ID"`
+	Title       string         `gorm:"type:varchar(255);not null;comment:商品标题"`
+	SubTitle    string         `gorm:"type:varchar(255);not null;comment:副标题"`
+	ShopID      uint64         `gorm:"index:idx_shop;not null;comment:店铺ID"`
+	BrandID     uint64         `gorm:"index;not null;comment:品牌ID"`
+	MainImages  []string       `gorm:"type:json;comment:主图URL列表"`
+	Video       string         `gorm:"type:varchar(500);comment:商品视频URL"`
+	Description string         `gorm:"type:text;comment:商品详情"`
+	Status      int8           `gorm:"type:tinyint;default:0;index:idx_status;comment:状态（0-下架 1-上架 2-待审核）"`
+	CreatedAt   time.Time      `gorm:"comment:创建时间"`
+	UpdatedAt   time.Time      `gorm:"comment:更新时间"`
+	DeletedAt   gorm.DeletedAt `gorm:"index;comment:软删除时间"`
 
-	SKUs       []SKU      `gorm:"foreignKey:SpuID;references:ID"`            // 关联SKU，一对多
-	Categories []Category `json:"categories" gorm:"many2many:SPU_category;"` // 关联分类，多对多
+	SKUs       []SKU      `gorm:"foreignKey:SpuID;references:ID;comment:关联SKU"`
+	Categories []Category `gorm:"many2many:spu_categories;joinForeignKey:spu_id;joinReferences:category_id;comment:关联分类"`
 }
 
 func (SPU) TableName() string {
