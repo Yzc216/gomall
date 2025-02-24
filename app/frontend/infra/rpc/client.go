@@ -1,6 +1,8 @@
 package rpc
 
 import (
+	"sync"
+
 	"github.com/Yzc216/gomall/app/frontend/conf"
 	frontendUtils "github.com/Yzc216/gomall/app/frontend/utils"
 	frontendutils "github.com/Yzc216/gomall/app/frontend/utils"
@@ -11,7 +13,6 @@ import (
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/product/productcatalogservice"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/user/userservice"
 	"github.com/cloudwego/kitex/client"
-	"sync"
 )
 
 var (

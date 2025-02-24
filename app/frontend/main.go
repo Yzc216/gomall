@@ -4,6 +4,9 @@ package main
 
 import (
 	"context"
+	"os"
+	"time"
+
 	frontendUtils "github.com/Yzc216/gomall/app/frontend/biz/utils"
 	"github.com/Yzc216/gomall/app/frontend/infra/mtl"
 	"github.com/Yzc216/gomall/app/frontend/infra/rpc"
@@ -15,8 +18,6 @@ import (
 	"github.com/hertz-contrib/sessions/redis"
 	"github.com/joho/godotenv"
 	oteltrace "go.opentelemetry.io/otel/trace"
-	"os"
-	"time"
 
 	"github.com/Yzc216/gomall/app/frontend/biz/router"
 	"github.com/Yzc216/gomall/app/frontend/conf"
@@ -42,6 +43,8 @@ var ServiceName = frontendutils.ServiceName
 func main() {
 
 	_ = godotenv.Load()
+	middleware.InitJWT()
+	middleware.InitCasbin()
 
 	mtl.InitMtl()
 	rpc.InitClient()
@@ -78,7 +81,7 @@ func main() {
 	h.Delims("{{", "}}")
 	h.Static("/static", "./")
 
-	h.GET("/about", middleware.Auth(), func(c context.Context, ctx *app.RequestContext) {
+	h.GET("/about", func(c context.Context, ctx *app.RequestContext) {
 		hlog.CtxInfof(c, "gomall about page")
 		ctx.HTML(consts.StatusOK, "about", frontendUtils.WarpResponse(c, ctx, utils.H{"title": "About"}))
 	})
@@ -152,6 +155,4 @@ func registerMiddleware(h *server.Hertz) {
 
 	// cores
 	h.Use(cors.Default())
-
-	middleware.Register(h)
 }
