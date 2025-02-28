@@ -11,7 +11,7 @@ type SPU struct {
 	Title       string         `gorm:"type:varchar(255);not null;comment:商品标题"`
 	SubTitle    string         `gorm:"type:varchar(255);not null;comment:副标题"`
 	ShopID      uint64         `gorm:"index:idx_shop;not null;comment:店铺ID"`
-	BrandID     uint64         `gorm:"index;not null;comment:品牌ID"`
+	Brand       string         `gorm:"index;not null;comment:品牌ID"`
 	MainImages  []string       `gorm:"type:json;comment:主图URL列表"`
 	Video       string         `gorm:"type:varchar(500);comment:商品视频URL"`
 	Description string         `gorm:"type:text;comment:商品详情"`

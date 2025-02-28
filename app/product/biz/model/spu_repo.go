@@ -1,10 +1,9 @@
-package repo
+package model
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Yzc216/gomall/app/product/biz/model"
 	"github.com/Yzc216/gomall/app/product/biz/types"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -17,26 +16,26 @@ var (
 
 type SPURepository interface {
 	// 基础单条操作
-	Create(ctx context.Context, spu *model.SPU) error
-	Update(ctx context.Context, spu *model.SPU) error
+	Create(ctx context.Context, spu *SPU) error
+	Update(ctx context.Context, spu *SPU) error
 	Delete(ctx context.Context, id uint64) error
-	GetByID(ctx context.Context, id uint64) (*model.SPU, error)
-	GetByName(ctx context.Context, name string) (*model.SPU, error)
+	GetByID(ctx context.Context, id uint64) (*SPU, error)
+	GetByName(ctx context.Context, name string) (*SPU, error)
 	ExistsByID(ctx context.Context, id uint64) (bool, error)
 	ExistByTitle(ctx context.Context, title string) (bool, error)
 
 	// 复杂查询
-	List(ctx context.Context, filter SPUFilter, page Pagination) ([]*model.SPU, int64, error)
-	FullTextSearch(ctx context.Context, keyword string, page Pagination) ([]*model.SPU, int64, error)
+	List(ctx context.Context, filter SPUFilter, page Pagination) ([]*SPU, int64, error)
+	FullTextSearch(ctx context.Context, keyword string, page Pagination) ([]*SPU, int64, error)
 	//GetInventoryAlert(ctx context.Context,spuID uint64) (int, error) // 库存预警数量
 
 	// 关联数据操作
-	GetSKUs(ctx context.Context, spuID uint64) ([]*model.SKU, error)
+	GetSKUs(ctx context.Context, spuID uint64) ([]*SKU, error)
 	GetSKUCount(ctx context.Context, spuID uint64) (int64, error)
 	AddSKUs(ctx context.Context, spuID uint64, skuIDs []uint64) error
 	RemoveSKUs(ctx context.Context, spuID uint64, skuIDs []uint64) error
 
-	GetCategories(ctx context.Context, spuID uint64) ([]*model.Category, error)
+	GetCategories(ctx context.Context, spuID uint64) ([]*Category, error)
 	AddCategory(ctx context.Context, spuID, categoryID uint64) error
 	RemoveCategories(ctx context.Context, spuID uint64, categoryIDs []uint64) error
 	ReplaceCategories(ctx context.Context, spuID uint64, categoryIDs []uint64) error
@@ -56,7 +55,7 @@ type SPURepository interface {
 	//UpdateSalesCount(ctx context.Context, spuID uint64) error
 
 	//批量操作
-	BatchGetByIDs(ctx context.Context, ids []uint64) ([]*model.SPU, error)
+	BatchGetByIDs(ctx context.Context, ids []uint64) ([]*SPU, error)
 	//BatchCreateSPUs(ctx context.Context, spus []*model.SPU) error
 	//BatchUpdateStatus(ctx context.Context, spuIDs []uint64, status int8) error
 }
@@ -91,7 +90,7 @@ func NewSPURepo(ctx context.Context, db *gorm.DB) *SPURepo {
 }
 
 // 基础单条操作
-func (r *SPURepo) Create(ctx context.Context, spu *model.SPU) error {
+func (r *SPURepo) Create(ctx context.Context, spu *SPU) error {
 	exist, err := r.ExistByTitle(ctx, spu.Title)
 	if err != nil {
 		return fmt.Errorf("check title existence failed: %w", err)
@@ -118,10 +117,10 @@ func (r *SPURepo) Create(ctx context.Context, spu *model.SPU) error {
 	})
 }
 
-func (r *SPURepo) Update(ctx context.Context, spu *model.SPU) error {
+func (r *SPURepo) Update(ctx context.Context, spu *SPU) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 获取当前数据并加锁
-		var current model.SPU
+		var current SPU
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			First(&current, spu.ID).Error; err != nil {
 			return types.ErrSPUNotFound
@@ -143,7 +142,7 @@ func (r *SPURepo) Delete(ctx context.Context, id uint64) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 检查关联SKU
 		var count int64
-		if err := tx.Model(&model.SKU{}).Where("spu_id = ?", id).Count(&count).Error; err != nil {
+		if err := tx.Model(&SKU{}).Where("spu_id = ?", id).Count(&count).Error; err != nil {
 			return err
 		}
 		if count > 0 {
@@ -151,17 +150,17 @@ func (r *SPURepo) Delete(ctx context.Context, id uint64) error {
 		}
 
 		// 删除分类关联
-		if err := tx.Model(&model.SPU{ID: id}).Association("Categories").Clear(); err != nil {
+		if err := tx.Model(&SPU{ID: id}).Association("Categories").Clear(); err != nil {
 			return err
 		}
 
 		// 删除主记录
-		return tx.Delete(&model.SPU{}, id).Error
+		return tx.Delete(&SPU{}, id).Error
 	})
 }
 
-func (r *SPURepo) GetByID(ctx context.Context, id uint64) (*model.SPU, error) {
-	var spu model.SPU
+func (r *SPURepo) GetByID(ctx context.Context, id uint64) (*SPU, error) {
+	var spu SPU
 	err := r.db.WithContext(ctx).
 		Preload("SKUs").
 		Preload("Categories").
@@ -172,8 +171,8 @@ func (r *SPURepo) GetByID(ctx context.Context, id uint64) (*model.SPU, error) {
 	return &spu, err
 }
 
-func (r *SPURepo) GetByName(ctx context.Context, name string) (*model.SPU, error) {
-	var spu model.SPU
+func (r *SPURepo) GetByName(ctx context.Context, name string) (*SPU, error) {
+	var spu SPU
 	err := r.db.WithContext(ctx).
 		Where("title = ?", name).
 		First(&spu).Error
@@ -186,7 +185,7 @@ func (r *SPURepo) GetByName(ctx context.Context, name string) (*model.SPU, error
 func (r *SPURepo) ExistsByID(ctx context.Context, id uint64) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).
-		Model(&model.SPU{}).
+		Model(&SPU{}).
 		Where("id = ?", id).
 		Count(&count).Error
 	return count > 0, err
@@ -195,7 +194,7 @@ func (r *SPURepo) ExistsByID(ctx context.Context, id uint64) (bool, error) {
 func (r *SPURepo) ExistByTitle(ctx context.Context, title string) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).
-		Model(&model.SPU{}).
+		Model(&SPU{}).
 		Where("title = ?", title).
 		Count(&count).Error
 	return count > 0, err
@@ -203,15 +202,15 @@ func (r *SPURepo) ExistByTitle(ctx context.Context, title string) (bool, error) 
 
 // 复杂查询
 // --------------------------------------------------
-func (r *SPURepo) List(ctx context.Context, filter SPUFilter, page Pagination) ([]*model.SPU, int64, error) {
+func (r *SPURepo) List(ctx context.Context, filter SPUFilter, page Pagination) ([]*SPU, int64, error) {
 	query := r.buildListQuery(filter)
 
 	var total int64
-	if err := query.Model(&model.SPU{}).Count(&total).Error; err != nil {
+	if err := query.Model(&SPU{}).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	var spus []*model.SPU
+	var spus []*SPU
 	err := query.Scopes(r.paginate(page)).
 		Preload("SKUs", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, spu_id, price, stock").Where("is_active = ?", true)
@@ -221,9 +220,9 @@ func (r *SPURepo) List(ctx context.Context, filter SPUFilter, page Pagination) (
 	return spus, total, err
 }
 
-func (r *SPURepo) FullTextSearch(ctx context.Context, keyword string, page Pagination) ([]*model.SPU, int64, error) {
+func (r *SPURepo) FullTextSearch(ctx context.Context, keyword string, page Pagination) ([]*SPU, int64, error) {
 	query := r.db.WithContext(ctx).
-		Model(&model.SPU{}).
+		Model(&SPU{}).
 		Where("MATCH(title, description) AGAINST(? IN BOOLEAN MODE)", keyword+"*")
 
 	var total int64
@@ -231,15 +230,15 @@ func (r *SPURepo) FullTextSearch(ctx context.Context, keyword string, page Pagin
 		return nil, 0, err
 	}
 
-	var spus []*model.SPU
+	var spus []*SPU
 	err := query.Scopes(r.paginate(page)).
 		Find(&spus).Error
 
 	return spus, total, err
 }
 
-func (r *SPURepo) BatchGetByIDs(ctx context.Context, ids []uint64) ([]*model.SPU, error) {
-	var spus []*model.SPU
+func (r *SPURepo) BatchGetByIDs(ctx context.Context, ids []uint64) ([]*SPU, error) {
+	var spus []*SPU
 	err := r.db.WithContext(ctx).
 		Where("id IN ?", ids).
 		Find(&spus).Error
@@ -248,8 +247,8 @@ func (r *SPURepo) BatchGetByIDs(ctx context.Context, ids []uint64) ([]*model.SPU
 
 // 关联数据操作
 // --------------------------------------------------
-func (r *SPURepo) GetSKUs(ctx context.Context, spuID uint64) ([]*model.SKU, error) {
-	var skus []*model.SKU
+func (r *SPURepo) GetSKUs(ctx context.Context, spuID uint64) ([]*SKU, error) {
+	var skus []*SKU
 	err := r.db.WithContext(ctx).
 		Where("spu_id = ?", spuID).
 		Find(&skus).Error
@@ -259,7 +258,7 @@ func (r *SPURepo) GetSKUs(ctx context.Context, spuID uint64) ([]*model.SKU, erro
 func (r *SPURepo) GetSKUCount(ctx context.Context, spuID uint64) (int64, error) {
 	var count int64
 	err := r.db.WithContext(ctx).
-		Model(&model.SKU{}).
+		Model(&SKU{}).
 		Where("spu_id = ?", spuID).
 		Count(&count).Error
 	return count, err
@@ -269,7 +268,7 @@ func (r *SPURepo) AddSKUs(ctx context.Context, spuID uint64, skuIDs []uint64) er
 	// 验证SKU存在性
 	var count int64
 	if err := r.db.WithContext(ctx).
-		Model(&model.SKU{}).
+		Model(&SKU{}).
 		Where("id IN ?", skuIDs).
 		Count(&count).Error; err != nil {
 		return err
@@ -278,49 +277,49 @@ func (r *SPURepo) AddSKUs(ctx context.Context, spuID uint64, skuIDs []uint64) er
 		return errors.New("invalid SKU IDs")
 	}
 
-	return r.db.WithContext(ctx).Model(&model.SPU{ID: spuID}).
+	return r.db.WithContext(ctx).Model(&SPU{ID: spuID}).
 		Association("SKUs").
 		Append(generateSKUReferences(skuIDs))
 }
 
 func (r *SPURepo) RemoveSKUs(ctx context.Context, spuID uint64, skuIDs []uint64) error {
-	return r.db.WithContext(ctx).Model(&model.SPU{ID: spuID}).
+	return r.db.WithContext(ctx).Model(&SPU{ID: spuID}).
 		Association("SKUs").
 		Delete(generateSKUReferences(skuIDs))
 }
 
 // 分类关联操作
 // --------------------------------------------------
-func (r *SPURepo) GetCategories(ctx context.Context, spuID uint64) ([]*model.Category, error) {
-	var categories []*model.Category
-	err := r.db.WithContext(ctx).Model(&model.SPU{ID: spuID}).
+func (r *SPURepo) GetCategories(ctx context.Context, spuID uint64) ([]*Category, error) {
+	var categories []*Category
+	err := r.db.WithContext(ctx).Model(&SPU{ID: spuID}).
 		Association("Categories").
 		Find(&categories)
 	return categories, err
 }
 
 func (r *SPURepo) AddCategory(ctx context.Context, spuID, categoryID uint64) error {
-	return r.db.WithContext(ctx).Model(&model.SPU{ID: spuID}).
+	return r.db.WithContext(ctx).Model(&SPU{ID: spuID}).
 		Association("Categories").
-		Append(&model.Category{ID: categoryID})
+		Append(&Category{ID: categoryID})
 }
 
 func (r *SPURepo) RemoveCategories(ctx context.Context, spuID uint64, categoryIDs []uint64) error {
-	refs := make([]*model.Category, len(categoryIDs))
+	refs := make([]*Category, len(categoryIDs))
 	for i, id := range categoryIDs {
-		refs[i] = &model.Category{ID: id}
+		refs[i] = &Category{ID: id}
 	}
-	return r.db.WithContext(ctx).Model(&model.SPU{ID: spuID}).
+	return r.db.WithContext(ctx).Model(&SPU{ID: spuID}).
 		Association("Categories").
 		Delete(refs)
 }
 
 func (r *SPURepo) ReplaceCategories(ctx context.Context, spuID uint64, categoryIDs []uint64) error {
-	categories := make([]*model.Category, len(categoryIDs))
+	categories := make([]*Category, len(categoryIDs))
 	for i, id := range categoryIDs {
-		categories[i] = &model.Category{ID: id}
+		categories[i] = &Category{ID: id}
 	}
-	return r.db.WithContext(ctx).Model(&model.SPU{ID: spuID}).
+	return r.db.WithContext(ctx).Model(&SPU{ID: spuID}).
 		Association("Categories").
 		Replace(categories)
 }
@@ -328,7 +327,7 @@ func (r *SPURepo) ReplaceCategories(ctx context.Context, spuID uint64, categoryI
 // 多媒体管理
 // --------------------------------------------------
 func (r *SPURepo) UpdateMedia(ctx context.Context, spuID uint64, media Media) error {
-	return r.db.WithContext(ctx).Model(&model.SPU{}).
+	return r.db.WithContext(ctx).Model(&SPU{}).
 		Where("id = ?", spuID).
 		Updates(map[string]interface{}{
 			"main_images": media.MainImages,
@@ -340,7 +339,7 @@ func (r *SPURepo) UpdateMedia(ctx context.Context, spuID uint64, media Media) er
 // --------------------------------------------------
 func (r *SPURepo) UpdateStatus(ctx context.Context, spuID uint64, status int8) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var current model.SPU
+		var current SPU
 		if err := tx.First(&current, spuID).Error; err != nil {
 			return types.ErrSPUNotFound
 		}
@@ -357,7 +356,7 @@ func (r *SPURepo) UpdateStatus(ctx context.Context, spuID uint64, status int8) e
 // 私有辅助方法
 // --------------------------------------------------
 func (r *SPURepo) buildListQuery(filter SPUFilter) *gorm.DB {
-	query := r.db.Model(&model.SPU{})
+	query := r.db.Model(&SPU{})
 
 	if len(filter.ShopID) > 0 {
 		query = query.Where("shop_id IN ?", filter.ShopID)
@@ -408,10 +407,10 @@ func (r *SPURepo) paginate(page Pagination) func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func generateSKUReferences(ids []uint64) []*model.SKU {
-	skus := make([]*model.SKU, len(ids))
+func generateSKUReferences(ids []uint64) []*SKU {
+	skus := make([]*SKU, len(ids))
 	for i, id := range ids {
-		skus[i] = &model.SKU{ID: id}
+		skus[i] = &SKU{ID: id}
 	}
 	return skus
 }

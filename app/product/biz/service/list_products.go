@@ -14,25 +14,7 @@ func NewListProductsService(ctx context.Context) *ListProductsService {
 
 // Run create note info
 func (s *ListProductsService) Run(req *product.ListProductsReq) (resp *product.ListProductsResp, err error) {
-	//categoryQuery := model.NewCategoryQuery(s.ctx, mysql.DB)
-
-	//c, err := categoryQuery.GetProductsByCategoryName(req.CategoryName)
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	//resp = &product.ListProductsResp{}
-	//for _, v := range c {
-	//	for _, v1 := range v.Products {
-	//		resp.Products = append(resp.Products, &product.Product{
-	//			Id:          uint32(v1.ID),
-	//			Name:        v1.Name,
-	//			Price:       v1.Price,
-	//			Picture:     v1.Picture,
-	//			Description: v1.Description,
-	//		})
-	//	}
-	//}
+	// Finish your business logic.
 
 	return
 }

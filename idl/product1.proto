@@ -5,11 +5,13 @@ package product;
 option go_package = "/product";
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "third_party/validate.proto";
 
 // ================== 数据结构 ==================
 message Pagination {
-  int32 Page = 1;
-  int32 PageSize = 2;
+  int32 Page = 1[(validate.rules).int32 = {gt: 0}];
+  int32 PageSize = 2[(validate.rules).int32 = {gt: 0}];
 }
 
 message SKU {
@@ -33,32 +35,39 @@ message SPU {
 }
 
 message SPUBasicInfo {
-  string title = 1 ;
-  string sub_title = 2 ;
-  string description = 3 ;
-  uint64 shop_id = 4 ;
-  uint64 brand_id = 5 ;
-  SPUStatus status = 6 ;
+  string title = 1 [(validate.rules).string = {min_len: 1, max_len: 255}];
+  string sub_title = 2 [(validate.rules).string = {max_len: 255}];
+  string description = 3 [(validate.rules).string = {max_len: 5000}];
+  uint64 shop_id = 4 [(validate.rules).uint64 = {gt: 0}];
+  uint64 brand_id = 5 [(validate.rules).uint64 = {gt: 0}];
+  SPUStatus status = 6 [(validate.rules).int32 = {in: [0, 1, 2, 3, 4, 5]}];
 }
 
 message SPUMedia {
-  repeated string main_images = 1;
-  string video_url = 2 ;
+  repeated string main_images = 1 [(validate.rules).repeated = {
+    max_items: 5,
+    items: {string: {uri: true}}
+  }];
+  string video_url = 2 [(validate.rules).string = {uri: true}];
 }
 
 message ProductFilter {
   string keywords = 1;
-  uint64 category_id = 2 ;
+  uint64 category_id = 2 [(validate.rules).uint64 = {gt: 0}];
   string brand = 3;
-  double min_price = 4;
-  double max_price = 5;
-  SPUStatus status = 6 ;
+  double min_price = 4[(validate.rules).double = {gt: 0}];
+  double max_price = 5[(validate.rules).double = {gt: 0}];
+  SPUStatus status = 6 [(validate.rules).int32 = {in: [0, 1, 2, 3, 4, 5]}];
   Pagination pagination = 7;
 }
 
 
 message CategoryRelation {
-  repeated uint64 category_ids = 1 ;
+  repeated uint64 category_ids = 1 [(validate.rules).repeated = {
+    min_items: 1,
+    max_items: 5,
+    items: {uint64: {gt: 0}}
+  }];
 }
 
 enum SPUStatus {
@@ -111,30 +120,30 @@ service ProductCatalogService {
 // 商品管理
 message CreateProductReq {
   message SKUData {
-    string title = 1 ;
-    double price = 2 ;
-    uint32 stock = 3 ;
+    string title = 1 [(validate.rules).string = {min_len: 1, max_len: 50}];
+    double price = 2 [(validate.rules).double = {gt: 0}];
+    uint32 stock = 3 [(validate.rules).uint32 = {gt: 0}];
     map<string, string> specs = 4;
   }
 
   SPUBasicInfo basic_info = 3;
   SPUMedia media = 4;
   CategoryRelation category_relation = 5;
-  repeated SKUData SKUs = 6 ;
+  repeated SKUData SKUs = 6 [(validate.rules).repeated = {min_items: 1}];
 }
 
 message UpdateProductReq {
   // 主标识
-  uint64 id = 1 ;
+  uint64 id = 1 [(validate.rules).uint64 = {gt: 0}];
   // 要更新的字段掩码（客户端指定需要更新的路径）
-  string update_mask = 2;
+  google.protobuf.FieldMask update_mask = 2;
   SPUBasicInfo basic_info = 3;
   SPUMedia media = 4;
   CategoryRelation category_relation = 5;
 }
 
 message DeleteProductReq{
-  uint64 id = 1;
+  uint64 id = 1[(validate.rules).uint64.gt = 0];
 }
 
 message ProductResp{
@@ -170,26 +179,26 @@ message SearchProductsResp {
 
 // 分类管理
 message CreateCategoryReq {
-  string name = 1 ;
+  string name = 1 [(validate.rules).string = {min_len: 2, max_len: 50}];
   string description = 2;
   uint64 parent_id = 3;  // 0表示根分类
-  optional string image_url = 4 ;
+  optional string image_url = 4 [(validate.rules).string.uri = true];
 }
 
 message UpdateCategoryReq {
-  uint64 id = 1 ;
-  optional string name = 2 ;
+  uint64 id = 1 [(validate.rules).uint64.gt = 0];
+  optional string name = 2 [(validate.rules).string = {min_len: 2, max_len: 50}];
   optional string description = 3;
   optional int32 sort = 4;
-  optional string image_url = 5 ;
+  optional string image_url = 5 [(validate.rules).string.uri = true];
 }
 
 message DeleteCategoryReq {
-  uint64 id = 1 ;
+  uint64 id = 1 [(validate.rules).uint64.gt = 0];
 }
 
 message ListCategoriesReq {
-  uint64 id = 1 ;
+  uint64 id = 1 [(validate.rules).uint64.gt = 0];
   bool with_children = 2;  // 是否包含直接子分类
   bool with_spus = 3;  // 是否包含关联商品概要
 }

@@ -1,11 +1,10 @@
-package repo
+package model
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	ordermodel "github.com/Yzc216/gomall/app/order/biz/model"
-	"github.com/Yzc216/gomall/app/product/biz/model"
 	"github.com/Yzc216/gomall/app/product/biz/types"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -23,18 +22,18 @@ var (
 // sku_repository.go
 type SKURepository interface {
 	// 基础CRUD
-	Create(ctx context.Context, sku *model.SKU) error
-	Update(ctx context.Context, sku *model.SKU) error
+	Create(ctx context.Context, sku *SKU) error
+	Update(ctx context.Context, sku *SKU) error
 	Delete(ctx context.Context, id uint64) error
-	GetByID(ctx context.Context, id uint64) (*model.SKU, error)
+	GetByID(ctx context.Context, id uint64) (*SKU, error)
 	ExistsByID(ctx context.Context, id uint64) (bool, error)
 
 	// 复杂查询
-	List(ctx context.Context, filter SKUFilter, page Pagination) ([]*model.SKU, int64, error)
+	List(ctx context.Context, filter SKUFilter, page Pagination) ([]*SKU, int64, error)
 
 	// 批量操作
-	BatchGetByIDs(ctx context.Context, ids []uint64) ([]*model.SKU, error)
-	BatchCreate(ctx context.Context, spuID uint64, skus []*model.SKU) error
+	BatchGetByIDs(ctx context.Context, ids []uint64) ([]*SKU, error)
+	BatchCreate(ctx context.Context, spuID uint64, skus []*SKU) error
 	BatchToggleActive(ctx context.Context, spuID uint64, active bool) error
 
 	//// 库存管理
@@ -44,13 +43,13 @@ type SKURepository interface {
 	//GetStockInfo(ctx context.Context, spuID uint64) (totalStock uint32, availableStock uint32, err error)
 
 	// 关联查询
-	GetActiveSKUs(ctx context.Context, spuID uint64) ([]*model.SKU, error)
-	GetSpecs(ctx context.Context, spuID uint64) ([]*model.AttributeValue, error)
-	GetSKUsByAttributes(ctx context.Context, attrFilters map[string]string, page Pagination) ([]*model.SKU, error)
+	GetActiveSKUs(ctx context.Context, spuID uint64) ([]*SKU, error)
+	GetSpecs(ctx context.Context, spuID uint64) (string, error)
+	GetSKUsByAttributes(ctx context.Context, attrFilters map[string]string, page Pagination) ([]*SKU, error)
 
 	// 销售统计
 	UpdateSales(ctx context.Context, skuID uint64, quantity uint32) error
-	GetTopSales(ctx context.Context, limit int) ([]*model.SKU, error)
+	GetTopSales(ctx context.Context, limit int) ([]*SKU, error)
 }
 
 type SKURepo struct {
@@ -73,10 +72,10 @@ type SKUFilter struct {
 
 // 基础CRUD
 // --------------------------------------------------
-func (r *SKURepo) Create(ctx context.Context, sku *model.SKU) error {
+func (r *SKURepo) Create(ctx context.Context, sku *SKU) error {
 	// 检查同一SPU下标题是否重复
 	var exist int64
-	r.db.WithContext(ctx).Model(&model.SKU{}).
+	r.db.WithContext(ctx).Model(&SKU{}).
 		Where("spu_id = ? AND title = ?", sku.SpuID, sku.Title).
 		Count(&exist)
 	if exist > 0 {
@@ -85,7 +84,7 @@ func (r *SKURepo) Create(ctx context.Context, sku *model.SKU) error {
 
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 获取SPU标题
-		var spu model.SPU
+		var spu SPU
 		if err := tx.Select("title").First(&spu, sku.SpuID).Error; err != nil {
 			return fmt.Errorf("get SPU failed: %w", err)
 		}
@@ -105,10 +104,10 @@ func (r *SKURepo) Create(ctx context.Context, sku *model.SKU) error {
 	})
 }
 
-func (r *SKURepo) Update(ctx context.Context, sku *model.SKU) error {
+func (r *SKURepo) Update(ctx context.Context, sku *SKU) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 获取当前数据并加锁
-		var current model.SKU
+		var current SKU
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 			First(&current, sku.ID).Error; err != nil {
 			return types.ErrSKUNotFound
@@ -117,7 +116,7 @@ func (r *SKURepo) Update(ctx context.Context, sku *model.SKU) error {
 		// 校验标题唯一性
 		if current.Title != sku.Title {
 			var count int64
-			tx.Model(&model.SKU{}).
+			tx.Model(&SKU{}).
 				Where("spu_id = ? AND title = ? AND id != ?", current.SpuID, sku.Title, sku.ID).
 				Count(&count)
 			if count > 0 {
@@ -148,17 +147,17 @@ func (r *SKURepo) Delete(ctx context.Context, id uint64) error {
 		}
 
 		// 删除规格属性
-		if err := tx.Model(&model.SKU{ID: id}).Association("Specs").Clear(); err != nil {
+		if err := tx.Model(&SKU{ID: id}).Association("Specs").Clear(); err != nil {
 			return err
 		}
 
 		// 删除主记录
-		return tx.Delete(&model.SKU{}, id).Error
+		return tx.Delete(&SKU{}, id).Error
 	})
 }
 
-func (r *SKURepo) GetByID(ctx context.Context, id uint64) (*model.SKU, error) {
-	var sku model.SKU
+func (r *SKURepo) GetByID(ctx context.Context, id uint64) (*SKU, error) {
+	var sku SKU
 	err := r.db.WithContext(ctx).
 		Preload("Specs").
 		First(&sku, id).Error
@@ -171,7 +170,7 @@ func (r *SKURepo) GetByID(ctx context.Context, id uint64) (*model.SKU, error) {
 func (r *SKURepo) ExistsByID(ctx context.Context, id uint64) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).
-		Model(&model.SKU{}).
+		Model(&SKU{}).
 		Where("id = ?", id).
 		Count(&count).Error
 	return count > 0, err
@@ -179,15 +178,15 @@ func (r *SKURepo) ExistsByID(ctx context.Context, id uint64) (bool, error) {
 
 // 复杂查询
 // --------------------------------------------------
-func (r *SKURepo) List(ctx context.Context, filter SKUFilter, page Pagination) ([]*model.SKU, int64, error) {
+func (r *SKURepo) List(ctx context.Context, filter SKUFilter, page Pagination) ([]*SKU, int64, error) {
 	query := r.buildListQuery(filter)
 
 	var total int64
-	if err := query.Model(&model.SKU{}).Count(&total).Error; err != nil {
+	if err := query.Model(&SKU{}).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	var skus []*model.SKU
+	var skus []*SKU
 	err := query.Scopes(Paginate(page)).
 		Preload("Specs").
 		Find(&skus).Error
@@ -197,18 +196,18 @@ func (r *SKURepo) List(ctx context.Context, filter SKUFilter, page Pagination) (
 
 // 批量操作
 // --------------------------------------------------
-func (r *SKURepo) BatchGetByIDs(ctx context.Context, ids []uint64) ([]*model.SKU, error) {
-	var skus []*model.SKU
+func (r *SKURepo) BatchGetByIDs(ctx context.Context, ids []uint64) ([]*SKU, error) {
+	var skus []*SKU
 	err := r.db.WithContext(ctx).
 		Where("id IN ?", ids).
 		Find(&skus).Error
 	return skus, err
 }
 
-func (r *SKURepo) BatchCreate(ctx context.Context, spuID uint64, skus []*model.SKU) error {
+func (r *SKURepo) BatchCreate(ctx context.Context, spuID uint64, skus []*SKU) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 获取SPU信息
-		var spu model.SPU
+		var spu SPU
 		if err := tx.Select("title").First(&spu, spuID).Error; err != nil {
 			return err
 		}
@@ -238,7 +237,7 @@ func (r *SKURepo) BatchCreate(ctx context.Context, spuID uint64, skus []*model.S
 
 func (r *SKURepo) BatchToggleActive(ctx context.Context, spuID uint64, active bool) error {
 	return r.db.WithContext(ctx).
-		Model(&model.SKU{}).
+		Model(&SKU{}).
 		Where("spu_id = ?", spuID).
 		Update("is_active", active).Error
 }
@@ -247,14 +246,14 @@ func (r *SKURepo) BatchToggleActive(ctx context.Context, spuID uint64, active bo
 // --------------------------------------------------
 func (r *SKURepo) IncreaseStock(ctx context.Context, skuID uint64, quantity uint32) error {
 	return r.db.WithContext(ctx).
-		Model(&model.SKU{}).
+		Model(&SKU{}).
 		Where("id = ?", skuID).
 		Update("stock", gorm.Expr("stock + ?", quantity)).Error
 }
 
 func (r *SKURepo) DecreaseStock(ctx context.Context, skuID uint64, quantity uint32) error {
 	result := r.db.WithContext(ctx).
-		Model(&model.SKU{}).
+		Model(&SKU{}).
 		Where("id = ? AND stock >= ?", skuID, quantity).
 		Update("stock", gorm.Expr("stock - ?", quantity))
 
@@ -269,27 +268,27 @@ func (r *SKURepo) DecreaseStock(ctx context.Context, skuID uint64, quantity uint
 
 // 关联查询
 // --------------------------------------------------
-func (r *SKURepo) GetActiveSKUs(ctx context.Context, spuID uint64) ([]*model.SKU, error) {
-	var skus []*model.SKU
+func (r *SKURepo) GetActiveSKUs(ctx context.Context, spuID uint64) ([]*SKU, error) {
+	var skus []*SKU
 	err := r.db.WithContext(ctx).
 		Where("spu_id = ? AND is_active = ?", spuID, true).
 		Find(&skus).Error
 	return skus, err
 }
 
-func (r *SKURepo) GetSpecs(ctx context.Context, skuID uint64) ([]*model.AttributeValue, error) {
-	var specs []*model.AttributeValue
+func (r *SKURepo) GetSpecs(ctx context.Context, skuID uint64) ([]*AttributeValue, error) {
+	var specs []*AttributeValue
 	err := r.db.WithContext(ctx).
-		Model(&model.SKU{ID: skuID}).
+		Model(&SKU{ID: skuID}).
 		Association("Specs").
 		Find(&specs)
 	return specs, err
 }
 
-func (r *SKURepo) GetSKUsByAttributes(ctx context.Context, attrFilters map[string]string, page Pagination) ([]*model.SKU, error) {
+func (r *SKURepo) GetSKUsByAttributes(ctx context.Context, attrFilters map[string]string, page Pagination) ([]*SKU, error) {
 	// 1. 获取属性KeyID
 	var keyIDs []uint64
-	err := r.db.WithContext(ctx).Model(&model.AttributeKey{}).
+	err := r.db.WithContext(ctx).Model(&AttributeKey{}).
 		Where("name IN (?)", maps.Keys(attrFilters)).
 		Pluck("key_id", &keyIDs).Error
 	if err != nil {
@@ -297,14 +296,14 @@ func (r *SKURepo) GetSKUsByAttributes(ctx context.Context, attrFilters map[strin
 	}
 
 	// 2. 构建子查询：获取满足所有属性的SkuID
-	subQuery := r.db.WithContext(ctx).Model(&model.AttributeValue{}).
+	subQuery := r.db.WithContext(ctx).Model(&AttributeValue{}).
 		Select("sku_id").
 		Where("(key_id, value) IN ?", getKeyValuePairs(keyIDs, attrFilters)).
 		Group("sku_id").
 		Having("COUNT(DISTINCT key_id) = ?", len(keyIDs))
 
 	// 3. 主查询
-	var skus []*model.SKU
+	var skus []*SKU
 	err = r.db.WithContext(ctx).Preload("AttributeValues", func(db *gorm.DB) *gorm.DB {
 		return db.Joins("JOIN attribute_keys ON attribute_values.key_id = attribute_keys.key_id").
 			Order("attribute_keys.order ASC")
@@ -321,13 +320,13 @@ func (r *SKURepo) GetSKUsByAttributes(ctx context.Context, attrFilters map[strin
 // --------------------------------------------------
 func (r *SKURepo) UpdateSales(ctx context.Context, skuID uint64, quantity uint32) error {
 	return r.db.WithContext(ctx).
-		Model(&model.SKU{}).
+		Model(&SKU{}).
 		Where("id = ?", skuID).
 		Update("sales", gorm.Expr("sales + ?", quantity)).Error
 }
 
-func (r *SKURepo) GetTopSales(ctx context.Context, limit int) ([]*model.SKU, error) {
-	var skus []*model.SKU
+func (r *SKURepo) GetTopSales(ctx context.Context, limit int) ([]*SKU, error) {
+	var skus []*SKU
 	err := r.db.WithContext(ctx).
 		Order("sales DESC").
 		Limit(limit).
@@ -338,7 +337,7 @@ func (r *SKURepo) GetTopSales(ctx context.Context, limit int) ([]*model.SKU, err
 // 私有辅助方法
 // --------------------------------------------------
 func (r *SKURepo) buildListQuery(filter SKUFilter) *gorm.DB {
-	query := r.db.Model(&model.SKU{})
+	query := r.db.Model(&SKU{})
 
 	if filter.SPUID != 0 {
 		query = query.Where("spu_id = ?", filter.SPUID)
@@ -367,14 +366,14 @@ func (r *SKURepo) buildListQuery(filter SKUFilter) *gorm.DB {
 }
 
 // 保存规格属性（内部方法）
-func (r *SKURepo) saveSKUAttributes(tx *gorm.DB, skuID uint64, specs []model.AttributeValue) error {
+func (r *SKURepo) saveSKUAttributes(tx *gorm.DB, skuID uint64, specs []AttributeValue) error {
 	if len(specs) == 0 {
 		return nil
 	}
 
-	cleanSpecs := make([]model.AttributeValue, len(specs))
+	cleanSpecs := make([]AttributeValue, len(specs))
 	for i := range specs {
-		cleanSpecs[i] = model.AttributeValue{
+		cleanSpecs[i] = AttributeValue{
 			SkuID: skuID,
 			KeyID: specs[i].KeyID,
 			Value: specs[i].Value,
@@ -397,7 +396,7 @@ func getKeyValuePairs(keyIDs []uint64, filters map[string]string) [][]interface{
 }
 
 // UpdateSKUAttributes 全量更新SKU属性（原子操作）
-func (r *SKURepo) UpdateSKUAttributes(ctx context.Context, skuID uint64, newSpecs []model.AttributeValue) error {
+func (r *SKURepo) UpdateSKUAttributes(ctx context.Context, skuID uint64, newSpecs []AttributeValue) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 1. 校验属性键有效性
 		keyIDs := make([]uint64, len(newSpecs))
@@ -406,7 +405,7 @@ func (r *SKURepo) UpdateSKUAttributes(ctx context.Context, skuID uint64, newSpec
 		}
 
 		var validKeys int64
-		if err := tx.Model(&model.AttributeKey{}).
+		if err := tx.Model(&AttributeKey{}).
 			Where("key_id IN ?", keyIDs).
 			Count(&validKeys).Error; err != nil {
 			return fmt.Errorf("属性键校验失败: %w", err)
@@ -418,7 +417,7 @@ func (r *SKURepo) UpdateSKUAttributes(ctx context.Context, skuID uint64, newSpec
 		// 2. 删除旧属性（带行锁）
 		if err := tx.Set("gorm:query_option", "FOR UPDATE").
 			Where("sku_id = ?", skuID).
-			Delete(&model.AttributeValue{}).Error; err != nil {
+			Delete(&AttributeValue{}).Error; err != nil {
 			return fmt.Errorf("删除旧属性失败: %w", err)
 		}
 
@@ -432,7 +431,7 @@ func (r *SKURepo) UpdateSKUAttributes(ctx context.Context, skuID uint64, newSpec
 		}
 
 		// 4. 更新SKU更新时间
-		return tx.Model(&model.SKU{}).
+		return tx.Model(&SKU{}).
 			Where("id = ?", skuID).
 			Update("updated_at", gorm.Expr("NOW()")).Error
 	})
@@ -458,14 +457,14 @@ func (r *SKURepo) PatchSKUAttributes(ctx context.Context, skuID uint64, updates 
 
 		// 3. 获取现有属性键
 		var existingKeys []uint64
-		if err := tx.Model(&model.AttributeValue{}).
+		if err := tx.Model(&AttributeValue{}).
 			Where("sku_id = ?", skuID).
 			Pluck("key_id", &existingKeys).Error; err != nil {
 			return err
 		}
 
 		// 4. 分离更新操作
-		var toCreate []model.AttributeValue
+		var toCreate []AttributeValue
 		var toUpdate []struct {
 			KeyID uint64
 			Value string
@@ -478,7 +477,7 @@ func (r *SKURepo) PatchSKUAttributes(ctx context.Context, skuID uint64, updates 
 					Value string
 				}{KeyID: keyID, Value: value})
 			} else {
-				toCreate = append(toCreate, model.AttributeValue{
+				toCreate = append(toCreate, AttributeValue{
 					SkuID: skuID,
 					KeyID: keyID,
 					Value: value,
@@ -540,7 +539,7 @@ func (r *SKURepo) resolveAttributeNamesConcurrently(tx *gorm.DB, updates map[str
 			sem <- struct{}{}
 			defer func() { <-sem }()
 
-			var key model.AttributeKey
+			var key AttributeKey
 			err := tx.Where("name = ?", n).First(&key).Error
 			ch <- result{n, key.KeyID, err}
 		}(name)

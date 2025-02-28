@@ -1,11 +1,10 @@
-package repo
+package model
 
 import (
 	"context"
 	"fmt"
 	"github.com/Yzc216/gomall/app/product/biz/dal"
 	"github.com/Yzc216/gomall/app/product/biz/dal/mysql"
-	"github.com/Yzc216/gomall/app/product/biz/model"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -25,10 +24,10 @@ func (s *SKURepoTestSuite) SetupSuite() {
 	s.repo = NewSKURepo(context.Background(), mysql.DB)
 
 	// 确保表结构存在
-	s.repo.db.AutoMigrate(&model.SKU{}, &model.AttributeValue{}, &model.AttributeKey{})
+	s.repo.db.AutoMigrate(&SKU{}, &AttributeValue{}, &AttributeKey{})
 
 	// 创建测试用的SPU
-	spu := &model.SPU{Title: "Test SPU"}
+	spu := &SPU{Title: "Test SPU"}
 	s.repo.db.Create(spu)
 	s.spuID = spu.ID
 }
@@ -44,10 +43,10 @@ func (s *SKURepoTestSuite) SetupTest() {
 // 测试保存SKU
 func (s *SKURepoTestSuite) TestSave() {
 	// 准备测试数据
-	sku := &model.SKU{
+	sku := &SKU{
 		ID:    s.spuID,
 		Title: "Test SKU",
-		Specs: []model.AttributeValue{
+		Specs: []AttributeValue{
 			{KeyID: 1, Value: "Red"},
 			{KeyID: 2, Value: "XL"},
 		},
@@ -58,19 +57,19 @@ func (s *SKURepoTestSuite) TestSave() {
 	s.NoError(err)
 
 	// 验证数据库记录
-	var dbSKU model.SKU
+	var dbSKU SKU
 	s.repo.db.Preload("Specs").First(&dbSKU, sku.ID)
 	s.Equal(2, len(dbSKU.Specs))
 }
 
 // 测试批量保存
 func (s *SKURepoTestSuite) TestSaveBatch() {
-	skus := make([]*model.SKU, 2)
+	skus := make([]*SKU, 2)
 	for i := 0; i < 2; i++ {
-		skus[i] = &model.SKU{
+		skus[i] = &SKU{
 			ID:    s.spuID,
 			Title: fmt.Sprintf("SKU-%d", i),
-			Specs: []model.AttributeValue{
+			Specs: []AttributeValue{
 				{KeyID: 1, Value: "Value"},
 			},
 		}
@@ -80,14 +79,14 @@ func (s *SKURepoTestSuite) TestSaveBatch() {
 	s.NoError(err)
 
 	var count int64
-	s.repo.db.Model(&model.SKU{}).Count(&count)
+	s.repo.db.Model(&SKU{}).Count(&count)
 	s.Equal(int64(2), count)
 }
 
 // 测试查询SKU
 func (s *SKURepoTestSuite) TestQuery() {
 	// 先创建测试数据
-	sku := &model.SKU{ID: s.spuID, Title: "Query Test"}
+	sku := &SKU{ID: s.spuID, Title: "Query Test"}
 	s.repo.db.Create(sku)
 
 	// 执行查询
@@ -98,45 +97,45 @@ func (s *SKURepoTestSuite) TestQuery() {
 
 // 测试更新状态
 func (s *SKURepoTestSuite) TestUpdateStatus() {
-	sku := &model.SKU{ID: s.spuID, IsActive: false}
+	sku := &SKU{ID: s.spuID, IsActive: false}
 	s.repo.db.Create(sku)
 
 	err := s.repo.UpdateStatusBySkuId(sku.ID, true)
 	s.NoError(err)
 
-	var updated model.SKU
+	var updated SKU
 	s.repo.db.First(&updated, sku.ID)
 	s.True(updated.IsActive)
 }
 
 // 测试删除SKU
 func (s *SKURepoTestSuite) TestDelete() {
-	sku := &model.SKU{ID: s.spuID}
+	sku := &SKU{ID: s.spuID}
 	s.repo.db.Create(sku)
 
 	err := s.repo.Delete(sku.ID)
 	s.NoError(err)
 
 	var count int64
-	s.repo.db.Model(&model.SKU{}).Where("id = ?", sku.ID).Count(&count)
+	s.repo.db.Model(&SKU{}).Where("id = ?", sku.ID).Count(&count)
 	s.Equal(int64(0), count)
 }
 
 // 测试全量更新属性
 func (s *SKURepoTestSuite) TestUpdateSKUAttributes() {
 	// 创建属性键
-	keys := []model.AttributeKey{
+	keys := []AttributeKey{
 		{Name: "color"},
 		{Name: "size"},
 	}
 	s.repo.db.Create(&keys)
 
 	// 创建初始SKU
-	sku := &model.SKU{ID: s.spuID}
+	sku := &SKU{ID: s.spuID}
 	s.repo.db.Create(sku)
 
 	// 新属性
-	newSpecs := []model.AttributeValue{
+	newSpecs := []AttributeValue{
 		{KeyID: keys[0].KeyID, Value: "Blue"},
 		{KeyID: keys[1].KeyID, Value: "L"},
 	}
@@ -145,7 +144,7 @@ func (s *SKURepoTestSuite) TestUpdateSKUAttributes() {
 	s.NoError(err)
 
 	// 验证属性
-	var attrs []model.AttributeValue
+	var attrs []AttributeValue
 	s.repo.db.Where("sku_id = ?", sku.ID).Find(&attrs)
 	s.Equal(2, len(attrs))
 }
@@ -153,16 +152,16 @@ func (s *SKURepoTestSuite) TestUpdateSKUAttributes() {
 // 测试增量更新属性
 func (s *SKURepoTestSuite) TestPatchSKUAttributes() {
 	// 创建属性键
-	keys := []model.AttributeKey{
+	keys := []AttributeKey{
 		{Name: "color", KeyID: 1},
 		{Name: "size", KeyID: 2},
 	}
 	s.repo.db.Create(&keys)
 
 	// 创建初始SKU和属性
-	sku := &model.SKU{ID: s.spuID}
+	sku := &SKU{ID: s.spuID}
 	s.repo.db.Create(sku)
-	s.repo.db.Create(&model.AttributeValue{SkuID: sku.ID, KeyID: 1, Value: "Red"})
+	s.repo.db.Create(&AttributeValue{SkuID: sku.ID, KeyID: 1, Value: "Red"})
 
 	// 执行更新
 	updates := map[string]string{
@@ -174,7 +173,7 @@ func (s *SKURepoTestSuite) TestPatchSKUAttributes() {
 	s.NoError(err)
 
 	// 验证结果
-	var attrs []model.AttributeValue
+	var attrs []AttributeValue
 	s.repo.db.Where("sku_id = ?", sku.ID).Find(&attrs)
 	s.Equal(2, len(attrs))
 }
@@ -193,7 +192,7 @@ func (s *SKURepoTestSuite) TestInvalidAttributeNames() {
 // 测试并发解析属性名称
 func (s *SKURepoTestSuite) TestResolveNamesConcurrently() {
 	// 创建测试属性键
-	keys := []model.AttributeKey{
+	keys := []AttributeKey{
 		{Name: "color"},
 		{Name: "size"},
 	}
