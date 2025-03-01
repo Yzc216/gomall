@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"github.com/Yzc216/gomall/app/product/biz/service"
+	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/common"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // ProductCatalogServiceImpl implements the last service interface defined in the IDL.
@@ -46,14 +46,14 @@ func (s *ProductCatalogServiceImpl) UpdateProduct(ctx context.Context, req *prod
 }
 
 // DeleteProduct implements the ProductCatalogServiceImpl interface.
-func (s *ProductCatalogServiceImpl) DeleteProduct(ctx context.Context, req *product.DeleteProductReq) (resp *emptypb.Empty, err error) {
+func (s *ProductCatalogServiceImpl) DeleteProduct(ctx context.Context, req *product.DeleteProductReq) (resp *common.Empty, err error) {
 	resp, err = service.NewDeleteProductService(ctx).Run(req)
 
 	return resp, err
 }
 
 // ListCategories implements the ProductCatalogServiceImpl interface.
-func (s *ProductCatalogServiceImpl) ListCategories(ctx context.Context, req *product.ListCategoriesReq) (resp *product.CategoryDetailResp, err error) {
+func (s *ProductCatalogServiceImpl) ListCategories(ctx context.Context, req *product.ListCategoriesReq) (resp *product.CategoryNode, err error) {
 	resp, err = service.NewListCategoriesService(ctx).Run(req)
 
 	return resp, err
@@ -74,8 +74,15 @@ func (s *ProductCatalogServiceImpl) UpdateCategory(ctx context.Context, req *pro
 }
 
 // DeleteCategory implements the ProductCatalogServiceImpl interface.
-func (s *ProductCatalogServiceImpl) DeleteCategory(ctx context.Context, req *product.DeleteCategoryReq) (resp *emptypb.Empty, err error) {
+func (s *ProductCatalogServiceImpl) DeleteCategory(ctx context.Context, req *product.DeleteCategoryReq) (resp *common.Empty, err error) {
 	resp, err = service.NewDeleteCategoryService(ctx).Run(req)
+
+	return resp, err
+}
+
+// GetCategoryTree implements the ProductCatalogServiceImpl interface.
+func (s *ProductCatalogServiceImpl) GetCategoryTree(ctx context.Context, req *product.GetCategoryTreeReq) (resp *product.CategoryTreeResp, err error) {
+	resp, err = service.NewGetCategoryTreeService(ctx).Run(req)
 
 	return resp, err
 }

@@ -4,15 +4,13 @@ import "github.com/cloudwego/kitex/pkg/kerrors"
 
 var (
 	//category
-	ErrDuplicateName        = kerrors.NewGRPCBizStatusError(5002101, "分类名称已存在")
-	ErrInvalidParent        = kerrors.NewGRPCBizStatusError(5002102, "无效的父分类")
-	ErrHasChildren          = kerrors.NewGRPCBizStatusError(5002103, "存在子分类不可删除")
-	ErrCategoryNotFound     = kerrors.NewGRPCBizStatusError(5002104, "未找到分类")
-	ErrInvalidCategoryChain = kerrors.NewGRPCBizStatusError(5002105, "分类链不连续")
-
-	//brand
-	ErrBrandNotFound = kerrors.NewGRPCBizStatusError(5002201, "brand not found")
-	ErrBrandExists   = kerrors.NewGRPCBizStatusError(5002202, "brand name already exists")
+	ErrNoRowsAffected     = kerrors.NewGRPCBizStatusError(5002101, "no rows affected")
+	ErrRecordNotFound     = kerrors.NewGRPCBizStatusError(5002102, "record not found")
+	ErrCategoryNotFound   = kerrors.NewGRPCBizStatusError(5002103, "category not found")
+	ErrCategoryNameExists = kerrors.NewGRPCBizStatusError(5002104, "category name already exists")
+	ErrInvalidUpdate      = kerrors.NewGRPCBizStatusError(5002105, "invalid update")
+	ErrHasChildren        = kerrors.NewGRPCBizStatusError(5002106, "category has children")
+	ErrAssociatedSPUs     = kerrors.NewGRPCBizStatusError(5002107, "category has associated SPUs")
 
 	//SPU
 	ErrHasAssociatedSPUs = kerrors.NewGRPCBizStatusError(5002301, "存在关联SPU不可删除")

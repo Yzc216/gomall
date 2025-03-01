@@ -30,9 +30,6 @@ func Init() {
 	//	panic(err)
 	//}
 	err = DB.AutoMigrate(
-		&model.Brand{},
-		&model.AttributeKey{},
-		&model.AttributeValue{},
 		&model.SPU{},
 		&model.SKU{},
 		&model.Category{},

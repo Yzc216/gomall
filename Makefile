@@ -8,6 +8,10 @@ gen-demo-proto:
 gen-frontend:
 	@cd app/frontend && cwgo server --type HTTP --idl ../../idl/frontend/order_page.proto --service frontend -I ../../idl --module ${ROOT_MOD}/app/frontend
 
+.PHONY: gen-frontend_category
+gen-frontend_category:
+	@cd app/frontend && cwgo server --type HTTP --idl ../../idl/frontend/category_page.proto --service frontend -I ../../idl --module ${ROOT_MOD}/app/frontend
+
 .PHONY: gen-user
 gen-user:
 	@cd rpc_gen && cwgo client --type RPC  --service user --module  ${ROOT_MOD}/rpc_gen --I ../idl --idl ../idl/user.proto
