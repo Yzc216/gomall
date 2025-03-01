@@ -4,8 +4,8 @@ package product
 
 import (
 	fmt "fmt"
+	common "github.com/Yzc216/gomall/rpc_gen/kitex_gen/common"
 	fastpb "github.com/cloudwego/fastpb"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 var (
@@ -1176,6 +1176,11 @@ func (x *DeleteCategoryReq) FastRead(buf []byte, _type int8, number int32) (offs
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	default:
 		offset, err = fastpb.Skip(buf, _type, number)
 		if err != nil {
@@ -1191,6 +1196,11 @@ ReadFieldError:
 
 func (x *DeleteCategoryReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
 	x.Id, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *DeleteCategoryReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.Force, offset, err = fastpb.ReadBool(buf, _type)
 	return offset, err
 }
 
@@ -1239,20 +1249,10 @@ func (x *ListCategoriesReq) fastReadField3(buf []byte, _type int8) (offset int, 
 	return offset, err
 }
 
-func (x *CategoryDetailResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+func (x *GetCategoryTreeReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
 	switch number {
 	case 1:
 		offset, err = x.fastReadField1(buf, _type)
-		if err != nil {
-			goto ReadFieldError
-		}
-	case 2:
-		offset, err = x.fastReadField2(buf, _type)
-		if err != nil {
-			goto ReadFieldError
-		}
-	case 3:
-		offset, err = x.fastReadField3(buf, _type)
 		if err != nil {
 			goto ReadFieldError
 		}
@@ -1266,32 +1266,42 @@ func (x *CategoryDetailResp) FastRead(buf []byte, _type int8, number int32) (off
 SkipFieldError:
 	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
 ReadFieldError:
-	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_CategoryDetailResp[number], err)
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_GetCategoryTreeReq[number], err)
 }
 
-func (x *CategoryDetailResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
-	var v Category
-	offset, err = fastpb.ReadMessage(buf, _type, &v)
-	if err != nil {
-		return offset, err
-	}
-	x.Category = &v
-	return offset, nil
-}
-
-func (x *CategoryDetailResp) fastReadField2(buf []byte, _type int8) (offset int, err error) {
-	var v Category
-	offset, err = fastpb.ReadMessage(buf, _type, &v)
-	if err != nil {
-		return offset, err
-	}
-	x.Children = append(x.Children, &v)
-	return offset, nil
-}
-
-func (x *CategoryDetailResp) fastReadField3(buf []byte, _type int8) (offset int, err error) {
-	x.SpuCount, offset, err = fastpb.ReadUint32(buf, _type)
+func (x *GetCategoryTreeReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.IncludeSpuCount, offset, err = fastpb.ReadBool(buf, _type)
 	return offset, err
+}
+
+func (x *CategoryTreeResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_CategoryTreeResp[number], err)
+}
+
+func (x *CategoryTreeResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	var v CategoryNode
+	offset, err = fastpb.ReadMessage(buf, _type, &v)
+	if err != nil {
+		return offset, err
+	}
+	x.Tree = append(x.Tree, &v)
+	return offset, nil
 }
 
 func (x *CreateProductReq_SKUData) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
@@ -2173,6 +2183,7 @@ func (x *DeleteCategoryReq) FastWrite(buf []byte) (offset int) {
 		return offset
 	}
 	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
 	return offset
 }
 
@@ -2181,6 +2192,14 @@ func (x *DeleteCategoryReq) fastWriteField1(buf []byte) (offset int) {
 		return offset
 	}
 	offset += fastpb.WriteUint64(buf[offset:], 1, x.GetId())
+	return offset
+}
+
+func (x *DeleteCategoryReq) fastWriteField2(buf []byte) (offset int) {
+	if !x.Force {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 2, x.GetForce())
 	return offset
 }
 
@@ -2218,39 +2237,37 @@ func (x *ListCategoriesReq) fastWriteField3(buf []byte) (offset int) {
 	return offset
 }
 
-func (x *CategoryDetailResp) FastWrite(buf []byte) (offset int) {
+func (x *GetCategoryTreeReq) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
 	}
 	offset += x.fastWriteField1(buf[offset:])
-	offset += x.fastWriteField2(buf[offset:])
-	offset += x.fastWriteField3(buf[offset:])
 	return offset
 }
 
-func (x *CategoryDetailResp) fastWriteField1(buf []byte) (offset int) {
-	if x.Category == nil {
+func (x *GetCategoryTreeReq) fastWriteField1(buf []byte) (offset int) {
+	if !x.IncludeSpuCount {
 		return offset
 	}
-	offset += fastpb.WriteMessage(buf[offset:], 1, x.GetCategory())
+	offset += fastpb.WriteBool(buf[offset:], 1, x.GetIncludeSpuCount())
 	return offset
 }
 
-func (x *CategoryDetailResp) fastWriteField2(buf []byte) (offset int) {
-	if x.Children == nil {
+func (x *CategoryTreeResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
 		return offset
 	}
-	for i := range x.GetChildren() {
-		offset += fastpb.WriteMessage(buf[offset:], 2, x.GetChildren()[i])
-	}
+	offset += x.fastWriteField1(buf[offset:])
 	return offset
 }
 
-func (x *CategoryDetailResp) fastWriteField3(buf []byte) (offset int) {
-	if x.SpuCount == 0 {
+func (x *CategoryTreeResp) fastWriteField1(buf []byte) (offset int) {
+	if x.Tree == nil {
 		return offset
 	}
-	offset += fastpb.WriteUint32(buf[offset:], 3, x.GetSpuCount())
+	for i := range x.GetTree() {
+		offset += fastpb.WriteMessage(buf[offset:], 1, x.GetTree()[i])
+	}
 	return offset
 }
 
@@ -3112,6 +3129,7 @@ func (x *DeleteCategoryReq) Size() (n int) {
 		return n
 	}
 	n += x.sizeField1()
+	n += x.sizeField2()
 	return n
 }
 
@@ -3120,6 +3138,14 @@ func (x *DeleteCategoryReq) sizeField1() (n int) {
 		return n
 	}
 	n += fastpb.SizeUint64(1, x.GetId())
+	return n
+}
+
+func (x *DeleteCategoryReq) sizeField2() (n int) {
+	if !x.Force {
+		return n
+	}
+	n += fastpb.SizeBool(2, x.GetForce())
 	return n
 }
 
@@ -3157,39 +3183,37 @@ func (x *ListCategoriesReq) sizeField3() (n int) {
 	return n
 }
 
-func (x *CategoryDetailResp) Size() (n int) {
+func (x *GetCategoryTreeReq) Size() (n int) {
 	if x == nil {
 		return n
 	}
 	n += x.sizeField1()
-	n += x.sizeField2()
-	n += x.sizeField3()
 	return n
 }
 
-func (x *CategoryDetailResp) sizeField1() (n int) {
-	if x.Category == nil {
+func (x *GetCategoryTreeReq) sizeField1() (n int) {
+	if !x.IncludeSpuCount {
 		return n
 	}
-	n += fastpb.SizeMessage(1, x.GetCategory())
+	n += fastpb.SizeBool(1, x.GetIncludeSpuCount())
 	return n
 }
 
-func (x *CategoryDetailResp) sizeField2() (n int) {
-	if x.Children == nil {
+func (x *CategoryTreeResp) Size() (n int) {
+	if x == nil {
 		return n
 	}
-	for i := range x.GetChildren() {
-		n += fastpb.SizeMessage(2, x.GetChildren()[i])
-	}
+	n += x.sizeField1()
 	return n
 }
 
-func (x *CategoryDetailResp) sizeField3() (n int) {
-	if x.SpuCount == 0 {
+func (x *CategoryTreeResp) sizeField1() (n int) {
+	if x.Tree == nil {
 		return n
 	}
-	n += fastpb.SizeUint32(3, x.GetSpuCount())
+	for i := range x.GetTree() {
+		n += fastpb.SizeMessage(1, x.GetTree()[i])
+	}
 	return n
 }
 
@@ -3379,6 +3403,7 @@ var fieldIDToName_UpdateCategoryReq = map[int32]string{
 
 var fieldIDToName_DeleteCategoryReq = map[int32]string{
 	1: "Id",
+	2: "Force",
 }
 
 var fieldIDToName_ListCategoriesReq = map[int32]string{
@@ -3387,10 +3412,12 @@ var fieldIDToName_ListCategoriesReq = map[int32]string{
 	3: "WithSpus",
 }
 
-var fieldIDToName_CategoryDetailResp = map[int32]string{
-	1: "Category",
-	2: "Children",
-	3: "SpuCount",
+var fieldIDToName_GetCategoryTreeReq = map[int32]string{
+	1: "IncludeSpuCount",
+}
+
+var fieldIDToName_CategoryTreeResp = map[int32]string{
+	1: "Tree",
 }
 
 var fieldIDToName_CreateProductReq_SKUData = map[int32]string{
@@ -3400,4 +3427,4 @@ var fieldIDToName_CreateProductReq_SKUData = map[int32]string{
 	4: "Specs",
 }
 
-var _ = emptypb.File_google_protobuf_empty_proto
+var _ = common.File_common_proto

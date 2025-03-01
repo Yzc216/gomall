@@ -4,7 +4,7 @@ package product;
 
 option go_package = "/product";
 
-import "google/protobuf/empty.proto";
+import "common.proto";
 
 // ================== 数据结构 ==================
 message Pagination {
@@ -93,7 +93,7 @@ service ProductCatalogService {
   //商品管理
   rpc CreateProduct (CreateProductReq) returns (ProductResp);
   rpc UpdateProduct (UpdateProductReq) returns (ProductResp);
-  rpc DeleteProduct (DeleteProductReq) returns (google.protobuf.Empty);
+  rpc DeleteProduct (DeleteProductReq) returns (common.Empty);
   //商品查询
   rpc ListProducts(ListProductsReq) returns (ListProductsResp) {} ;
   rpc GetProduct(GetProductReq) returns (GetProductResp) {};
@@ -102,9 +102,9 @@ service ProductCatalogService {
   //分类管理和查询
   rpc CreateCategory(CreateCategoryReq) returns (Category);
   rpc UpdateCategory(UpdateCategoryReq) returns (Category);
-  rpc DeleteCategory(DeleteCategoryReq) returns (google.protobuf.Empty);
-  rpc ListCategories(ListCategoriesReq) returns (CategoryDetailResp);
-  //  rpc GetCategoryTree(GetCategoryTreeReq) returns (CategoryTreeResp);
+  rpc DeleteCategory(DeleteCategoryReq) returns (common.Empty);
+  rpc ListCategories(ListCategoriesReq) returns (CategoryNode);
+  rpc GetCategoryTree(GetCategoryTreeReq) returns (CategoryTreeResp);
   //  rpc ListCategoriesByParent(ListByParentReq) returns (CategoryTreeResp);
 }
 
@@ -186,6 +186,9 @@ message UpdateCategoryReq {
 
 message DeleteCategoryReq {
   uint64 id = 1 ;
+  //强制删除模式 (true)：允许删除有关联 SPU 的分类
+  //安全模式 (false)：默认模式，阻止删除有关联的分类
+  bool force = 2;
 }
 
 message ListCategoriesReq {
@@ -194,19 +197,13 @@ message ListCategoriesReq {
   bool with_spus = 3;  // 是否包含关联商品概要
 }
 
-message CategoryDetailResp {
-  Category category = 1;
-  repeated Category children = 2;  // 直接子分类
-  uint32 spu_count = 3;  // 关联商品总数
+message GetCategoryTreeReq {
+  bool include_spu_count = 1;  // 是否包含商品数量统计
 }
 
-//message GetCategoryTreeReq {
-//  bool include_spu_count = 1;  // 是否包含商品数量统计
-//}
-//
-//message CategoryTreeResp {
-//  repeated CategoryNode tree = 1;
-//}
+message CategoryTreeResp {
+  repeated CategoryNode tree = 1;
+}
 
 //message ListByParentReq {
 //  uint64 parent_id = 1;

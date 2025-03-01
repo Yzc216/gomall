@@ -4,24 +4,25 @@ package productcatalogservice
 
 import (
 	"context"
+	common "github.com/Yzc216/gomall/rpc_gen/kitex_gen/common"
 	product "github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
 	client "github.com/cloudwego/kitex/client"
 	callopt "github.com/cloudwego/kitex/client/callopt"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // Client is designed to provide IDL-compatible methods with call-option parameter for kitex framework.
 type Client interface {
 	CreateProduct(ctx context.Context, Req *product.CreateProductReq, callOptions ...callopt.Option) (r *product.ProductResp, err error)
 	UpdateProduct(ctx context.Context, Req *product.UpdateProductReq, callOptions ...callopt.Option) (r *product.ProductResp, err error)
-	DeleteProduct(ctx context.Context, Req *product.DeleteProductReq, callOptions ...callopt.Option) (r *emptypb.Empty, err error)
+	DeleteProduct(ctx context.Context, Req *product.DeleteProductReq, callOptions ...callopt.Option) (r *common.Empty, err error)
 	ListProducts(ctx context.Context, Req *product.ListProductsReq, callOptions ...callopt.Option) (r *product.ListProductsResp, err error)
 	GetProduct(ctx context.Context, Req *product.GetProductReq, callOptions ...callopt.Option) (r *product.GetProductResp, err error)
 	SearchProducts(ctx context.Context, Req *product.SearchProductsReq, callOptions ...callopt.Option) (r *product.SearchProductsResp, err error)
 	CreateCategory(ctx context.Context, Req *product.CreateCategoryReq, callOptions ...callopt.Option) (r *product.Category, err error)
 	UpdateCategory(ctx context.Context, Req *product.UpdateCategoryReq, callOptions ...callopt.Option) (r *product.Category, err error)
-	DeleteCategory(ctx context.Context, Req *product.DeleteCategoryReq, callOptions ...callopt.Option) (r *emptypb.Empty, err error)
-	ListCategories(ctx context.Context, Req *product.ListCategoriesReq, callOptions ...callopt.Option) (r *product.CategoryDetailResp, err error)
+	DeleteCategory(ctx context.Context, Req *product.DeleteCategoryReq, callOptions ...callopt.Option) (r *common.Empty, err error)
+	ListCategories(ctx context.Context, Req *product.ListCategoriesReq, callOptions ...callopt.Option) (r *product.CategoryNode, err error)
+	GetCategoryTree(ctx context.Context, Req *product.GetCategoryTreeReq, callOptions ...callopt.Option) (r *product.CategoryTreeResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -63,7 +64,7 @@ func (p *kProductCatalogServiceClient) UpdateProduct(ctx context.Context, Req *p
 	return p.kClient.UpdateProduct(ctx, Req)
 }
 
-func (p *kProductCatalogServiceClient) DeleteProduct(ctx context.Context, Req *product.DeleteProductReq, callOptions ...callopt.Option) (r *emptypb.Empty, err error) {
+func (p *kProductCatalogServiceClient) DeleteProduct(ctx context.Context, Req *product.DeleteProductReq, callOptions ...callopt.Option) (r *common.Empty, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.DeleteProduct(ctx, Req)
 }
@@ -93,12 +94,17 @@ func (p *kProductCatalogServiceClient) UpdateCategory(ctx context.Context, Req *
 	return p.kClient.UpdateCategory(ctx, Req)
 }
 
-func (p *kProductCatalogServiceClient) DeleteCategory(ctx context.Context, Req *product.DeleteCategoryReq, callOptions ...callopt.Option) (r *emptypb.Empty, err error) {
+func (p *kProductCatalogServiceClient) DeleteCategory(ctx context.Context, Req *product.DeleteCategoryReq, callOptions ...callopt.Option) (r *common.Empty, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.DeleteCategory(ctx, Req)
 }
 
-func (p *kProductCatalogServiceClient) ListCategories(ctx context.Context, Req *product.ListCategoriesReq, callOptions ...callopt.Option) (r *product.CategoryDetailResp, err error) {
+func (p *kProductCatalogServiceClient) ListCategories(ctx context.Context, Req *product.ListCategoriesReq, callOptions ...callopt.Option) (r *product.CategoryNode, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.ListCategories(ctx, Req)
+}
+
+func (p *kProductCatalogServiceClient) GetCategoryTree(ctx context.Context, Req *product.GetCategoryTreeReq, callOptions ...callopt.Option) (r *product.CategoryTreeResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.GetCategoryTree(ctx, Req)
 }

@@ -2,10 +2,10 @@ package product
 
 import (
 	"context"
+	common "github.com/Yzc216/gomall/rpc_gen/kitex_gen/common"
 	product "github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
 	"github.com/cloudwego/kitex/client/callopt"
 	"github.com/cloudwego/kitex/pkg/klog"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 func CreateProduct(ctx context.Context, req *product.CreateProductReq, callOptions ...callopt.Option) (resp *product.ProductResp, err error) {
@@ -26,7 +26,7 @@ func UpdateProduct(ctx context.Context, req *product.UpdateProductReq, callOptio
 	return resp, nil
 }
 
-func DeleteProduct(ctx context.Context, req *product.DeleteProductReq, callOptions ...callopt.Option) (resp *emptypb.Empty, err error) {
+func DeleteProduct(ctx context.Context, req *product.DeleteProductReq, callOptions ...callopt.Option) (resp *common.Empty, err error) {
 	resp, err = defaultClient.DeleteProduct(ctx, req, callOptions...)
 	if err != nil {
 		klog.CtxErrorf(ctx, "DeleteProduct call failed,err =%+v", err)
@@ -80,7 +80,7 @@ func UpdateCategory(ctx context.Context, req *product.UpdateCategoryReq, callOpt
 	return resp, nil
 }
 
-func DeleteCategory(ctx context.Context, req *product.DeleteCategoryReq, callOptions ...callopt.Option) (resp *emptypb.Empty, err error) {
+func DeleteCategory(ctx context.Context, req *product.DeleteCategoryReq, callOptions ...callopt.Option) (resp *common.Empty, err error) {
 	resp, err = defaultClient.DeleteCategory(ctx, req, callOptions...)
 	if err != nil {
 		klog.CtxErrorf(ctx, "DeleteCategory call failed,err =%+v", err)
@@ -89,10 +89,19 @@ func DeleteCategory(ctx context.Context, req *product.DeleteCategoryReq, callOpt
 	return resp, nil
 }
 
-func ListCategories(ctx context.Context, req *product.ListCategoriesReq, callOptions ...callopt.Option) (resp *product.CategoryDetailResp, err error) {
+func ListCategories(ctx context.Context, req *product.ListCategoriesReq, callOptions ...callopt.Option) (resp *product.CategoryNode, err error) {
 	resp, err = defaultClient.ListCategories(ctx, req, callOptions...)
 	if err != nil {
 		klog.CtxErrorf(ctx, "ListCategories call failed,err =%+v", err)
+		return nil, err
+	}
+	return resp, nil
+}
+
+func GetCategoryTree(ctx context.Context, req *product.GetCategoryTreeReq, callOptions ...callopt.Option) (resp *product.CategoryTreeResp, err error) {
+	resp, err = defaultClient.GetCategoryTree(ctx, req, callOptions...)
+	if err != nil {
+		klog.CtxErrorf(ctx, "GetCategoryTree call failed,err =%+v", err)
 		return nil, err
 	}
 	return resp, nil
