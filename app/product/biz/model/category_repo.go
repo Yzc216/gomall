@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Yzc216/gomall/app/product/biz/types"
 	"gorm.io/gorm"
 )
 
@@ -13,25 +14,23 @@ var (
 )
 
 type CategoryRepository interface {
-	Create(ctx context.Context, c *Category) error
-	Delete(ctx context.Context, id uint64) error
-	Update(ctx context.Context, c *Category) error
+	Create(ctx context.Context, c *Category) (*Category, error)
 
 	GetByID(ctx context.Context, id uint64) (*Category, error)
+	ExistByName(ctx context.Context, parentID uint64, name string, excludeID uint64) (bool, error)
 	GetChildren(ctx context.Context, parentID uint64) ([]*Category, error)
-
-	UpdateParentLeafStatus(ctx context.Context, parentID uint64, isLeaf bool) error
 	CountChildren(ctx context.Context, parentID uint64) (int64, error)
 	GetMaxSort(ctx context.Context, parentID uint64) (int, error)
-	CheckNameExists(ctx context.Context, parentID uint64, name string) (bool, error)
+	GetAll(ctx context.Context) ([]*Category, error)
+	GetSPUCountsByCategoryIDs(ctx context.Context, ids []uint64) (map[uint64]uint32, error)
+	GetCategoryTreeByID(ctx context.Context, rootID uint64, withSPUs bool) ([]*Category, error)
 
-	//// 基础CRUD
-	//Create(ctx context.Context, category *Category) error
-	//Update(ctx context.Context, category *Category) error
-	//Delete(ctx context.Context, id uint64) error
-	//GetByID(ctx context.Context, id uint64) (*Category, error)
-	//ExistByName(ctx context.Context, name string) (bool, error)
-	//
+	UpdatePartial(ctx context.Context, id uint64, updates map[string]interface{}) error
+	UpdateParentLeafStatus(ctx context.Context, parentID uint64, isLeaf bool) error
+	UpdateLeafStatusWithTx(tx *gorm.DB, parentID uint64) error
+
+	DeleteCascade(ctx context.Context, id uint64, force bool) error
+
 	//// 树形结构操作
 	//GetChildren(ctx context.Context, parentID uint64) ([]*Category, error)
 	//GetAncestors(ctx context.Context, id uint64) ([]*Category, error)    // 获取所有祖先节点
@@ -60,15 +59,15 @@ func NewCategoryRepo(db *gorm.DB) *CategoryRepo {
 }
 
 // 创建分类（需在事务中调用）
-func (r *CategoryRepo) Create(ctx context.Context, c *Category) error {
+func (r *CategoryRepo) Create(ctx context.Context, c *Category) (*Category, error) {
 	// 自动计算层级
 	if c.ParentID != 0 {
 		parent, err := r.GetByID(ctx, c.ParentID)
 		if err != nil {
-			return fmt.Errorf("parent category not found: %w", err)
+			return nil, fmt.Errorf("parent category not found: %w", err)
 		}
 		if parent.Level >= 5 { // 限制最多5级分类
-			return fmt.Errorf("maximum category depth (5) exceeded")
+			return nil, fmt.Errorf("maximum category depth (5) exceeded")
 		}
 		c.Level = parent.Level + 1
 	} else {
@@ -79,12 +78,17 @@ func (r *CategoryRepo) Create(ctx context.Context, c *Category) error {
 	if c.Sort == 0 {
 		maxSort, err := r.GetMaxSort(ctx, c.ParentID)
 		if err != nil {
-			return fmt.Errorf("failed to get max sort: %w", err)
+			return nil, fmt.Errorf("failed to get max sort: %w", err)
 		}
 		c.Sort = maxSort + 1
 	}
 
-	return r.DB.WithContext(ctx).Model(&c).Create(c).Error
+	err := r.DB.WithContext(ctx).Model(&c).Create(c).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to create category: %w", err)
+	}
+
+	return c, nil
 }
 
 // 根据ID获取分类
@@ -137,23 +141,151 @@ func (r *CategoryRepo) GetMaxSort(ctx context.Context, parentID uint64) (int, er
 }
 
 // 检查名称是否重复
-func (r *CategoryRepo) CheckNameExists(ctx context.Context, parentID uint64, name string) (bool, error) {
+func (r *CategoryRepo) ExistByName(ctx context.Context, parentID uint64, name string, excludeID uint64,
+) (bool, error) {
 	var count int64
-	err := r.DB.WithContext(ctx).
+	query := r.DB.WithContext(ctx).
 		Model(&Category{}).
-		Where("parent_id = ? AND name = ?", parentID, name).
-		Count(&count).Error
-	return count > 0, err
+		Where("name = ? AND parent_id = ?", name, parentID)
+
+	if excludeID > 0 {
+		query = query.Where("id <> ?", excludeID)
+	}
+
+	if err := query.Count(&count).Error; err != nil {
+		return false, fmt.Errorf("check name exists failed: %w", err)
+	}
+	return count > 0, nil
 }
 
-// 删除分类（需在事务中调用）
-func (r *CategoryRepo) Delete(ctx context.Context, id uint64) error {
-	return r.DB.WithContext(ctx).Delete(&Category{}, id).Error
+// UpdatePartial 实现部分更新（只更新非零值字段）
+func (r *CategoryRepo) UpdatePartial(ctx context.Context, id uint64, updates map[string]interface{}) error {
+	result := r.DB.WithContext(ctx).
+		Model(&Category{ID: id}).
+		Updates(updates)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return types.ErrNoRowsAffected
+	}
+	return nil
 }
 
-// 更新分类信息
-func (r *CategoryRepo) Update(ctx context.Context, c *Category) error {
-	return r.DB.WithContext(ctx).Save(c).Error
+// DeleteCascade 级联删除（带事务）
+func (r *CategoryRepo) DeleteCascade(ctx context.Context, id uint64, force bool) error {
+	return r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 1. 检查关联SPUs
+		var spuCount int64
+		if err := tx.Model(&SPU{}).
+			Joins("JOIN spu_categories ON spu_categories.spu_id = spu.id").
+			Where("spu_categories.category_id = ?", id).
+			Count(&spuCount).Error; err != nil {
+			return err
+		}
+		if spuCount > 0 && !force {
+			return types.ErrAssociatedSPUs
+		}
+
+		// 2. 解除SPU关联
+		if err := tx.Exec(
+			"DELETE FROM spu_categories WHERE category_id = ?", id,
+		).Error; err != nil {
+			return err
+		}
+
+		// 3. 获取父ID用于后续状态更新
+		var parentID uint64
+		if err := tx.Model(&Category{}).
+			Select("parent_id").
+			Where("id = ?", id).
+			Scan(&parentID).Error; err != nil {
+			return err
+		}
+
+		// 4. 执行删除
+		if err := tx.Delete(&Category{}, id).Error; err != nil {
+			return err
+		}
+
+		// 5. 更新父级叶子状态
+		if parentID > 0 {
+			return r.UpdateLeafStatusWithTx(tx, parentID)
+		}
+		return nil
+	})
+}
+
+// UpdateLeafStatus 更新父分类叶子状态
+func (r *CategoryRepo) UpdateLeafStatusWithTx(tx *gorm.DB, parentID uint64) error {
+	var childCount int64
+	if err := tx.Model(&Category{}).
+		Where("parent_id = ?", parentID).
+		Count(&childCount).Error; err != nil {
+		return err
+	}
+
+	isLeaf := childCount == 0
+	return tx.Model(&Category{}).
+		Where("id = ?", parentID).
+		Update("is_leaf", isLeaf).Error
+}
+
+func (r *CategoryRepo) GetAll(ctx context.Context) ([]*Category, error) {
+	var categories []*Category
+	if err := r.DB.WithContext(ctx).Find(&categories).Error; err != nil {
+		return nil, fmt.Errorf("failed to get all categories: %w", err)
+	}
+	return categories, nil
+}
+
+func (r *CategoryRepo) GetSPUCountsByCategoryIDs(ctx context.Context, ids []uint64) (map[uint64]uint32, error) {
+	type result struct {
+		CategoryID uint64 `gorm:"column:category_id"`
+		Count      int    `gorm:"column:count"`
+	}
+
+	var results []result
+	err := r.DB.WithContext(ctx).
+		Table("spu_categories").
+		Select("category_id, COUNT(spu_id) as count").
+		Where("category_id IN (?)", ids).
+		Group("category_id").
+		Scan(&results).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get spu counts: %w", err)
+	}
+
+	countMap := make(map[uint64]uint32)
+	for _, res := range results {
+		countMap[res.CategoryID] = uint32(res.Count)
+	}
+	return countMap, nil
+}
+
+func (r *CategoryRepo) GetCategoryTreeByID(ctx context.Context, rootID uint64, withSPUs bool) ([]*Category, error) {
+	var categories []*Category
+	query := r.DB.WithContext(ctx)
+
+	// 获取所有相关分类（单次查询获取整棵树）
+	if rootID == 0 {
+		query = query.Where("parent_id = 0")
+	} else {
+		query = query.Where("id = ? OR parent_id = ?", rootID, rootID)
+	}
+
+	if withSPUs {
+		query = query.Preload("SPUs")
+	}
+
+	if err := query.Find(&categories).Error; err != nil {
+		return nil, errors.New("failed to get categories")
+	}
+
+	return categories, nil
 }
 
 //// 基础CRUD操作

@@ -30,11 +30,12 @@ func (s *CreateCategoryService) Run(req *product.CreateCategoryReq) (resp *produ
 	}
 
 	// 名称冲突检查
-	exists, err := s.repo.CheckNameExists(s.ctx, req.ParentId, req.Name)
+	exists, err := s.repo.ExistByName(s.ctx, req.ParentId, req.Name, 0)
 	if err != nil || exists {
 		return nil, fmt.Errorf("category name must be unique under parent")
 	}
 
+	var c *model.Category
 	err = s.repo.DB.Transaction(func(tx *gorm.DB) error {
 		txRepo := model.NewCategoryRepo(tx)
 
@@ -42,11 +43,13 @@ func (s *CreateCategoryService) Run(req *product.CreateCategoryReq) (resp *produ
 			Name:        req.Name,
 			Description: req.Description,
 			ParentID:    req.ParentId,
-			Image:       *req.ImageUrl,
+		}
+		if req.ImageUrl != nil {
+			category.Image = *req.ImageUrl
 		}
 
 		// 创建分类
-		if err = txRepo.Create(s.ctx, category); err != nil {
+		if c, err = txRepo.Create(s.ctx, category); err != nil {
 			return err
 		}
 		// 更新父节点状态
@@ -59,7 +62,16 @@ func (s *CreateCategoryService) Run(req *product.CreateCategoryReq) (resp *produ
 		return nil, err
 	}
 
-	return &product.Category{}, nil
+	return &product.Category{
+		Id:          c.ID,
+		Name:        c.Name,
+		Description: c.Description,
+		ParentId:    c.ParentID,
+		Level:       int32(c.Level),
+		IsLeaf:      c.IsLeaf,
+		Sort:        int32(c.Sort),
+		ImageUrl:    c.Image,
+	}, nil
 
 }
 
@@ -70,8 +82,8 @@ func (s *CreateCategoryService) Validate(req *product.CreateCategoryReq) error {
 	if req.Description == "" {
 		return fmt.Errorf("category description is required")
 	}
-	if req.ParentId < 0 || req.ParentId > 5 {
-		return fmt.Errorf("category parent id must be between 0 and 5")
+	if req.ParentId < 0 {
+		return fmt.Errorf("category parent id is invalid")
 	}
 	return nil
 }
