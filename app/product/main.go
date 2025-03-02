@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Yzc216/gomall/app/product/biz/dal"
+	"github.com/Yzc216/gomall/app/product/infra/mq"
 	"github.com/Yzc216/gomall/common/mtl"
 	"github.com/Yzc216/gomall/common/serversuite"
 	"github.com/joho/godotenv"
@@ -31,6 +32,7 @@ func main() {
 	//数据库初始化
 	dal.Init()
 
+	mq.Init()
 	opts := kitexInit()
 
 	svr := productcatalogservice.NewServer(new(ProductCatalogServiceImpl), opts...)

@@ -139,6 +139,18 @@ func (r *CategoryRepo) GetMaxSort(ctx context.Context, parentID uint64) (int, er
 		Scan(&maxSort).Error
 	return maxSort, err
 }
+func (r *CategoryRepo) ExistByIDs(ctx context.Context, id []uint64) (bool, error) {
+	var count int64
+	query := r.DB.WithContext(ctx).
+		Model(&Category{}).
+		Where("id IN ? ", id)
+
+	if err := query.Count(&count).Error; err != nil {
+		return false, fmt.Errorf("check name exists failed: %w", err)
+	}
+
+	return count == int64(len(id)), nil
+}
 
 // 检查名称是否重复
 func (r *CategoryRepo) ExistByName(ctx context.Context, parentID uint64, name string, excludeID uint64,

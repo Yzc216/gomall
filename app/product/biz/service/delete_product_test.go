@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	product "github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
+	"testing"
 )
 
 func TestDeleteProduct_Run(t *testing.T) {

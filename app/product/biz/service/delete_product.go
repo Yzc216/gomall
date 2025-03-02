@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
+	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/common"
 	product "github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 type DeleteProductService struct {
@@ -14,7 +14,7 @@ func NewDeleteProductService(ctx context.Context) *DeleteProductService {
 }
 
 // Run create note info
-func (s *DeleteProductService) Run(req *product.DeleteProductReq) (resp *emptypb.Empty, err error) {
+func (s *DeleteProductService) Run(req *product.DeleteProductReq) (resp *common.Empty, err error) {
 	// Finish your business logic.
 
 	return

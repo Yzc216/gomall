@@ -6,7 +6,7 @@ import (
 )
 
 type SKU struct {
-	ID        uint64         `gorm:"primaryKey;comment:SKU ID"`
+	ID        uint64         `gorm:"primaryKey;autoIncrement;comment:SKU ID"`
 	SpuID     uint64         `gorm:"index:idx_spu_active,priority:1;not null;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;comment:关联SPU ID"`
 	SpuTitle  string         `gorm:"type:varchar(255);comment:关联SPU名称（冗余）"`
 	Title     string         `gorm:"type:varchar(255);not null;comment:SKU标题"`

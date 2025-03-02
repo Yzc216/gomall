@@ -78,18 +78,15 @@ type Media struct {
 	Video      string
 }
 type SPURepo struct {
-	ctx context.Context
-	db  *gorm.DB
+	db *gorm.DB
 }
 
-func NewSPURepo(ctx context.Context, db *gorm.DB) *SPURepo {
+func NewSPURepo(db *gorm.DB) *SPURepo {
 	return &SPURepo{
-		ctx: ctx,
-		db:  db,
+		db: db,
 	}
 }
 
-// 基础单条操作
 func (r *SPURepo) Create(ctx context.Context, spu *SPU) error {
 	exist, err := r.ExistByTitle(ctx, spu.Title)
 	if err != nil {
@@ -100,22 +97,44 @@ func (r *SPURepo) Create(ctx context.Context, spu *SPU) error {
 	}
 
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(spu).Error; err != nil {
-			if errors.Is(err, gorm.ErrDuplicatedKey) {
-				return types.ErrSPUTitleExists
-			}
-			return fmt.Errorf("create SPU failed: %w", err)
+		// 1. 创建SPU基础信息
+		if err := tx.Create(&spu).Error; err != nil {
+			return fmt.Errorf("创建SPU失败: %w", err)
 		}
 
-		// 处理分类关联
+		// 2. 处理分类关联（多对多）
 		if len(spu.Categories) > 0 {
-			if err := tx.Model(spu).Association("Categories").Append(spu.Categories); err != nil {
-				return fmt.Errorf("add categories failed: %w", err)
+			// 使用关联模式创建关系
+			if err := tx.Model(&spu).Association("Categories").Replace(spu.Categories); err != nil {
+				return fmt.Errorf("创建分类关联失败: %w", err)
 			}
 		}
+
 		return nil
 	})
 }
+
+// 基础单条操作
+//func (r *SPURepo) Create(ctx context.Context, spu *SPU) error {
+//
+//
+//	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+//		if err := tx.Create(spu).Error; err != nil {
+//			if errors.Is(err, gorm.ErrDuplicatedKey) {
+//				return types.ErrSPUTitleExists
+//			}
+//			return fmt.Errorf("create SPU failed: %w", err)
+//		}
+//
+//		// 处理分类关联
+//		if len(spu.Categories) > 0 {
+//			if err := tx.Model(spu).Association("Categories").Append(spu.Categories); err != nil {
+//				return fmt.Errorf("add categories failed: %w", err)
+//			}
+//		}
+//		return nil
+//	})
+//}
 
 func (r *SPURepo) Update(ctx context.Context, spu *SPU) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
