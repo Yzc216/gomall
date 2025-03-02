@@ -9,7 +9,7 @@ import (
 type Cart struct {
 	gorm.Model
 	UserId    uint64 `gorm:"type:bigint(11);not null;index:idx_user_id"`
-	ProductId uint32 `gorm:"type:int(11);not null;"`
+	ProductId uint64 `gorm:"type:bigint(11);not null;"`
 	Qty       uint32 `gorm:"type:int(11);not null;"`
 }
 
