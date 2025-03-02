@@ -17,7 +17,7 @@ service ProductService {
 }
 
 message ProductReq {
-  uint32 id = 1 [ (api.query) = "id"];
+  uint64 id = 1 [(api.query) = "id"];
 }
 
 message SearchProductsReq {
