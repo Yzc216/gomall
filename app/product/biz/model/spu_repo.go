@@ -229,12 +229,16 @@ func (r *SPURepo) List(ctx context.Context, filter SPUFilter, page Pagination) (
 	if err := query.Model(&SPU{}).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
+	fmt.Println(total)
+
+	if page.Page != 0 && page.PageSize != 0 {
+		query = query.Offset(page.Offset()).Limit(page.PageSize)
+	}
 
 	var spus []*SPU
-	err := query.Scopes(r.paginate(page)).
-		Preload("SKUs", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id, spu_id, price, stock").Where("is_active = ?", true)
-		}).
+	err := query.Preload("SKUs", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, spu_id, price, stock").Where("is_active = ?", true)
+	}).
 		Find(&spus).Error
 
 	return spus, total, err
@@ -380,7 +384,7 @@ func (r *SPURepo) buildListQuery(ctx context.Context, filter SPUFilter) *gorm.DB
 
 	// 关键词搜索（标题+副标题）
 	if keywords := strings.TrimSpace(filter.Keyword); keywords != "" {
-		fmt.Println("keyword")
+		fmt.Println(keywords)
 		query.Where("title LIKE ? OR sub_title LIKE ?",
 			"%"+keywords+"%", "%"+keywords+"%")
 	}
