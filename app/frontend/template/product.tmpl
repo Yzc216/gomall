@@ -137,15 +137,17 @@
 
                     <!-- 购买表单 -->
                     <form action="/cart" method="post" class="mt-4">
-                        <input type="hidden" name="skuId" value="{{ (index .SPU.Skus 0).Id }}">
+                        <input type="hidden" name="productId" value="{{ .SPU.Id }}">
+{{/*                        <input type="hidden" name="skuId" value="{{ (index .SPU.Skus 0).Id }}">*/}}
 
                         <div class="row g-3 align-items-center">
                             <div class="col-auto">
-                                <label class="form-label">数量</label>
+                                <label for="productNum" class="form-label">数量</label>
                             </div>
                             <div class="col-4">
                                 <input type="number"
-                                       name="quantity"
+                                       id="productNum"
+                                       name="productNum"
                                        class="form-control"
                                        value="1"
                                        min="1"
