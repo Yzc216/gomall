@@ -7,6 +7,7 @@ import (
 	"github.com/Yzc216/gomall/app/product/biz/types"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"strings"
 	"time"
 )
 
@@ -61,10 +62,10 @@ type SPURepository interface {
 }
 
 type SPUFilter struct {
-	ShopID      []uint64
-	BrandID     []uint64
-	CategoryID  []uint64
-	Status      []int8
+	ShopID      uint64
+	Brand       string
+	CategoryID  uint64
+	Status      int8
 	MinPrice    float64 // 基于SKU最低价
 	MaxPrice    float64
 	CreateStart time.Time
@@ -222,7 +223,7 @@ func (r *SPURepo) ExistByTitle(ctx context.Context, title string) (bool, error) 
 // 复杂查询
 // --------------------------------------------------
 func (r *SPURepo) List(ctx context.Context, filter SPUFilter, page Pagination) ([]*SPU, int64, error) {
-	query := r.buildListQuery(filter)
+	query := r.buildListQuery(ctx, filter)
 
 	var total int64
 	if err := query.Model(&SPU{}).Count(&total).Error; err != nil {
@@ -374,47 +375,76 @@ func (r *SPURepo) UpdateStatus(ctx context.Context, spuID uint64, status int8) e
 
 // 私有辅助方法
 // --------------------------------------------------
-func (r *SPURepo) buildListQuery(filter SPUFilter) *gorm.DB {
-	query := r.db.Model(&SPU{})
+func (r *SPURepo) buildListQuery(ctx context.Context, filter SPUFilter) *gorm.DB {
+	query := r.db.WithContext(ctx).Model(&SPU{})
 
-	if len(filter.ShopID) > 0 {
-		query = query.Where("shop_id IN ?", filter.ShopID)
+	// 关键词搜索（标题+副标题）
+	if keywords := strings.TrimSpace(filter.Keyword); keywords != "" {
+		fmt.Println("keyword")
+		query.Where("title LIKE ? OR sub_title LIKE ?",
+			"%"+keywords+"%", "%"+keywords+"%")
 	}
-	if len(filter.BrandID) > 0 {
-		query = query.Where("brand_id IN ?", filter.BrandID)
+
+	// 分类过滤（通过关联表）
+	if filter.CategoryID > 0 {
+		query.Joins("JOIN spu_categories ON spu_categories.spu_id = spu.id").
+			Where("spu_categories.category_id = ?", filter.CategoryID)
 	}
-	if len(filter.Status) > 0 {
-		query = query.Where("status IN ?", filter.Status)
+
+	// 品牌过滤
+	if filter.Brand != "" {
+		query.Where("brand = ?", filter.Brand)
 	}
-	if !filter.CreateStart.IsZero() {
-		query = query.Where("created_at >= ?", filter.CreateStart)
-	}
-	if !filter.CreateEnd.IsZero() {
-		query = query.Where("created_at <= ?", filter.CreateEnd)
-	}
-	if filter.Keyword != "" {
-		query = query.Where("title LIKE ?", "%"+filter.Keyword+"%")
-	}
+
+	// 价格区间（通过SKU）
 	if filter.MinPrice > 0 || filter.MaxPrice > 0 {
-		query = query.Joins(
-			"INNER JOIN (SELECT spu_id, MIN(price) AS min_price FROM skus GROUP BY spu_id) s ON spus.id = s.spu_id").
-			Where("s.min_price BETWEEN ? AND ?", filter.MinPrice, filter.MaxPrice)
+		query.Joins("INNER JOIN (SELECT spu_id, MIN(price) as min_price FROM skus GROUP BY spu_id) s ON s.spu_id = spu.id")
+		if filter.MinPrice > 0 {
+			query.Where("s.min_price >= ?", filter.MinPrice)
+		}
+		if filter.MaxPrice > 0 {
+			query.Where("s.min_price <= ?", filter.MaxPrice)
+		}
 	}
-	if len(filter.CategoryID) > 0 {
-		query = query.Joins(
-			"JOIN spu_categories ON spus.id = spu_categories.spu_id").
-			Where("spu_categories.category_id IN ?", filter.CategoryID)
-	}
+
+	//if len(filter.ShopID) > 0 {
+	//	query = query.Where("shop_id IN ?", filter.ShopID)
+	//}
+	//if len(filter.BrandID) > 0 {
+	//	query = query.Where("brand_id IN ?", filter.BrandID)
+	//}
+	//if len(filter.Status) > 0 {
+	//	query = query.Where("status IN ?", filter.Status)
+	//}
+	//if !filter.CreateStart.IsZero() {
+	//	query = query.Where("created_at >= ?", filter.CreateStart)
+	//}
+	//if !filter.CreateEnd.IsZero() {
+	//	query = query.Where("created_at <= ?", filter.CreateEnd)
+	//}
+	//if filter.Keyword != "" {
+	//	query = query.Where("title LIKE ?", "%"+filter.Keyword+"%")
+	//}
+	//if filter.MinPrice > 0 || filter.MaxPrice > 0 {
+	//	query = query.Joins(
+	//		"INNER JOIN (SELECT spu_id, MIN(price) AS min_price FROM skus GROUP BY spu_id) s ON spus.id = s.spu_id").
+	//		Where("s.min_price BETWEEN ? AND ?", filter.MinPrice, filter.MaxPrice)
+	//}
+	//if len(filter.CategoryID) > 0 {
+	//	query = query.Joins(
+	//		"JOIN spu_categories ON spus.id = spu_categories.spu_id").
+	//		Where("spu_categories.category_id IN ?", filter.CategoryID)
+	//}
 
 	// 排序处理
-	switch filter.OrderBy {
-	case "sales_desc":
-		query = query.Order("sales DESC")
-	case "price_asc":
-		query = query.Order("s.min_price ASC")
-	default:
-		query = query.Order("created_at DESC")
-	}
+	//switch filter.OrderBy {
+	//case "sales_desc":
+	//	query = query.Order("sales DESC")
+	//case "price_asc":
+	//	query = query.Order("s.min_price ASC")
+	//default:
+	//	query = query.Order("created_at DESC")
+	//}
 
 	return query
 }

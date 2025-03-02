@@ -177,11 +177,6 @@ func (x *SPU) FastRead(buf []byte, _type int8, number int32) (offset int, err er
 		if err != nil {
 			goto ReadFieldError
 		}
-	case 4:
-		offset, err = x.fastReadField4(buf, _type)
-		if err != nil {
-			goto ReadFieldError
-		}
 	case 5:
 		offset, err = x.fastReadField5(buf, _type)
 		if err != nil {
@@ -227,16 +222,6 @@ func (x *SPU) fastReadField3(buf []byte, _type int8) (offset int, err error) {
 		return offset, err
 	}
 	x.Media = &v
-	return offset, nil
-}
-
-func (x *SPU) fastReadField4(buf []byte, _type int8) (offset int, err error) {
-	var v int32
-	v, offset, err = fastpb.ReadInt32(buf, _type)
-	if err != nil {
-		return offset, err
-	}
-	x.Status = SPUStatus(v)
 	return offset, nil
 }
 
@@ -1495,7 +1480,6 @@ func (x *SPU) FastWrite(buf []byte) (offset int) {
 	offset += x.fastWriteField1(buf[offset:])
 	offset += x.fastWriteField2(buf[offset:])
 	offset += x.fastWriteField3(buf[offset:])
-	offset += x.fastWriteField4(buf[offset:])
 	offset += x.fastWriteField5(buf[offset:])
 	offset += x.fastWriteField6(buf[offset:])
 	return offset
@@ -1522,14 +1506,6 @@ func (x *SPU) fastWriteField3(buf []byte) (offset int) {
 		return offset
 	}
 	offset += fastpb.WriteMessage(buf[offset:], 3, x.GetMedia())
-	return offset
-}
-
-func (x *SPU) fastWriteField4(buf []byte) (offset int) {
-	if x.Status == 0 {
-		return offset
-	}
-	offset += fastpb.WriteInt32(buf[offset:], 4, int32(x.GetStatus()))
 	return offset
 }
 
@@ -2441,7 +2417,6 @@ func (x *SPU) Size() (n int) {
 	n += x.sizeField1()
 	n += x.sizeField2()
 	n += x.sizeField3()
-	n += x.sizeField4()
 	n += x.sizeField5()
 	n += x.sizeField6()
 	return n
@@ -2468,14 +2443,6 @@ func (x *SPU) sizeField3() (n int) {
 		return n
 	}
 	n += fastpb.SizeMessage(3, x.GetMedia())
-	return n
-}
-
-func (x *SPU) sizeField4() (n int) {
-	if x.Status == 0 {
-		return n
-	}
-	n += fastpb.SizeInt32(4, int32(x.GetStatus()))
 	return n
 }
 
@@ -3288,7 +3255,6 @@ var fieldIDToName_SPU = map[int32]string{
 	1: "Id",
 	2: "BasicInfo",
 	3: "Media",
-	4: "Status",
 	5: "CategoryRelation",
 	6: "Skus",
 }

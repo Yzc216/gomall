@@ -27,7 +27,6 @@ message SPU {
   uint64 id = 1;
   SPUBasicInfo basic_info = 2;
   SPUMedia media = 3;
-  SPUStatus status = 4;
   CategoryRelation category_relation = 5;
   repeated SKU skus = 6;
 }
