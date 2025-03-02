@@ -18,18 +18,23 @@ func NewListProductsService(ctx context.Context) *ListProductsService {
 
 // Run create note info
 func (s *ListProductsService) Run(req *product.ListProductsReq) (resp *product.ListProductsResp, err error) {
-	filter := model.SPUFilter{
-		Brand:      req.Filter.Brand,
-		CategoryID: req.Filter.CategoryId,
-		Status:     int8(req.Filter.Status),
-		MinPrice:   req.Filter.MinPrice,
-		MaxPrice:   req.Filter.MaxPrice,
-		Keyword:    req.Filter.Keywords,
+	var filter = &model.SPUFilter{}
+	var page = &model.Pagination{}
+	if req.Filter != nil {
+		filter = &model.SPUFilter{
+			Brand:      req.Filter.Brand,
+			CategoryID: req.Filter.CategoryId,
+			Status:     int8(req.Filter.Status),
+			MinPrice:   req.Filter.MinPrice,
+			MaxPrice:   req.Filter.MaxPrice,
+			Keyword:    req.Filter.Keywords,
+		}
+		page = &model.Pagination{
+			Page:     int(req.Filter.Pagination.Page),
+			PageSize: int(req.Filter.Pagination.PageSize),
+		}
 	}
-	page := model.Pagination{
-		Page:     int(req.Filter.Pagination.Page),
-		PageSize: int(req.Filter.Pagination.PageSize),
-	}
+
 	products, _, err := s.repo.List(s.ctx, filter, page)
 	if err != nil {
 		return nil, err

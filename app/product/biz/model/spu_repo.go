@@ -26,8 +26,9 @@ type SPURepository interface {
 	ExistByTitle(ctx context.Context, title string) (bool, error)
 
 	// 复杂查询
-	List(ctx context.Context, filter SPUFilter, page Pagination) ([]*SPU, int64, error)
+	List(ctx context.Context, filter *SPUFilter, page *Pagination) ([]*SPU, int64, error)
 	FullTextSearch(ctx context.Context, keyword string, page Pagination) ([]*SPU, int64, error)
+	GetAll(ctx context.Context) ([]*SPU, error)
 	//GetInventoryAlert(ctx context.Context,spuID uint64) (int, error) // 库存预警数量
 
 	// 关联数据操作
@@ -191,6 +192,18 @@ func (r *SPURepo) GetByID(ctx context.Context, id uint64) (*SPU, error) {
 	return &spu, err
 }
 
+func (r *SPURepo) GetAll(ctx context.Context) ([]*SPU, error) {
+	var spu []*SPU
+	err := r.db.WithContext(ctx).
+		Preload("SKUs").
+		Preload("Categories").
+		Find(&spu).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, types.ErrSPUNotFound
+	}
+	return spu, err
+}
+
 func (r *SPURepo) GetByName(ctx context.Context, name string) (*SPU, error) {
 	var spu SPU
 	err := r.db.WithContext(ctx).
@@ -222,14 +235,13 @@ func (r *SPURepo) ExistByTitle(ctx context.Context, title string) (bool, error) 
 
 // 复杂查询
 // --------------------------------------------------
-func (r *SPURepo) List(ctx context.Context, filter SPUFilter, page Pagination) ([]*SPU, int64, error) {
+func (r *SPURepo) List(ctx context.Context, filter *SPUFilter, page *Pagination) ([]*SPU, int64, error) {
 	query := r.buildListQuery(ctx, filter)
 
 	var total int64
 	if err := query.Model(&SPU{}).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	fmt.Println(total)
 
 	if page.Page != 0 && page.PageSize != 0 {
 		query = query.Offset(page.Offset()).Limit(page.PageSize)
@@ -379,9 +391,8 @@ func (r *SPURepo) UpdateStatus(ctx context.Context, spuID uint64, status int8) e
 
 // 私有辅助方法
 // --------------------------------------------------
-func (r *SPURepo) buildListQuery(ctx context.Context, filter SPUFilter) *gorm.DB {
+func (r *SPURepo) buildListQuery(ctx context.Context, filter *SPUFilter) *gorm.DB {
 	query := r.db.WithContext(ctx).Model(&SPU{})
-
 	// 关键词搜索（标题+副标题）
 	if keywords := strings.TrimSpace(filter.Keyword); keywords != "" {
 		fmt.Println(keywords)

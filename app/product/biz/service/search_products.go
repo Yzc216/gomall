@@ -18,10 +18,10 @@ func NewSearchProductsService(ctx context.Context) *SearchProductsService {
 
 // Run create note info
 func (s *SearchProductsService) Run(req *product.SearchProductsReq) (resp *product.SearchProductsResp, err error) {
-	filter := model.SPUFilter{
+	filter := &model.SPUFilter{
 		Keyword: req.Query,
 	}
-	page := model.Pagination{
+	page := &model.Pagination{
 		//Page:     1,
 		//PageSize: 20,
 	}
@@ -30,7 +30,7 @@ func (s *SearchProductsService) Run(req *product.SearchProductsReq) (resp *produ
 		return nil, err
 	}
 	fmt.Println(products)
-	SPUs := []*product.SPU{}
+	var SPUs []*product.SPU
 	for _, v := range products {
 		spu, err := convertToProtoSPU(v)
 		if err != nil {
