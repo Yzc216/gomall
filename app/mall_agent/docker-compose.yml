@@ -1,0 +1,91 @@
+version: '3'
+
+services:
+  mall_agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - REDIS_ADDR=redis:6379
+      - ETCD_ENDPOINTS=etcd:2379
+    depends_on:
+      - redis
+      - etcd
+      - product-service
+      - cart-service
+      - order-service
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - mall-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - mall-network
+    restart: unless-stopped
+
+  etcd:
+    image: bitnami/etcd:latest
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+    ports:
+      - "2379:2379"
+    volumes:
+      - etcd-data:/bitnami/etcd
+    networks:
+      - mall-network
+    restart: unless-stopped
+
+  product-service:
+    image: mall/product-service:latest
+    ports:
+      - "9000:9000"
+    environment:
+      - ETCD_ENDPOINTS=etcd:2379
+    depends_on:
+      - etcd
+    networks:
+      - mall-network
+    restart: unless-stopped
+
+  cart-service:
+    image: mall/cart-service:latest
+    ports:
+      - "9001:9001"
+    environment:
+      - ETCD_ENDPOINTS=etcd:2379
+    depends_on:
+      - etcd
+    networks:
+      - mall-network
+    restart: unless-stopped
+
+  order-service:
+    image: mall/order-service:latest
+    ports:
+      - "9002:9002"
+    environment:
+      - ETCD_ENDPOINTS=etcd:2379
+    depends_on:
+      - etcd
+    networks:
+      - mall-network
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+  etcd-data:
+
+networks:
+  mall-network:
+    driver: bridge
