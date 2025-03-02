@@ -224,7 +224,7 @@ func (x *ProductCreatedEvent) fastReadField2(buf []byte, _type int8) (offset int
 }
 
 func (x *ProductCreatedEvent) fastReadField3(buf []byte, _type int8) (offset int, err error) {
-	x.InitialStock, offset, err = fastpb.ReadInt32(buf, _type)
+	x.InitialStock, offset, err = fastpb.ReadUint32(buf, _type)
 	return offset, err
 }
 
@@ -442,7 +442,7 @@ func (x *ProductCreatedEvent) fastWriteField3(buf []byte) (offset int) {
 	if x.InitialStock == 0 {
 		return offset
 	}
-	offset += fastpb.WriteInt32(buf[offset:], 3, x.GetInitialStock())
+	offset += fastpb.WriteUint32(buf[offset:], 3, x.GetInitialStock())
 	return offset
 }
 
@@ -643,7 +643,7 @@ func (x *ProductCreatedEvent) sizeField3() (n int) {
 	if x.InitialStock == 0 {
 		return n
 	}
-	n += fastpb.SizeInt32(3, x.GetInitialStock())
+	n += fastpb.SizeUint32(3, x.GetInitialStock())
 	return n
 }
 

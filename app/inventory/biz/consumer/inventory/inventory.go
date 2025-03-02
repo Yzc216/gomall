@@ -26,8 +26,8 @@ func ConsumerInit() {
 		ctx := context.Background()
 		inv := &model.Inventory{
 			SkuID:     req.SkuId,
-			Total:     uint32(req.InitialStock),
-			Available: req.InitialStock,
+			Total:     req.InitialStock,
+			Available: int32(req.InitialStock),
 			Locked:    0,
 			Version:   1,
 		}

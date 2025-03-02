@@ -326,7 +326,7 @@ func (x *SPUBasicInfo) fastReadField4(buf []byte, _type int8) (offset int, err e
 }
 
 func (x *SPUBasicInfo) fastReadField5(buf []byte, _type int8) (offset int, err error) {
-	x.BrandId, offset, err = fastpb.ReadUint64(buf, _type)
+	x.Brand, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
@@ -1597,10 +1597,10 @@ func (x *SPUBasicInfo) fastWriteField4(buf []byte) (offset int) {
 }
 
 func (x *SPUBasicInfo) fastWriteField5(buf []byte) (offset int) {
-	if x.BrandId == 0 {
+	if x.Brand == "" {
 		return offset
 	}
-	offset += fastpb.WriteUint64(buf[offset:], 5, x.GetBrandId())
+	offset += fastpb.WriteString(buf[offset:], 5, x.GetBrand())
 	return offset
 }
 
@@ -2543,10 +2543,10 @@ func (x *SPUBasicInfo) sizeField4() (n int) {
 }
 
 func (x *SPUBasicInfo) sizeField5() (n int) {
-	if x.BrandId == 0 {
+	if x.Brand == "" {
 		return n
 	}
-	n += fastpb.SizeUint64(5, x.GetBrandId())
+	n += fastpb.SizeString(5, x.GetBrand())
 	return n
 }
 
@@ -3298,7 +3298,7 @@ var fieldIDToName_SPUBasicInfo = map[int32]string{
 	2: "SubTitle",
 	3: "Description",
 	4: "ShopId",
-	5: "BrandId",
+	5: "Brand",
 	6: "Status",
 }
 

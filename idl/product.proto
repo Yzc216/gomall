@@ -37,7 +37,7 @@ message SPUBasicInfo {
   string sub_title = 2 ;
   string description = 3 ;
   uint64 shop_id = 4 ;
-  uint64 brand_id = 5 ;
+  string brand = 5 ;
   SPUStatus status = 6 ;
 }
 
