@@ -27,10 +27,10 @@ type SPURepository interface {
 
 	// 复杂查询
 	List(ctx context.Context, filter *SPUFilter, page *Pagination) ([]*SPU, int64, error)
+	BatchGetByIDs(ctx context.Context, ids []uint64) (map[uint64]*SPU, error)
+
 	FullTextSearch(ctx context.Context, keyword string, page Pagination) ([]*SPU, int64, error)
 	GetAll(ctx context.Context) ([]*SPU, error)
-	//GetInventoryAlert(ctx context.Context,spuID uint64) (int, error) // 库存预警数量
-
 	// 关联数据操作
 	GetSKUs(ctx context.Context, spuID uint64) ([]*SKU, error)
 	GetSKUCount(ctx context.Context, spuID uint64) (int64, error)
@@ -56,8 +56,6 @@ type SPURepository interface {
 	//AutoOfflineExpiredSPUs(ctx context.Context,) error // 自动下架过期商品
 	//UpdateSalesCount(ctx context.Context, spuID uint64) error
 
-	//批量操作
-	BatchGetByIDs(ctx context.Context, ids []uint64) ([]*SPU, error)
 	//BatchCreateSPUs(ctx context.Context, spus []*model.SPU) error
 	//BatchUpdateStatus(ctx context.Context, spuIDs []uint64, status int8) error
 }
@@ -116,28 +114,6 @@ func (r *SPURepo) Create(ctx context.Context, spu *SPU) error {
 	})
 }
 
-// 基础单条操作
-//func (r *SPURepo) Create(ctx context.Context, spu *SPU) error {
-//
-//
-//	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-//		if err := tx.Create(spu).Error; err != nil {
-//			if errors.Is(err, gorm.ErrDuplicatedKey) {
-//				return types.ErrSPUTitleExists
-//			}
-//			return fmt.Errorf("create SPU failed: %w", err)
-//		}
-//
-//		// 处理分类关联
-//		if len(spu.Categories) > 0 {
-//			if err := tx.Model(spu).Association("Categories").Append(spu.Categories); err != nil {
-//				return fmt.Errorf("add categories failed: %w", err)
-//			}
-//		}
-//		return nil
-//	})
-//}
-
 func (r *SPURepo) Update(ctx context.Context, spu *SPU) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 获取当前数据并加锁
@@ -159,24 +135,49 @@ func (r *SPURepo) Update(ctx context.Context, spu *SPU) error {
 	})
 }
 
-func (r *SPURepo) Delete(ctx context.Context, id uint64) error {
+//func (r *SPURepo) Delete(ctx context.Context, id uint64) error {
+//	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+//		// 检查关联SKU
+//		var count int64
+//		if err := tx.Model(&SKU{}).Where("spu_id = ?", id).Count(&count).Error; err != nil {
+//			return err
+//		}
+//		if count > 0 {
+//			return types.ErrHasAssociatedSKUs
+//		}
+//
+//		// 删除分类关联
+//		if err := tx.Model(&SPU{ID: id}).Association("Categories").Clear(); err != nil {
+//			return err
+//		}
+//
+//		// 删除主记录
+//		return tx.Delete(&SPU{}, id).Error
+//	})
+//}
+
+func (r *SPURepo) Delete(ctx context.Context, spuID uint64) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// 检查关联SKU
-		var count int64
-		if err := tx.Model(&SKU{}).Where("spu_id = ?", id).Count(&count).Error; err != nil {
-			return err
-		}
-		if count > 0 {
-			return types.ErrHasAssociatedSKUs
+		// 1. 清除 SPU 与分类的关联关系（不删除分类本身）
+		if err := tx.Exec(
+			"DELETE FROM spu_categories WHERE spu_id = ?", spuID,
+		).Error; err != nil {
+			return fmt.Errorf("failed to clear categories association: %w", err)
 		}
 
-		// 删除分类关联
-		if err := tx.Model(&SPU{ID: id}).Association("Categories").Clear(); err != nil {
-			return err
+		// 先删除所有关联 SKU（物理删除）
+		if err := tx.Where("spu_id = ?", spuID).
+			Delete(&SKU{}).Error; err != nil {
+			return fmt.Errorf("failed to delete SKUs: %w", err)
 		}
 
-		// 删除主记录
-		return tx.Delete(&SPU{}, id).Error
+		// 3. 删除 SPU（软删除或物理删除根据业务需求）
+		// 此处示例为软删除（使用 gorm.DeletedAt）
+		if err := tx.Delete(&SPU{ID: spuID}).Error; err != nil {
+			return fmt.Errorf("failed to delete SPU: %w", err)
+		}
+
+		return nil
 	})
 }
 
@@ -273,16 +274,25 @@ func (r *SPURepo) FullTextSearch(ctx context.Context, keyword string, page Pagin
 	return spus, total, err
 }
 
-func (r *SPURepo) BatchGetByIDs(ctx context.Context, ids []uint64) ([]*SPU, error) {
-	var spus []*SPU
-	err := r.db.WithContext(ctx).
+func (r *SPURepo) BatchGetByIDs(ctx context.Context, ids []uint64) (map[uint64]*SPU, error) {
+	var SPUs []*SPU
+	if err := r.db.WithContext(ctx).
 		Where("id IN ?", ids).
-		Find(&spus).Error
-	return spus, err
+		Preload("SKUs").
+		Preload("Categories").
+		Find(&SPUs).Error; err != nil {
+		return nil, err
+	}
+
+	// 转换为 map 结构
+	spuMap := make(map[uint64]*SPU, len(SPUs))
+	for _, spu := range SPUs {
+		spuMap[spu.ID] = spu
+	}
+	return spuMap, nil
 }
 
 // 关联数据操作
-// --------------------------------------------------
 func (r *SPURepo) GetSKUs(ctx context.Context, spuID uint64) ([]*SKU, error) {
 	var skus []*SKU
 	err := r.db.WithContext(ctx).
@@ -325,7 +335,6 @@ func (r *SPURepo) RemoveSKUs(ctx context.Context, spuID uint64, skuIDs []uint64)
 }
 
 // 分类关联操作
-// --------------------------------------------------
 func (r *SPURepo) GetCategories(ctx context.Context, spuID uint64) ([]*Category, error) {
 	var categories []*Category
 	err := r.db.WithContext(ctx).Model(&SPU{ID: spuID}).
@@ -372,7 +381,6 @@ func (r *SPURepo) UpdateMedia(ctx context.Context, spuID uint64, media Media) er
 }
 
 // 状态管理
-// --------------------------------------------------
 func (r *SPURepo) UpdateStatus(ctx context.Context, spuID uint64, status int8) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var current SPU
@@ -395,7 +403,6 @@ func (r *SPURepo) buildListQuery(ctx context.Context, filter *SPUFilter) *gorm.D
 	query := r.db.WithContext(ctx).Model(&SPU{})
 	// 关键词搜索（标题+副标题）
 	if keywords := strings.TrimSpace(filter.Keyword); keywords != "" {
-		fmt.Println(keywords)
 		query.Where("title LIKE ? OR sub_title LIKE ?",
 			"%"+keywords+"%", "%"+keywords+"%")
 	}
@@ -422,6 +429,7 @@ func (r *SPURepo) buildListQuery(ctx context.Context, filter *SPUFilter) *gorm.D
 		}
 	}
 
+	// 多个参数
 	//if len(filter.ShopID) > 0 {
 	//	query = query.Where("shop_id IN ?", filter.ShopID)
 	//}

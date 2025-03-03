@@ -96,6 +96,7 @@ service ProductCatalogService {
   //商品查询
   rpc ListProducts(ListProductsReq) returns (ListProductsResp) {} ;
   rpc GetProduct(GetProductReq) returns (GetProductResp) {};
+  rpc BatchGetProducts(BatchGetProductsReq) returns (BatchGetProductsResp) {};
   rpc SearchProducts (SearchProductsReq) returns (SearchProductsResp) {} ;
 
   //分类管理和查询
@@ -134,6 +135,9 @@ message UpdateProductReq {
 
 message DeleteProductReq{
   uint64 id = 1;
+  //强制删除模式 (true)：允许删除有关联的SPU及其关联的SKU
+  //安全模式 (false)：默认模式，阻止删除有关联的SPU
+  bool force = 2;
 }
 
 message ProductResp{
@@ -156,6 +160,15 @@ message GetProductReq {
 
 message GetProductResp {
   SPU product = 1;
+}
+
+message BatchGetProductsReq{
+  repeated uint64 ids = 1;
+}
+
+message BatchGetProductsResp{
+  map<uint64, SPU> products = 1;
+  repeated uint64 failed_ids = 2;
 }
 
 message SearchProductsReq {

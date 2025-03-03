@@ -17,7 +17,7 @@ func TestCreateProduct_Run(t *testing.T) {
 	s := NewCreateProductService(ctx)
 	// init req and assert value
 
-	resp, err := s.Run(req4)
+	resp, err := s.Run(req1)
 	t.Logf("err: %v", err)
 	t.Logf("resp: %v", resp)
 
@@ -28,8 +28,8 @@ func TestCreateProduct_Run(t *testing.T) {
 var (
 	req1 = &product.CreateProductReq{
 		BasicInfo: &product.SPUBasicInfo{
-			Title:       "Apple iPhone 15 Pro 5G手机",
-			SubTitle:    "钛金属设计 A17 Pro芯片 双卡双待",
+			Title:       "Apple iPhone 14 Pro 5G手机",
+			SubTitle:    "Pro芯片 双卡双待",
 			Description: "<p>旗舰智能手机，6.1英寸超视网膜XDR显示屏</p>",
 			ShopId:      1001,
 			Brand:       "Apple",
@@ -37,8 +37,8 @@ var (
 		},
 		Media: &product.SPUMedia{
 			MainImages: []string{
-				"https://cdn.example.com/iphone15_1.jpg",
-				"https://cdn.example.com/iphone15_2.jpg",
+				"https://cdn.rentio.jp/matome/uploads/2022/09/cdfec7f90c26bf83efffeb1adc507599.png",
+				"https://tse4-mm.cn.bing.net/th/id/OIP-C.1JtTljmKfBr-KphF4fi-vgHaHa?rs=1&pid=ImgDetMain",
 			},
 			VideoUrl: "https://cdn.example.com/iphone15_video.mp4",
 		},
@@ -47,20 +47,20 @@ var (
 		},
 		SKUs: []*product.CreateProductReq_SKUData{
 			{
-				Title: "iPhone 15 Pro 128GB 黑色钛金属",
+				Title: "iPhone 14 Pro 128GB 黑色",
 				Price: 7999.00,
 				Stock: 100,
 				Specs: map[string]string{
-					"颜色":   "黑色钛金属",
+					"颜色":   "黑色",
 					"存储容量": "128GB",
 				},
 			},
 			{
-				Title: "iPhone 15 Pro 256GB 原色钛金属",
+				Title: "iPhone 14 Pro 256GB 金色",
 				Price: 8999.00,
 				Stock: 50,
 				Specs: map[string]string{
-					"颜色":   "原色钛金属",
+					"颜色":   "金色",
 					"存储容量": "256GB",
 				},
 			},

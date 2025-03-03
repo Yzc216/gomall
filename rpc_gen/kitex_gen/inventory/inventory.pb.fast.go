@@ -233,6 +233,106 @@ func (x *ProductCreatedEvent) fastReadField4(buf []byte, _type int8) (offset int
 	return offset, err
 }
 
+func (x *ProductUpdateEvent) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_ProductUpdateEvent[number], err)
+}
+
+func (x *ProductUpdateEvent) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.SkuId, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *ProductUpdateEvent) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.SkuName, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ProductUpdateEvent) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	x.UpdatedStock, offset, err = fastpb.ReadUint32(buf, _type)
+	return offset, err
+}
+
+func (x *ProductUpdateEvent) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.Operator, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ProductDeleteEvent) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 4:
+		offset, err = x.fastReadField4(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_ProductDeleteEvent[number], err)
+}
+
+func (x *ProductDeleteEvent) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.SkuId, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *ProductDeleteEvent) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.SkuName, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
+func (x *ProductDeleteEvent) fastReadField4(buf []byte, _type int8) (offset int, err error) {
+	x.Operator, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
 func (x *InventoryReq_Item) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
 	switch number {
 	case 1:
@@ -454,6 +554,83 @@ func (x *ProductCreatedEvent) fastWriteField4(buf []byte) (offset int) {
 	return offset
 }
 
+func (x *ProductUpdateEvent) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	return offset
+}
+
+func (x *ProductUpdateEvent) fastWriteField1(buf []byte) (offset int) {
+	if x.SkuId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint64(buf[offset:], 1, x.GetSkuId())
+	return offset
+}
+
+func (x *ProductUpdateEvent) fastWriteField2(buf []byte) (offset int) {
+	if x.SkuName == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 2, x.GetSkuName())
+	return offset
+}
+
+func (x *ProductUpdateEvent) fastWriteField3(buf []byte) (offset int) {
+	if x.UpdatedStock == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint32(buf[offset:], 3, x.GetUpdatedStock())
+	return offset
+}
+
+func (x *ProductUpdateEvent) fastWriteField4(buf []byte) (offset int) {
+	if x.Operator == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 4, x.GetOperator())
+	return offset
+}
+
+func (x *ProductDeleteEvent) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField4(buf[offset:])
+	return offset
+}
+
+func (x *ProductDeleteEvent) fastWriteField1(buf []byte) (offset int) {
+	if x.SkuId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint64(buf[offset:], 1, x.GetSkuId())
+	return offset
+}
+
+func (x *ProductDeleteEvent) fastWriteField2(buf []byte) (offset int) {
+	if x.SkuName == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 2, x.GetSkuName())
+	return offset
+}
+
+func (x *ProductDeleteEvent) fastWriteField4(buf []byte) (offset int) {
+	if x.Operator == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 4, x.GetOperator())
+	return offset
+}
+
 func (x *InventoryReq_Item) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
@@ -655,6 +832,83 @@ func (x *ProductCreatedEvent) sizeField4() (n int) {
 	return n
 }
 
+func (x *ProductUpdateEvent) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	n += x.sizeField4()
+	return n
+}
+
+func (x *ProductUpdateEvent) sizeField1() (n int) {
+	if x.SkuId == 0 {
+		return n
+	}
+	n += fastpb.SizeUint64(1, x.GetSkuId())
+	return n
+}
+
+func (x *ProductUpdateEvent) sizeField2() (n int) {
+	if x.SkuName == "" {
+		return n
+	}
+	n += fastpb.SizeString(2, x.GetSkuName())
+	return n
+}
+
+func (x *ProductUpdateEvent) sizeField3() (n int) {
+	if x.UpdatedStock == 0 {
+		return n
+	}
+	n += fastpb.SizeUint32(3, x.GetUpdatedStock())
+	return n
+}
+
+func (x *ProductUpdateEvent) sizeField4() (n int) {
+	if x.Operator == "" {
+		return n
+	}
+	n += fastpb.SizeString(4, x.GetOperator())
+	return n
+}
+
+func (x *ProductDeleteEvent) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField4()
+	return n
+}
+
+func (x *ProductDeleteEvent) sizeField1() (n int) {
+	if x.SkuId == 0 {
+		return n
+	}
+	n += fastpb.SizeUint64(1, x.GetSkuId())
+	return n
+}
+
+func (x *ProductDeleteEvent) sizeField2() (n int) {
+	if x.SkuName == "" {
+		return n
+	}
+	n += fastpb.SizeString(2, x.GetSkuName())
+	return n
+}
+
+func (x *ProductDeleteEvent) sizeField4() (n int) {
+	if x.Operator == "" {
+		return n
+	}
+	n += fastpb.SizeString(4, x.GetOperator())
+	return n
+}
+
 func (x *InventoryReq_Item) Size() (n int) {
 	if x == nil {
 		return n
@@ -728,6 +982,19 @@ var fieldIDToName_ProductCreatedEvent = map[int32]string{
 	1: "SkuId",
 	2: "SkuName",
 	3: "InitialStock",
+	4: "Operator",
+}
+
+var fieldIDToName_ProductUpdateEvent = map[int32]string{
+	1: "SkuId",
+	2: "SkuName",
+	3: "UpdatedStock",
+	4: "Operator",
+}
+
+var fieldIDToName_ProductDeleteEvent = map[int32]string{
+	1: "SkuId",
+	2: "SkuName",
 	4: "Operator",
 }
 

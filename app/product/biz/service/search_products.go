@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/Yzc216/gomall/app/product/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/product/biz/model"
 	product "github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
@@ -21,15 +20,19 @@ func (s *SearchProductsService) Run(req *product.SearchProductsReq) (resp *produ
 	filter := &model.SPUFilter{
 		Keyword: req.Query,
 	}
-	page := &model.Pagination{
-		//Page:     1,
-		//PageSize: 20,
-	}
+	var page = &model.Pagination{}
+	// TODO 分页待proto补充
+	//if req.page != nil {
+	//	page = &model.Pagination{
+	//		Page:     int(req.Filter.Pagination.Page),
+	//		PageSize: int(req.Filter.Pagination.PageSize),
+	//	}
+	//}
+
 	products, _, err := s.repo.List(s.ctx, filter, page)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(products)
 	var SPUs []*product.SPU
 	for _, v := range products {
 		spu, err := convertToProtoSPU(v)

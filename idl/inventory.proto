@@ -70,5 +70,17 @@ message ProductCreatedEvent {
   string sku_name = 2;
   uint32 initial_stock = 3;
   string operator = 4;
-  //  google.protobuf.Timestamp event_time = 5;
+}
+
+message ProductUpdateEvent {
+  uint64 sku_id = 1;
+  string sku_name = 2;
+  uint32 updated_stock = 3;
+  string operator = 4;
+}
+
+message ProductDeleteEvent {
+  uint64 sku_id = 1;
+  string sku_name = 2;
+  string operator = 4;
 }

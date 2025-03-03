@@ -53,6 +53,15 @@ func GetProduct(ctx context.Context, req *product.GetProductReq, callOptions ...
 	return resp, nil
 }
 
+func BatchGetProducts(ctx context.Context, req *product.BatchGetProductsReq, callOptions ...callopt.Option) (resp *product.BatchGetProductsResp, err error) {
+	resp, err = defaultClient.BatchGetProducts(ctx, req, callOptions...)
+	if err != nil {
+		klog.CtxErrorf(ctx, "BatchGetProducts call failed,err =%+v", err)
+		return nil, err
+	}
+	return resp, nil
+}
+
 func SearchProducts(ctx context.Context, req *product.SearchProductsReq, callOptions ...callopt.Option) (resp *product.SearchProductsResp, err error) {
 	resp, err = defaultClient.SearchProducts(ctx, req, callOptions...)
 	if err != nil {

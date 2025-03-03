@@ -54,23 +54,24 @@ func (s *CreateProductService) Run(req *product.CreateProductReq) (resp *product
 		return nil, fmt.Errorf("创建商品失败: %w", err)
 	}
 
-	for _, sku := range spuModel.SKUs {
-		fmt.Println(sku)
-		data, _ := proto.Marshal(&inventory.ProductCreatedEvent{
-			SkuId:        sku.ID,
-			SkuName:      sku.Title,
-			InitialStock: sku.Stock,
-		})
-		msg := &nats.Msg{Subject: "inventory", Data: data, Header: make(nats.Header)}
+	go func() {
+		for _, sku := range spuModel.SKUs {
+			data, _ := proto.Marshal(&inventory.ProductCreatedEvent{
+				SkuId:        sku.ID,
+				SkuName:      sku.Title,
+				InitialStock: sku.Stock,
+			})
+			msg := &nats.Msg{Subject: "inventory", Data: data, Header: make(nats.Header)}
 
-		// otel inject
-		//otel.GetTextMapPropagator().Inject(s.ctx, propagation.HeaderCarrier(msg.Header))
+			// otel inject
+			//otel.GetTextMapPropagator().Inject(s.ctx, propagation.HeaderCarrier(msg.Header))
 
-		err = mq.Nc.PublishMsg(msg)
-		if err != nil {
-			klog.Error(err.Error())
+			err = mq.Nc.PublishMsg(msg)
+			if err != nil {
+				klog.Error(err.Error())
+			}
 		}
-	}
+	}()
 
 	// 5. 返回结果转换
 	return &product.ProductResp{Success: true}, nil
@@ -83,6 +84,12 @@ func validateCreateRequest(req *product.CreateProductReq) error {
 	}
 	if len(req.GetMedia().GetMainImages()) == 0 {
 		return errors.New("至少需要一张主图")
+	}
+	if req.GetCategoryRelation().GetCategoryIds() == nil {
+		return errors.New("商品分类不应为空")
+	}
+	if req.GetBasicInfo().GetShopId() == 0 {
+		return errors.New("店铺编号不能为空")
 	}
 	// 更多校验规则...
 	return nil

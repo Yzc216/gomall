@@ -18,6 +18,7 @@ type RPCClient interface {
 	DeleteProduct(ctx context.Context, Req *product.DeleteProductReq, callOptions ...callopt.Option) (r *common.Empty, err error)
 	ListProducts(ctx context.Context, Req *product.ListProductsReq, callOptions ...callopt.Option) (r *product.ListProductsResp, err error)
 	GetProduct(ctx context.Context, Req *product.GetProductReq, callOptions ...callopt.Option) (r *product.GetProductResp, err error)
+	BatchGetProducts(ctx context.Context, Req *product.BatchGetProductsReq, callOptions ...callopt.Option) (r *product.BatchGetProductsResp, err error)
 	SearchProducts(ctx context.Context, Req *product.SearchProductsReq, callOptions ...callopt.Option) (r *product.SearchProductsResp, err error)
 	CreateCategory(ctx context.Context, Req *product.CreateCategoryReq, callOptions ...callopt.Option) (r *product.Category, err error)
 	UpdateCategory(ctx context.Context, Req *product.UpdateCategoryReq, callOptions ...callopt.Option) (r *product.Category, err error)
@@ -70,6 +71,10 @@ func (c *clientImpl) ListProducts(ctx context.Context, Req *product.ListProducts
 
 func (c *clientImpl) GetProduct(ctx context.Context, Req *product.GetProductReq, callOptions ...callopt.Option) (r *product.GetProductResp, err error) {
 	return c.kitexClient.GetProduct(ctx, Req, callOptions...)
+}
+
+func (c *clientImpl) BatchGetProducts(ctx context.Context, Req *product.BatchGetProductsReq, callOptions ...callopt.Option) (r *product.BatchGetProductsResp, err error) {
+	return c.kitexClient.BatchGetProducts(ctx, Req, callOptions...)
 }
 
 func (c *clientImpl) SearchProducts(ctx context.Context, Req *product.SearchProductsReq, callOptions ...callopt.Option) (r *product.SearchProductsResp, err error) {
