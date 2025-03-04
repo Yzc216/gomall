@@ -40,13 +40,13 @@ func (h *GetCartService) Run(req *common.Empty) (resp map[string]any, err error)
 		p := productResp.Product
 		items = append(items, map[string]any{
 			"Name":        p.BasicInfo.Title,
-			"Price":       p.Skus[0].Price,
+			"Price":       strconv.FormatFloat(p.Skus[0].Price, 'f', 2, 64),
 			"Specs":       p.Skus[0].Specs,
 			"Description": p.BasicInfo.Description,
 			"Picture":     p.Media.MainImages[0],
 			"Quantity":    item.Quantity,
 		})
-		total += float64(p.Skus[0].Price) * float64(item.Quantity)
+		total += p.Skus[0].Price * float64(item.Quantity)
 	}
 
 	return utils.H{

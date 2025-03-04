@@ -20,3 +20,58 @@ func _category0Mw() []app.HandlerFunc {
 	// your code...
 	return nil
 }
+
+func _createcategoryMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _listcategoryMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _category1Mw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _createcategorypageMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _productMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _adminMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _categorymanagementMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _updatecategoryMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _deletecategoryMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _getproductbycategoryidMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}
+
+func _category_idMw() []app.HandlerFunc {
+	// your code...
+	return nil
+}

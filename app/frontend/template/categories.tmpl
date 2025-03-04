@@ -1,0 +1,274 @@
+<!-- 商品分类选择页面 -->
+{{ define "categories" }}
+    {{ template "header" . }}
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 左侧分类树 -->
+            <div class="col-lg-3 col-xl-2 category-tree border-end">
+                <div class="p-3" style="min-width: 280px;">
+                    <h5 class="mb-3 text-primary fs-6">
+                        <i class="fas fa-sitemap me-2"></i>商品分类
+                    </h5>
+                    <div class="tree-container">
+                        {{ template "category-tree" .tree }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧商品内容区 -->
+            <div class="col-lg-9 col-xl-10">
+                <div class="row g-4 g-lg-5">
+                    {{range .items}}
+                        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+                            <div class="card h-100 shadow-sm hover-card" style="border: none !important;">
+                                <a href="/product?id={{ .Id }}" class="text-decoration-none position-relative">
+                                    <div class="ratio ratio-4x3 bg-light overflow-hidden">
+                                        <img src="{{index .Media.MainImages 0}}"
+                                             class="card-img-top object-fit-cover p-2 transition-scale"
+                                             alt="{{ .BasicInfo.Title}}">
+                                    </div>
+
+                                    <div class="card-body p-3">
+                                        <h6 class="card-title text-dark mb-2 line-clamp-2" style="height: 3em;">
+                                            <div class="line-clamp-1 fw-medium">{{ .BasicInfo.Title }}</div>
+                                            {{if .BasicInfo.SubTitle}}
+                                                <div class="line-clamp-1 text-muted small">{{ .BasicInfo.SubTitle }}</div>
+                                            {{end}}
+                                        </h6>
+                                        <div class="d-flex align-items-end justify-content-between">
+                                            <div class="text-primary fs-5 fw-bold">
+                                                {{range $index, $sku := .Skus}}  <!-- SKUs大写 -->
+                                                ¥{{printf "%.2f" $sku.Price}}  <!-- Price大写 -->
+                                                {{break}}
+                                                {{else}}
+                                                    ¥0.00
+                                                {{end}}
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                                <i class="fas fa-cart-plus me-1"></i>购买
+                                            </button>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* 分类树紧凑样式 */
+        .category-tree {
+            background-color: #f8f9fa;
+            height: calc(100vh - 60px);
+            overflow-y: auto;
+        }
+
+        .tree-node {
+            padding: 0.15rem 0;
+            font-size: 0.9rem;
+        }
+
+        .tree-node .tree-children {
+            margin-left: 1.2rem;
+            border-left: 1px solid #dee2e6;
+        }
+
+        .toggle-icon {
+            width: 18px;
+            font-size: 0.8em;
+        }
+
+        .node-name {
+            padding: 0.2rem 0.5rem;
+            line-height: 1.4;
+        }
+
+        .tree-node .badge {
+            font-size: 0.7em;
+            padding: 0.25em 0.5em;
+        }
+
+        .tree-node.selected {
+            background: rgba(13, 110, 253, 0.1);
+            border-radius: 4px;
+        }
+
+        .tree-node.selected > div > .node-name {
+            color: #0d6efd;
+            font-weight: 500;
+        }
+
+        .tree-node.selected > div > .badge {
+            background-color: #0d6efd !important;
+            color: white !important;
+        }
+    </style>
+
+    <script>
+        // 初始化树形结构交互
+        document.addEventListener('DOMContentLoaded', function() {
+            // 展开/折叠控制
+            document.querySelectorAll('.toggle-icon').forEach(icon => {
+                icon.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const node = this.closest('.tree-node');
+                    const children = node.querySelector('.tree-children');
+
+                    if (children) {
+                        const isExpanded = node.classList.toggle('expanded');
+                        this.textContent = isExpanded ? '▼' : '▶';
+
+                        // 使用Bootstrap折叠组件
+                        new bootstrap.Collapse(children, {
+                            toggle: true
+                        });
+                    }
+                });
+            });
+
+            // 分类选择
+            document.querySelectorAll('.node-name').forEach(node => {
+                node.addEventListener('click', function() {
+                    // 移除之前选中状态
+                    document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('selected'));
+                    // 设置当前选中
+                    this.closest('.tree-node').classList.add('selected');
+                });
+            });
+        });
+
+        // 分类选择处理函数
+        function selectCategory(category) {
+            // 移除所有选中状态
+            document.querySelectorAll('.tree-node').forEach(node => {
+                node.classList.remove('selected');
+            });
+
+            // 设置当前选中状态
+            const currentNode = event.target.closest('.tree-node');
+            currentNode.classList.add('selected');
+
+            // 构建路由参数
+            const categoryId = encodeURIComponent(category.id);
+            const categoryName = encodeURIComponent(category.name);
+
+            // 跳转到指定路由
+            window.location.href = `/product/category/${categoryId}/${categoryName}`;
+
+            // 更新右侧详情区
+            // const detailHtml = `
+            //         <div class="p-4">
+            //             <div class="d-flex align-items-center mb-4">
+            //
+            //                 <h3 class="mb-0">${category.name}</h3>
+            //                 <span class="badge bg-primary-soft text-primary ms-3">ID: ${category.id}</span>
+            //             </div>
+            //             <div class="row g-4">
+            //                 <!-- 基本信息列 -->
+            //                 <div class="col-lg-6">
+            //                     <div class="card shadow-sm">
+            //                         <div class="card-body">
+            //                             <h5 class="card-title mb-4">
+            //                                 <i class="fas fa-info-circle me-2"></i>基本信息
+            //                             </h5>
+            //
+            //                             <dl class="row">
+            //                                 <dt class="col-sm-4">父级分类</dt>
+            //                                 <dd class="col-sm-8">${category.parentId ? '#'+category.parentId : '无'}</dd>
+            //
+            //                                 <dt class="col-sm-4">分类层级</dt>
+            //                                 <dd class="col-sm-8">
+            //                                     <span class="badge bg-primary">L${category.level}</span>
+            //                                 </dd>
+            //
+            //                                 <dt class="col-sm-4">是否末级</dt>
+            //                                 <dd class="col-sm-8">
+            //                                     ${category.isLeaf
+            //     ? '<i class="fas fa-check-circle text-success"></i> 是'
+            //     : '<i class="fas fa-times-circle text-danger"></i> 否'}
+            //                                 </dd>
+            //
+            //                                 <dt class="col-sm-4">排序权重</dt>
+            //                                 <dd class="col-sm-8">
+            //                                     <span class="text-primary fw-bold">${category.sort}</span>
+            //                                 </dd>
+            //                             </dl>
+            //                         </div>
+            //                     </div>
+            //                 </div>
+            //
+            //                 <!-- 商品统计列 -->
+            //                 <div class="col-lg-6">
+            //                     <div class="card shadow-sm">
+            //                         <div class="card-body">
+            //                             <h5 class="card-title mb-4">
+            //                                 <i class="fas fa-boxes me-2"></i>商品统计
+            //                             </h5>
+            //
+            //                             <div class="d-flex align-items-center justify-content-around">
+            //                                 <div class="text-center">
+            //                                     <div class="display-5 text-primary">${category.spuCount}</div>
+            //                                     <small class="text-muted">总商品数</small>
+            //                                 </div>
+            //                             </div>
+            //                         </div>
+            //                     </div>
+            //                 </div>
+            //
+            //                 <!-- 操作管理 -->
+            //                 <div class="col-12">
+            //                     <div class="card shadow-sm">
+            //                         <div class="card-body">
+            //                             <h5 class="card-title mb-4">
+            //                                 <i class="fas fa-tools me-2"></i>操作管理
+            //                             </h5>
+            //
+            //                             <div class="d-flex gap-2 flex-wrap">
+            //                                 <button class="btn btn-primary px-4"
+            //                                         onclick="handleCreate(${category.id})">
+            //                                     <i class="fas fa-plus me-2"></i>新增子类
+            //                                 </button>
+            //                                 <button class="btn btn-outline-secondary"
+            //                                         onclick="handleUpdate(${category.id})">
+            //                                     <i class="fas fa-edit me-2"></i>编辑信息
+            //                                 </button>
+            //                                 <button class="btn btn-outline-danger"
+            //                                         onclick="handleDelete(${category.id})">
+            //                                     <i class="fas fa-trash me-2"></i>删除分类
+            //                                 </button>
+            //                             </div>
+            //                         </div>
+            //                     </div>
+            //                 </div>
+            //             </div>
+            //         </div>
+            //     `;
+            // document.getElementById('detail-content').innerHTML = detailHtml;
+        }
+
+        // 按钮操作处理
+        function handleCreate(parentId) {
+            console.log('Create under:', parentId);
+            // 使用Bootstrap模态框示例
+            const modal = new bootstrap.Modal('#createModal');
+            modal.show();
+        }
+
+        function handleUpdate(categoryId) {
+            console.log('Update:', categoryId);
+            // 实现更新逻辑
+        }
+
+        function handleDelete(categoryId) {
+            if (confirm('确认删除该分类吗？')) {
+                console.log('Delete:', categoryId);
+                // 实现删除逻辑
+            }
+        }
+    </script>
+    {{ template "footer" }}
+{{ end }}
+

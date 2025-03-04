@@ -8,12 +8,53 @@ import "frontend/common.proto";
 option go_package = "/frontend/category";
 
 service CategoryService {
-  rpc Category(CategoryReq) returns (common.Empty) {
-    option (api.get) = "/category/:category";
+  rpc ListCategory(common.Empty) returns (common.Empty){
+    option (api.get) = "/categories";
+  }
+  rpc GetProductByCategoryID(GetProductByCategoryIDReq) returns (common.Empty) {
+    option (api.get) = "/product/category/:category_id/:category_name";
+  }
+
+  // admin
+  rpc CategoryManagement(common.Empty) returns (common.Empty){
+    option (api.get) = "/admin/categories";
+  }
+  rpc CreateCategory(CreateCategoryReq) returns (CreateCategoryResp){
+    option (api.post) = "/admin/categories";
+  }
+  rpc UpdateCategory(UpdateCategoryReq) returns (UpdateCategoryResp){
+    option (api.put) = "/admin/categories";
+  }
+  rpc DeleteCategory(DeleteCategoryReq) returns (common.Empty){
+    option (api.delete) = "/admin/categories";
   }
 }
 
-message CategoryReq {
-  string category = 1 [ (api.path) = "category"];
+message GetProductByCategoryIDReq {
+  uint64 category_id = 1 [(api.path) = "category_id"];
+  string category_name = 2 [(api.path) = "category_name"];
+}
+
+message CreateCategoryReq {
+  string name = 1 [(api.form) = "name"];
+  string description = 2 [(api.form) = "description"];
+  uint64 parent_id = 3 [(api.form) = "parent_id"];  // 0表示根分类
+  optional string image_url = 4 [(api.form) = "image_url"];
+}
+
+message CreateCategoryResp{
+  bool success = 1;
+}
+
+message UpdateCategoryReq{
+
+}
+
+message UpdateCategoryResp{
+
+}
+
+message DeleteCategoryReq{
+
 }
 

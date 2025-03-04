@@ -28,10 +28,10 @@ func (s *ListProductsService) Run(req *product.ListProductsReq) (resp *product.L
 			MaxPrice:   req.Filter.MaxPrice,
 			Keyword:    req.Filter.Keywords,
 		}
-		page = &model.Pagination{
-			Page:     int(req.Filter.Pagination.Page),
-			PageSize: int(req.Filter.Pagination.PageSize),
-		}
+		//page = &model.Pagination{
+		//	Page:     int(req.Filter.Pagination.Page),
+		//	PageSize: int(req.Filter.Pagination.PageSize),
+		//}
 	}
 
 	products, _, err := s.repo.List(s.ctx, filter, page)

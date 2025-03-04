@@ -46,7 +46,7 @@ func (s *CheckoutService) Run(req *checkout.CheckoutReq) (resp *checkout.Checkou
 	}
 
 	var (
-		total float32
+		total float64
 		oi    []*order.OrderItem
 	)
 
@@ -63,9 +63,9 @@ func (s *CheckoutService) Run(req *checkout.CheckoutReq) (resp *checkout.Checkou
 			continue
 		}
 
-		p := productResp.Product.Price
+		p := productResp.Product.Skus[0].Price
 
-		cost := p * float32(cartItem.Quantity)
+		cost := p * float64(cartItem.Quantity)
 		total += cost
 
 		oi = append(oi, &order.OrderItem{
@@ -103,7 +103,7 @@ func (s *CheckoutService) Run(req *checkout.CheckoutReq) (resp *checkout.Checkou
 	payReq := &payment.ChargeReq{
 		UserId:  req.UserId,
 		OrderId: orderId,
-		Amount:  total,
+		Amount:  float32(total),
 		CreditCard: &payment.CreditCardInfo{
 			CreditCardNumber:          req.CreditCard.CreditCardNumber,
 			CreditCardCvv:             req.CreditCard.CreditCardCvv,

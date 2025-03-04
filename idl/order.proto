@@ -21,7 +21,7 @@ message Address {
 
 message OrderItem {
   cart.CartItem item = 1;
-  float cost = 2;
+  double cost = 2;
 }
 
 message PlaceOrderReq {

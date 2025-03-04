@@ -23,14 +23,14 @@ func NewCheckoutService(Context context.Context, RequestContext *app.RequestCont
 }
 
 func (h *CheckoutService) Run(req *common.Empty) (resp map[string]any, err error) {
-	var items []map[string]string
+	var items []map[string]any
 	userId := frontendutils.GetUserIdFromCtx(h.Context)
 
 	carts, err := rpc.CartClient.GetCart(h.Context, &rpccart.GetCartReq{UserId: userId})
 	if err != nil {
 		return nil, err
 	}
-	var total float32
+	var total float64
 
 	for _, v := range carts.Items {
 		productResp, err := rpc.ProductClient.GetProduct(h.Context, &rpcproduct.GetProductReq{
@@ -43,18 +43,20 @@ func (h *CheckoutService) Run(req *common.Empty) (resp map[string]any, err error
 			continue
 		}
 		p := productResp.Product
-		items = append(items, map[string]string{
-			"Name":    p.Name,
-			"Price":   strconv.FormatFloat(float64(p.Price), 'f', 2, 64),
-			"Picture": p.Picture,
-			"Qty":     strconv.Itoa(int(v.Quantity)),
+		items = append(items, map[string]any{
+			"Name":        p.BasicInfo.Title,
+			"Price":       strconv.FormatFloat(p.Skus[0].Price, 'f', 2, 64),
+			"Picture":     p.Media.MainImages[0],
+			"Quantity":    strconv.Itoa(int(v.Quantity)),
+			"Specs":       p.Skus[0].Specs,
+			"Description": p.BasicInfo.Description,
 		})
-		total += float32(v.Quantity) * p.Price
+		total += float64(v.Quantity) * p.Skus[0].Price
 	}
 
 	return utils.H{
 		"title": "Checkout",
 		"items": items,
-		"total": strconv.FormatFloat(float64(total), 'f', 2, 64),
+		"total": strconv.FormatFloat(total, 'f', 2, 64),
 	}, nil
 }

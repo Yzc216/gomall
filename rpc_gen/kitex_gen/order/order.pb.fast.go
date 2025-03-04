@@ -114,7 +114,7 @@ func (x *OrderItem) fastReadField1(buf []byte, _type int8) (offset int, err erro
 }
 
 func (x *OrderItem) fastReadField2(buf []byte, _type int8) (offset int, err error) {
-	x.Cost, offset, err = fastpb.ReadFloat(buf, _type)
+	x.Cost, offset, err = fastpb.ReadDouble(buf, _type)
 	return offset, err
 }
 
@@ -451,7 +451,7 @@ func (x *OrderItem) fastWriteField2(buf []byte) (offset int) {
 	if x.Cost == 0 {
 		return offset
 	}
-	offset += fastpb.WriteFloat(buf[offset:], 2, x.GetCost())
+	offset += fastpb.WriteDouble(buf[offset:], 2, x.GetCost())
 	return offset
 }
 
@@ -702,7 +702,7 @@ func (x *OrderItem) sizeField2() (n int) {
 	if x.Cost == 0 {
 		return n
 	}
-	n += fastpb.SizeFloat(2, x.GetCost())
+	n += fastpb.SizeDouble(2, x.GetCost())
 	return n
 }
 
