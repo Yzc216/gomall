@@ -2,6 +2,9 @@ package model
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 	"time"
 )
@@ -28,24 +31,49 @@ func (SPU) TableName() string {
 	return "spu"
 }
 
-type SPUQuery struct {
-	ctx context.Context
-	db  *gorm.DB
+type CachedProductQuery struct {
+	productQuery *SPUQuery
+	cacheClient  *redis.Client
+	prefix       string
 }
 
-func NewSPUQuery(ctx context.Context, db *gorm.DB) *SPUQuery {
-	return &SPUQuery{
-		ctx: ctx,
-		db:  db,
+func NewCachedProductQuery(db *gorm.DB, cacheClient *redis.Client) *CachedProductQuery {
+	return &CachedProductQuery{
+		productQuery: NewSPUQuery(db),
+		cacheClient:  cacheClient,
+		prefix:       "shop",
 	}
 }
 
-func (q SPUQuery) GetById(spuId int) (spu SPU, err error) {
-	err = q.db.WithContext(q.ctx).Model(&SPU{}).First(&SPU{}, spuId).Error
-	return
-}
+func (c CachedProductQuery) GetByID(ctx context.Context, productId uint64) (product *SPU, err error) {
+	cacheKey := fmt.Sprintf("%s_%s_%d", c.prefix, "product_by_id", productId)
+	cachedResult := c.cacheClient.Get(ctx, cacheKey)
 
-func (q SPUQuery) SearchProducts(query string) (spus []*SPU, err error) {
-	err = q.db.WithContext(q.ctx).Model(&SPU{}).Find(&spus, "title like ? or description like ?", "%"+query+"%", "%"+query+"%").Error
+	err = func() error {
+		err1 := cachedResult.Err()
+		if err1 != nil {
+			return err1
+		}
+		cachedResultByte, err2 := cachedResult.Bytes()
+		if err2 != nil {
+			return err2
+		}
+		err3 := json.Unmarshal(cachedResultByte, &product)
+		if err3 != nil {
+			return err3
+		}
+		return nil
+	}()
+	if err != nil {
+		product, err = c.productQuery.GetByID(ctx, productId)
+		if err != nil {
+			return nil, err
+		}
+		encoded, err := json.Marshal(product)
+		if err != nil {
+			return product, nil
+		}
+		_ = c.cacheClient.Set(ctx, cacheKey, encoded, time.Hour)
+	}
 	return
 }

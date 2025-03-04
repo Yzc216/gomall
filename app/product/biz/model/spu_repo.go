@@ -15,6 +15,30 @@ var (
 	_ SPURepository = (*SPURepo)(nil)
 )
 
+type SPUQueryI interface {
+	GetByID(ctx context.Context, id uint64) (*SPU, error)
+}
+
+type SPUQuery struct {
+	db *gorm.DB
+}
+
+func NewSPUQuery(db *gorm.DB) *SPUQuery {
+	return &SPUQuery{db: db}
+}
+
+func (q *SPUQuery) GetByID(ctx context.Context, id uint64) (*SPU, error) {
+	var spu SPU
+	err := q.db.WithContext(ctx).
+		Preload("SKUs").
+		Preload("Categories").
+		First(&spu, id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, types.ErrSPUNotFound
+	}
+	return &spu, err
+}
+
 type SPURepository interface {
 	// 基础单条操作
 	Create(ctx context.Context, spu *SPU) error
