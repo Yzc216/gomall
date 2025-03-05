@@ -138,7 +138,6 @@
 
     function fetchChatResponse(message) {
         const url = `/mall/api/chat?id=${encodeURIComponent(sessionId)}&msg=${encodeURIComponent(message)}`;
-
         const source = new EventSource(url);
         let responseText = '';
 

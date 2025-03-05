@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/cloudwego/hertz/pkg/app/middlewares/server/cors"
-	"github.com/cloudwego/hertz/pkg/app/server/render/sse"
+	"github.com/cloudwego/hertz/pkg/app/middlewares/server"
+	sse "github.com/cloudwego/hertz/pkg/app/server/render"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
 	"github.com/cloudwego/hertz/pkg/route"
 )

@@ -2,12 +2,12 @@ package agent
 
 import (
 	"context"
+	"fmt"
 	"log"
 
+	"github.com/cloudwego/eino/schema"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
-
-	"github.com/strings77wzq/gomall/app/mall_agent/eino/mallagent"
 )
 
 // 请求结构
@@ -53,32 +53,52 @@ func HandleQuery(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	// 创建用户消息
-	userMsg := &mallagent.UserMessage{
-		UserID:  req.UserID,
-		Query:   req.Query,
-		Context: req.Context,
-	}
-
-	// 处理查询
-	result, err := mallagent.ProcessQuery(ctx, userMsg)
+	// 1. 获取相关知识
+	docs, err := RetrieveKnowledge(ctx, req.Query)
 	if err != nil {
-		log.Printf("处理用户查询失败: %v", err)
+		log.Printf("获取相关知识失败: %v", err)
 		c.JSON(consts.StatusInternalServerError, AgentResponse{
 			Success:      false,
-			ErrorMessage: "处理查询失败: " + err.Error(),
+			ErrorMessage: "获取相关知识失败: " + err.Error(),
 		})
 		return
 	}
 
-	// 构建响应
-	response := AgentResponse{
-		Message: result["message"].(string),
-		Data:    result,
-		Success: true,
+	// 2. 构建上下文
+	messages := buildContextMessages(docs)
+	messages = append(messages, schema.UserMessage(req.Query))
+
+	// 3. 调用Agent处理
+	agent, err := NewReactAgent(ctx)
+	if err != nil {
+		log.Printf("创建ReactAgent失败: %v", err)
+		c.JSON(consts.StatusInternalServerError, AgentResponse{
+			Success:      false,
+			ErrorMessage: "创建ReactAgent失败: " + err.Error(),
+		})
+		return
 	}
 
-	c.JSON(consts.StatusOK, response)
+	// 4. 流式处理
+	stream, err := agent.Stream(ctx, messages)
+	if err != nil {
+		log.Printf("流式处理失败: %v", err)
+		c.JSON(consts.StatusInternalServerError, AgentResponse{
+			Success:      false,
+			ErrorMessage: "流式处理失败: " + err.Error(),
+		})
+		return
+	}
+
+	// 5. 返回SSE响应
+	c.Stream(func(w *app.ResponseWriter) bool {
+		msg, err := stream.Read()
+		if err != nil {
+			return false
+		}
+		w.Write([]byte(msg.Content))
+		return true
+	})
 }
 
 // HandleHistory 处理获取历史会话请求
@@ -134,6 +154,46 @@ func HandleClear(ctx context.Context, c *app.RequestContext) {
 	})
 }
 
+// 添加SSE流式响应处理
+func HandleStream(ctx context.Context, c *app.RequestContext) {
+	userID := c.Query("user_id")
+
+	c.SetStatusCode(consts.StatusOK)
+	c.Response.Header.Set("Content-Type", "text/event-stream")
+	c.Response.Header.Set("Cache-Control", "no-cache")
+	c.Response.Header.Set("Connection", "keep-alive")
+
+	// 创建消息通道
+	msgChan := make(chan string)
+	defer close(msgChan)
+
+	go func() {
+		// 调用Agent处理逻辑
+		resp, err := ProcessRequest(ctx, &AgentRequest{
+			UserID: userID,
+			Query:  c.Query("query"),
+		})
+		if err != nil {
+			msgChan <- fmt.Sprintf("错误: %v", err)
+			return
+		}
+
+		for message := range resp.Stream {
+			msgChan <- message.Content
+		}
+	}()
+
+	for {
+		select {
+		case msg := <-msgChan:
+			c.Write([]byte(fmt.Sprintf("data: %s\n\n", msg)))
+			c.Flush()
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
 // BindRoutes 绑定路由
 func BindRoutes(group *app.RouterGroup) error {
 	// 初始化服务
@@ -145,6 +205,7 @@ func BindRoutes(group *app.RouterGroup) error {
 	group.POST("/query", HandleQuery)
 	group.GET("/history", HandleHistory)
 	group.POST("/clear", HandleClear)
+	group.GET("/stream", HandleStream)
 
 	return nil
 }

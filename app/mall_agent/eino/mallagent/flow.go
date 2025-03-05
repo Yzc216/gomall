@@ -13,9 +13,9 @@ import (
 	"github.com/cloudwego/eino/schema"
 	"github.com/joho/godotenv"
 
-	"github.com/strings77wzq/gomall/app/mall_agent/config"
-	"github.com/strings77wzq/gomall/app/mall_agent/discovery"
-	"github.com/strings77wzq/gomall/app/mall_agent/pkg/clients"
+	"gomall/app/mall_agent/config"
+	"gomall/app/mall_agent/discovery"
+	"gomall/app/mall_agent/pkg/clients"
 )
 
 var (

@@ -301,3 +301,30 @@ func GetTools(ctx context.Context) ([]tool.BaseTool, error) {
 
 	return tools, nil
 }
+
+// OrderTool 实现 StreamableTool 接口
+type OrderTool struct {
+    client OrderServiceClient
+}
+
+func (t *OrderTool) StreamableRun(ctx context.Context, args string, opts ...tool.Option) (*schema.StreamReader[string], error) {
+    return schema.NewStreamReader(func(ch chan<- string) error {
+        // 解析参数
+        var params map[string]interface{}
+        if err := json.Unmarshal([]byte(args), &params); err != nil {
+            return err
+        }
+
+        // 处理订单
+        orderID := params["order_id"].(string)
+        order, err := t.client.GetOrder(ctx, orderID)
+        if err != nil {
+            return err
+        }
+
+        // 流式返回订单信息
+        orderInfo, _ := json.Marshal(order)
+        ch <- string(orderInfo)
+        return nil
+    }), nil
+}

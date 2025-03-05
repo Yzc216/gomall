@@ -6,12 +6,14 @@ import (
 	"log"
 	"time"
 
+	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/cart"
+	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/order"
+	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
 	"github.com/cloudwego/eino/schema"
 	"github.com/strings77wzq/gomall/app/mall_agent/pkg/clients"
-	"github.com/strings77wzq/gomall/rpc_gen/kitex_gen/cart"
-	"github.com/strings77wzq/gomall/rpc_gen/kitex_gen/order"
-	"github.com/strings77wzq/gomall/rpc_gen/kitex_gen/product"
 )
+
+//工具调用会通过服务适配层访问微服务
 
 // ProductServiceImpl 实现ProductService接口
 type ProductServiceImpl struct {

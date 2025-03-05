@@ -91,3 +91,17 @@ func MustLoad() *Config {
 		},
 	}
 }
+
+// 在现有的Config结构中添加RPCServer字段
+
+type RPCServerConfig struct {
+	Address string
+}
+
+type Config struct {
+	Server    ServerConfig
+	RPCServer RPCServerConfig  // 新增RPC服务器配置
+	Etcd      EtcdConfig
+	Redis     RedisConfig
+	// 其他配置...
+}

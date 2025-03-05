@@ -89,3 +89,34 @@ func main() {
 	log.Printf("mall_agent HTTP服务启动，监听地址 %s", cfg.Server.Address)
 	h.Spin()
 }
+
+// startRPCServer 启动RPC服务器
+// 修改startRPCServer函数
+
+func startRPCServer(cfg *config.Config) error {
+	// 初始化服务发现
+	registry, err := discovery.NewEtcdRegistry(cfg.Etcd)
+	if err != nil {
+		return fmt.Errorf("初始化服务注册中心失败: %v", err)
+	}
+
+	// 初始化RPC客户端
+	ctx := context.Background()
+	if err := mallagent.InitClients(ctx, registry); err != nil {
+		return fmt.Errorf("初始化RPC客户端失败: %v", err)
+	}
+
+	// 启动RPC服务器
+	return rpc.StartRPCServer(cfg, registry)
+}
+
+	// 检查服务健康状态
+	clients := mallagent.GetClients()
+	if err := clients.HealthCheck(ctx); err != nil {
+		log.Printf("警告: 服务健康检查失败: %v", err)
+		// 不返回错误，允许即使某些服务不可用也能启动
+	}
+
+	log.Printf("RPC客户端初始化成功，已连接到所有微服务")
+	return nil
+}

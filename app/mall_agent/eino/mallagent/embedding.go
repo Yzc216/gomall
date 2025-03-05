@@ -2,9 +2,9 @@ package mallagent
 
 import (
 	"context"
-	"fmt"
-	"os"
+	"time"
 
+	"github.com/cloudwego/eino-ext/components/embedding"
 	"github.com/cloudwego/eino-ext/components/model/ark"
 )
 
@@ -12,25 +12,20 @@ import (
 type EmbeddingConfig struct {
 	EndpointID string // ARK Embedding模型的Endpoint ID
 	APIKey     string // ARK API Key
+	Model      string // 模型名称
 }
 
 // NewEmbeddingModel 创建ARK Embedding模型实例
-func NewEmbeddingModel(ctx context.Context, config *EmbeddingConfig) (*ark.EmbeddingModel, error) {
+func NewEmbeddingModel(ctx context.Context, config *EmbeddingConfig) (embedding.Model, error) {
 	if config == nil {
 		config = &EmbeddingConfig{
-			EndpointID: os.Getenv("ARK_EMBEDDING_MODEL"), // 使用环境变量中的ARK配置
-			APIKey:     os.Getenv("ARK_API_KEY"),
+			Model: "doubao-embedding-large",
 		}
 	}
 
-	// 创建ARK EmbeddingModel
-	embeddingModel, err := ark.NewEmbeddingModel(ctx, &ark.EmbeddingModelConfig{
-		EndpointID: config.EndpointID,
-		APIKey:     config.APIKey,
+	return ark.NewEmbeddingModel(ctx, &ark.EmbeddingModelConfig{
+		Model:      config.Model,
+		MaxRetries: 3,
+		Timeout:    time.Second * 10,
 	})
-	if err != nil {
-		return nil, fmt.Errorf("create ark embedding model failed: %v", err)
-	}
-
-	return embeddingModel, nil
 }

@@ -12,16 +12,17 @@ services:
     environment:
       - REDIS_ADDR=redis:6379
       - ETCD_ENDPOINTS=etcd:2379
+      - MALL_AGENT_DEBUG=true
     depends_on:
       - redis
       - etcd
-      - product-service
-      - cart-service
-      - order-service
+      - product
+      - cart
+      - order
     volumes:
       - ./logs:/app/logs
     networks:
-      - mall-network
+      - mall_network
     restart: unless-stopped
 
   redis:
@@ -29,9 +30,9 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - redis-data:/data
+      - redis_data:/data
     networks:
-      - mall-network
+      - mall_network
     restart: unless-stopped
 
   etcd:
@@ -41,51 +42,90 @@ services:
     ports:
       - "2379:2379"
     volumes:
-      - etcd-data:/bitnami/etcd
+      - etcd_data:/bitnami/etcd
     networks:
-      - mall-network
+      - mall_network
     restart: unless-stopped
 
-  product-service:
-    image: mall/product-service:latest
-    ports:
-      - "9000:9000"
+  product:
+    image: gomall/product:latest
+    build:
+      context: ../product
+      dockerfile: Dockerfile
     environment:
       - ETCD_ENDPOINTS=etcd:2379
+      - MYSQL_DSN=root:root@tcp(mysql:3306)/gomall_product?charset=utf8mb4&parseTime=True&loc=Local
     depends_on:
       - etcd
+      - mysql
     networks:
-      - mall-network
+      - mall_network
+
+  cart:
+    image: gomall/cart:latest
+    build:
+      context: ../cart
+      dockerfile: Dockerfile
+    environment:
+      - ETCD_ENDPOINTS=etcd:2379
+      - MYSQL_DSN=root:root@tcp(mysql:3306)/gomall_cart?charset=utf8mb4&parseTime=True&loc=Local
+    depends_on:
+      - etcd
+      - mysql
+    networks:
+      - mall_network
+
+  order:
+    image: gomall/order:latest
+    build:
+      context: ../order
+      dockerfile: Dockerfile
+    environment:
+      - ETCD_ENDPOINTS=etcd:2379
+      - MYSQL_DSN=root:root@tcp(mysql:3306)/gomall_order?charset=utf8mb4&parseTime=True&loc=Local
+    depends_on:
+      - etcd
+      - mysql
+    networks:
+      - mall_network
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=gomall
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../../db/sql/init:/docker-entrypoint-initdb.d
+    ports:
+      - "3306:3306"
+    networks:
+      - mall_network
+    command: --default-authentication-plugin=mysql_native_password
     restart: unless-stopped
 
-  cart-service:
-    image: mall/cart-service:latest
+  jaeger:
+    image: jaegertracing/all-in-one:latest
     ports:
-      - "9001:9001"
-    environment:
-      - ETCD_ENDPOINTS=etcd:2379
-    depends_on:
-      - etcd
+      - "16686:16686"
+      - "4317:4317"
     networks:
-      - mall-network
-    restart: unless-stopped
+      - mall_network
 
-  order-service:
-    image: mall/order-service:latest
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ../../deploy/config/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
-      - "9002:9002"
-    environment:
-      - ETCD_ENDPOINTS=etcd:2379
-    depends_on:
-      - etcd
+      - "9090:9090"
     networks:
-      - mall-network
-    restart: unless-stopped
+      - mall_network
 
 volumes:
-  redis-data:
-  etcd-data:
+  redis_data:
+  etcd_data:
+  mysql_data:
 
 networks:
-  mall-network:
+  mall_network:
     driver: bridge

@@ -7,6 +7,7 @@ import (
 
 	"github.com/cloudwego/eino/components/retriever"
 	"github.com/cloudwego/eino/components/retriever/redis"
+	"github.com/cloudwego/eino-ext/components/retriever/volc_vikingdb"
 	"github.com/cloudwego/eino/schema"
 )
 
@@ -17,6 +18,7 @@ type KnowledgeConfig struct {
 	TopK         int
 	MinScore     float32
 	EmbeddingDim int
+	Endpoint     string
 }
 
 // NewKnowledgeRetriever 创建知识库检索器
@@ -28,6 +30,7 @@ func NewKnowledgeRetriever(ctx context.Context, config *KnowledgeConfig) (retrie
 			TopK:         5,
 			MinScore:     0.7,
 			EmbeddingDim: 1536,
+			Endpoint:     os.Getenv("VIKINGDB_ENDPOINT"),
 		}
 	}
 
@@ -50,7 +53,11 @@ func NewKnowledgeRetriever(ctx context.Context, config *KnowledgeConfig) (retrie
 		return nil, fmt.Errorf("create redis retriever failed: %v", err)
 	}
 
-	return redisRetriever, nil
+	return vikingdb.NewRetriever(ctx, &vikingdb.Config{
+		Endpoint: config.Endpoint,
+		TopK:     config.TopK,
+		MinScore: config.MinScore,
+	})
 }
 
 // IndexKnowledge 索引知识到Redis
