@@ -14,7 +14,7 @@ message CheckoutReq {
   uint64 user_id = 1;
   string firstname = 2;
   string lastname = 3;
-  string email =4;
+  string email = 4;
   Address address = 5;
   payment.CreditCardInfo credit_card = 6;
 }
@@ -24,10 +24,10 @@ message Address {
   string city = 2;
   string state = 3;
   string country = 4;
-  string zip_code = 5;
+  int32 zip_code = 5;
 }
 
 message CheckoutResp {
-  string order_id = 1;
+  uint64 order_id = 1;
   string transaction_id = 2;
 }

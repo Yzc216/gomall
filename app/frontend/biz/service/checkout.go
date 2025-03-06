@@ -32,7 +32,7 @@ func (h *CheckoutService) Run(req *common.Empty) (resp map[string]any, err error
 	}
 	var total float64
 
-	for _, v := range carts.Items {
+	for _, v := range carts.Cart.Items {
 		productResp, err := rpc.ProductClient.GetProduct(h.Context, &rpcproduct.GetProductReq{
 			Id: v.ProductId,
 		})

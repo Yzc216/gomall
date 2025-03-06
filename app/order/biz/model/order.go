@@ -14,23 +14,39 @@ type Consignee struct {
 	ZipCode       string
 }
 
+type OrderState string
+
+const (
+	OrderStatePlaced   OrderState = "placed"
+	OrderStatePaid     OrderState = "paid"
+	OrderStateCanceled OrderState = "canceled"
+)
+
 type Order struct {
 	gorm.Model
-	OrderId    string      `gorm:"type:varchar(100);uniqueIndex"`
-	UserId     uint64      `gorm:"type:bigint(11)"`
+	OrderId      uint64 `gorm:"type:bigint(10);uniqueIndex;"`
+	UserId       uint64 `gorm:"type:bigint(10);index;"`
+	UserCurrency string
+
 	Consignee  Consignee   `gorm:"embedded"`
 	OrderItems []OrderItem `gorm:"foreignKey:OrderIdRefer;references:OrderId"`
+	OrderState OrderState
 }
 
 func (Order) TableName() string {
 	return "order"
 }
 
-func ListOrder(ctx context.Context, db *gorm.DB, userId uint64) ([]*Order, error) {
-	var orders []*Order
-	err := db.WithContext(ctx).Where("user_id = ?", userId).Preload("OrderItems").Find(&orders).Error
-	if err != nil {
-		return nil, err
-	}
-	return orders, nil
+func ListOrder(ctx context.Context, db *gorm.DB, userId uint64) (orders []Order, err error) {
+	err = db.WithContext(ctx).Model(&Order{}).Where(&Order{UserId: userId}).Preload("OrderItems").Find(&orders).Error
+	return
+}
+
+func GetOrder(ctx context.Context, db *gorm.DB, userId uint64, orderId uint64) (order Order, err error) {
+	err = db.WithContext(ctx).Where(&Order{UserId: userId, OrderId: orderId}).First(&order).Error
+	return
+}
+
+func UpdateOrderState(ctx context.Context, db *gorm.DB, userId uint64, orderId uint64, state OrderState) error {
+	return db.WithContext(ctx).Model(&Order{}).Where(&Order{UserId: userId, OrderId: orderId}).Update("order_state", state).Error
 }

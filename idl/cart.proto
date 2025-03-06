@@ -27,7 +27,12 @@ message GetCartReq {
 }
 
 message GetCartResp {
-  repeated CartItem items = 1;
+  Cart cart = 1;
+}
+
+message Cart {
+  uint64 user_id = 1;
+  repeated CartItem items = 2;
 }
 
 message EmptyCartReq {

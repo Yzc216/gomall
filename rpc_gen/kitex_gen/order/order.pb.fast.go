@@ -74,7 +74,7 @@ func (x *Address) fastReadField4(buf []byte, _type int8) (offset int, err error)
 }
 
 func (x *Address) fastReadField5(buf []byte, _type int8) (offset int, err error) {
-	x.ZipCode, offset, err = fastpb.ReadString(buf, _type)
+	x.ZipCode, offset, err = fastpb.ReadInt32(buf, _type)
 	return offset, err
 }
 
@@ -125,6 +125,11 @@ func (x *PlaceOrderReq) FastRead(buf []byte, _type int8, number int32) (offset i
 		if err != nil {
 			goto ReadFieldError
 		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
 	case 3:
 		offset, err = x.fastReadField3(buf, _type)
 		if err != nil {
@@ -155,6 +160,11 @@ ReadFieldError:
 
 func (x *PlaceOrderReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
 	x.UserId, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *PlaceOrderReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.UserCurrency, offset, err = fastpb.ReadString(buf, _type)
 	return offset, err
 }
 
@@ -204,7 +214,7 @@ ReadFieldError:
 }
 
 func (x *OrderResult) fastReadField1(buf []byte, _type int8) (offset int, err error) {
-	x.OrderId, offset, err = fastpb.ReadString(buf, _type)
+	x.OrderId, offset, err = fastpb.ReadUint64(buf, _type)
 	return offset, err
 }
 
@@ -319,7 +329,7 @@ func (x *Order) fastReadField1(buf []byte, _type int8) (offset int, err error) {
 }
 
 func (x *Order) fastReadField2(buf []byte, _type int8) (offset int, err error) {
-	x.OrderId, offset, err = fastpb.ReadString(buf, _type)
+	x.OrderId, offset, err = fastpb.ReadUint64(buf, _type)
 	return offset, err
 }
 
@@ -378,6 +388,91 @@ func (x *ListOrderResp) fastReadField1(buf []byte, _type int8) (offset int, err 
 	return offset, nil
 }
 
+func (x *UpdateOrderStateReq) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 3:
+		offset, err = x.fastReadField3(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_UpdateOrderStateReq[number], err)
+}
+
+func (x *UpdateOrderStateReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.UserId, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateOrderStateReq) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.OrderId, offset, err = fastpb.ReadUint64(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateOrderStateReq) fastReadField3(buf []byte, _type int8) (offset int, err error) {
+	var v int32
+	v, offset, err = fastpb.ReadInt32(buf, _type)
+	if err != nil {
+		return offset, err
+	}
+	x.State = OrderState(v)
+	return offset, nil
+}
+
+func (x *UpdateOrderStateResp) FastRead(buf []byte, _type int8, number int32) (offset int, err error) {
+	switch number {
+	case 1:
+		offset, err = x.fastReadField1(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	case 2:
+		offset, err = x.fastReadField2(buf, _type)
+		if err != nil {
+			goto ReadFieldError
+		}
+	default:
+		offset, err = fastpb.Skip(buf, _type, number)
+		if err != nil {
+			goto SkipFieldError
+		}
+	}
+	return offset, nil
+SkipFieldError:
+	return offset, fmt.Errorf("%T cannot parse invalid wire-format data, error: %s", x, err)
+ReadFieldError:
+	return offset, fmt.Errorf("%T read field %d '%s' error: %s", x, number, fieldIDToName_UpdateOrderStateResp[number], err)
+}
+
+func (x *UpdateOrderStateResp) fastReadField1(buf []byte, _type int8) (offset int, err error) {
+	x.Success, offset, err = fastpb.ReadBool(buf, _type)
+	return offset, err
+}
+
+func (x *UpdateOrderStateResp) fastReadField2(buf []byte, _type int8) (offset int, err error) {
+	x.Error, offset, err = fastpb.ReadString(buf, _type)
+	return offset, err
+}
+
 func (x *Address) FastWrite(buf []byte) (offset int) {
 	if x == nil {
 		return offset
@@ -423,10 +518,10 @@ func (x *Address) fastWriteField4(buf []byte) (offset int) {
 }
 
 func (x *Address) fastWriteField5(buf []byte) (offset int) {
-	if x.ZipCode == "" {
+	if x.ZipCode == 0 {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 5, x.GetZipCode())
+	offset += fastpb.WriteInt32(buf[offset:], 5, x.GetZipCode())
 	return offset
 }
 
@@ -460,6 +555,7 @@ func (x *PlaceOrderReq) FastWrite(buf []byte) (offset int) {
 		return offset
 	}
 	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
 	offset += x.fastWriteField3(buf[offset:])
 	offset += x.fastWriteField4(buf[offset:])
 	offset += x.fastWriteField5(buf[offset:])
@@ -471,6 +567,14 @@ func (x *PlaceOrderReq) fastWriteField1(buf []byte) (offset int) {
 		return offset
 	}
 	offset += fastpb.WriteUint64(buf[offset:], 1, x.GetUserId())
+	return offset
+}
+
+func (x *PlaceOrderReq) fastWriteField2(buf []byte) (offset int) {
+	if x.UserCurrency == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 2, x.GetUserCurrency())
 	return offset
 }
 
@@ -509,10 +613,10 @@ func (x *OrderResult) FastWrite(buf []byte) (offset int) {
 }
 
 func (x *OrderResult) fastWriteField1(buf []byte) (offset int) {
-	if x.OrderId == "" {
+	if x.OrderId == 0 {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 1, x.GetOrderId())
+	offset += fastpb.WriteUint64(buf[offset:], 1, x.GetOrderId())
 	return offset
 }
 
@@ -572,10 +676,10 @@ func (x *Order) fastWriteField1(buf []byte) (offset int) {
 }
 
 func (x *Order) fastWriteField2(buf []byte) (offset int) {
-	if x.OrderId == "" {
+	if x.OrderId == 0 {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 2, x.GetOrderId())
+	offset += fastpb.WriteUint64(buf[offset:], 2, x.GetOrderId())
 	return offset
 }
 
@@ -629,6 +733,65 @@ func (x *ListOrderResp) fastWriteField1(buf []byte) (offset int) {
 	return offset
 }
 
+func (x *UpdateOrderStateReq) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	offset += x.fastWriteField3(buf[offset:])
+	return offset
+}
+
+func (x *UpdateOrderStateReq) fastWriteField1(buf []byte) (offset int) {
+	if x.UserId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint64(buf[offset:], 1, x.GetUserId())
+	return offset
+}
+
+func (x *UpdateOrderStateReq) fastWriteField2(buf []byte) (offset int) {
+	if x.OrderId == 0 {
+		return offset
+	}
+	offset += fastpb.WriteUint64(buf[offset:], 2, x.GetOrderId())
+	return offset
+}
+
+func (x *UpdateOrderStateReq) fastWriteField3(buf []byte) (offset int) {
+	if x.State == 0 {
+		return offset
+	}
+	offset += fastpb.WriteInt32(buf[offset:], 3, int32(x.GetState()))
+	return offset
+}
+
+func (x *UpdateOrderStateResp) FastWrite(buf []byte) (offset int) {
+	if x == nil {
+		return offset
+	}
+	offset += x.fastWriteField1(buf[offset:])
+	offset += x.fastWriteField2(buf[offset:])
+	return offset
+}
+
+func (x *UpdateOrderStateResp) fastWriteField1(buf []byte) (offset int) {
+	if !x.Success {
+		return offset
+	}
+	offset += fastpb.WriteBool(buf[offset:], 1, x.GetSuccess())
+	return offset
+}
+
+func (x *UpdateOrderStateResp) fastWriteField2(buf []byte) (offset int) {
+	if x.Error == "" {
+		return offset
+	}
+	offset += fastpb.WriteString(buf[offset:], 2, x.GetError())
+	return offset
+}
+
 func (x *Address) Size() (n int) {
 	if x == nil {
 		return n
@@ -674,10 +837,10 @@ func (x *Address) sizeField4() (n int) {
 }
 
 func (x *Address) sizeField5() (n int) {
-	if x.ZipCode == "" {
+	if x.ZipCode == 0 {
 		return n
 	}
-	n += fastpb.SizeString(5, x.GetZipCode())
+	n += fastpb.SizeInt32(5, x.GetZipCode())
 	return n
 }
 
@@ -711,6 +874,7 @@ func (x *PlaceOrderReq) Size() (n int) {
 		return n
 	}
 	n += x.sizeField1()
+	n += x.sizeField2()
 	n += x.sizeField3()
 	n += x.sizeField4()
 	n += x.sizeField5()
@@ -722,6 +886,14 @@ func (x *PlaceOrderReq) sizeField1() (n int) {
 		return n
 	}
 	n += fastpb.SizeUint64(1, x.GetUserId())
+	return n
+}
+
+func (x *PlaceOrderReq) sizeField2() (n int) {
+	if x.UserCurrency == "" {
+		return n
+	}
+	n += fastpb.SizeString(2, x.GetUserCurrency())
 	return n
 }
 
@@ -760,10 +932,10 @@ func (x *OrderResult) Size() (n int) {
 }
 
 func (x *OrderResult) sizeField1() (n int) {
-	if x.OrderId == "" {
+	if x.OrderId == 0 {
 		return n
 	}
-	n += fastpb.SizeString(1, x.GetOrderId())
+	n += fastpb.SizeUint64(1, x.GetOrderId())
 	return n
 }
 
@@ -823,10 +995,10 @@ func (x *Order) sizeField1() (n int) {
 }
 
 func (x *Order) sizeField2() (n int) {
-	if x.OrderId == "" {
+	if x.OrderId == 0 {
 		return n
 	}
-	n += fastpb.SizeString(2, x.GetOrderId())
+	n += fastpb.SizeUint64(2, x.GetOrderId())
 	return n
 }
 
@@ -880,6 +1052,65 @@ func (x *ListOrderResp) sizeField1() (n int) {
 	return n
 }
 
+func (x *UpdateOrderStateReq) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	n += x.sizeField3()
+	return n
+}
+
+func (x *UpdateOrderStateReq) sizeField1() (n int) {
+	if x.UserId == 0 {
+		return n
+	}
+	n += fastpb.SizeUint64(1, x.GetUserId())
+	return n
+}
+
+func (x *UpdateOrderStateReq) sizeField2() (n int) {
+	if x.OrderId == 0 {
+		return n
+	}
+	n += fastpb.SizeUint64(2, x.GetOrderId())
+	return n
+}
+
+func (x *UpdateOrderStateReq) sizeField3() (n int) {
+	if x.State == 0 {
+		return n
+	}
+	n += fastpb.SizeInt32(3, int32(x.GetState()))
+	return n
+}
+
+func (x *UpdateOrderStateResp) Size() (n int) {
+	if x == nil {
+		return n
+	}
+	n += x.sizeField1()
+	n += x.sizeField2()
+	return n
+}
+
+func (x *UpdateOrderStateResp) sizeField1() (n int) {
+	if !x.Success {
+		return n
+	}
+	n += fastpb.SizeBool(1, x.GetSuccess())
+	return n
+}
+
+func (x *UpdateOrderStateResp) sizeField2() (n int) {
+	if x.Error == "" {
+		return n
+	}
+	n += fastpb.SizeString(2, x.GetError())
+	return n
+}
+
 var fieldIDToName_Address = map[int32]string{
 	1: "StreetAddress",
 	2: "City",
@@ -895,6 +1126,7 @@ var fieldIDToName_OrderItem = map[int32]string{
 
 var fieldIDToName_PlaceOrderReq = map[int32]string{
 	1: "UserId",
+	2: "UserCurrency",
 	3: "Address",
 	4: "Email",
 	5: "Items",
@@ -923,6 +1155,17 @@ var fieldIDToName_Order = map[int32]string{
 
 var fieldIDToName_ListOrderResp = map[int32]string{
 	1: "Orders",
+}
+
+var fieldIDToName_UpdateOrderStateReq = map[int32]string{
+	1: "UserId",
+	2: "OrderId",
+	3: "State",
+}
+
+var fieldIDToName_UpdateOrderStateResp = map[int32]string{
+	1: "Success",
+	2: "Error",
 }
 
 var _ = cart.File_cart_proto

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package payment;
 
-option go_package ="/payment";
+option go_package = "/payment";
 
 service PaymentService {
   rpc Charge(ChargeReq) returns (ChargeResp) {}
@@ -16,9 +16,9 @@ message CreditCardInfo {
 }
 
 message ChargeReq {
-  float amount = 1;
+  double amount = 1;
   CreditCardInfo credit_card = 2;
-  string order_id = 3;
+  uint64 order_id = 3;
   uint64 user_id = 4;
 }
 

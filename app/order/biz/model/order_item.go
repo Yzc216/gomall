@@ -5,7 +5,7 @@ import "gorm.io/gorm"
 type OrderItem struct {
 	gorm.Model
 	ProductId    uint64  `gorm:"type:bigint(11)"`
-	OrderIdRefer string  `gorm:"type:varchar(100);index"`
+	OrderIdRefer uint64  `gorm:"type:bigint(11);index"`
 	Quantity     uint32  `gorm:"type:int(11)"`
 	Cost         float64 `gorm:"type:decimal(10,2)"`
 }
