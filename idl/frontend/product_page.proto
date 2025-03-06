@@ -14,6 +14,17 @@ service ProductService {
   rpc SearchProducts(SearchProductsReq) returns (common.Empty) {
     option (api.get) = "/search";
   }
+
+  //商家页面
+  rpc CreateProduct(CreateProductReq) returns (common.Empty) {
+    option (api.post) = "/products";
+  }
+  rpc UpdateProduct(UpdateProductReq) returns (common.Empty) {
+    option (api.put) = "/products";
+  }
+  rpc DeleteProduct(DeleteProductReq) returns (common.Empty) {
+    option (api.delete) = "/products";
+  }
 }
 
 message ProductReq {
@@ -24,3 +35,14 @@ message SearchProductsReq {
   string q = 1 [(api.query) = "q"];
 }
 
+message CreateProductReq{
+
+}
+
+message UpdateProductReq{
+
+}
+
+message DeleteProductReq{
+
+}
