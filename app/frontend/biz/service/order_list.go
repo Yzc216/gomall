@@ -41,7 +41,7 @@ func (h *OrderListService) Run(req *common.Empty) (resp map[string]any, err erro
 			total += v.Cost
 			i := v.Item
 			//应该批量获取，然后组装成map[id]product
-			productResp, err := rpc.ProductClient.GetProduct(h.Context, &product.GetProductReq{Id: i.ProductId})
+			productResp, err := rpc.ProductClient.GetProduct(h.Context, &product.GetProductReq{Id: i.SpuId})
 			if err != nil {
 				return nil, err
 			}

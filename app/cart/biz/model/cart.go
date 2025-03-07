@@ -8,9 +8,10 @@ import (
 
 type Cart struct {
 	gorm.Model
-	UserId    uint64 `gorm:"type:bigint(11);not null;index:idx_user_id"`
-	ProductId uint64 `gorm:"type:bigint(11);not null;"`
-	Qty       uint32 `gorm:"type:int(11);not null;"`
+	UserId uint64 `gorm:"type:bigint(11);not null;index:idx_user_id"`
+	SpuId  uint64 `gorm:"type:bigint(11);not null;"`
+	SkuId  uint64 `gorm:"type:bigint(11);not null;"`
+	Qty    uint32 `gorm:"type:int(11);not null;"`
 }
 
 func (Cart) TableName() string {
@@ -19,12 +20,20 @@ func (Cart) TableName() string {
 
 func AddItem(ctx context.Context, db *gorm.DB, item *Cart) error {
 	var find Cart
-	err := db.WithContext(ctx).Model(&Cart{}).Where(&Cart{UserId: item.UserId, ProductId: item.ProductId}).First(&find).Error
+	err := db.WithContext(ctx).Model(&Cart{}).Where(&Cart{
+		UserId: item.UserId,
+		SpuId:  item.SpuId,
+		SkuId:  item.SkuId,
+	}).First(&find).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
+
 	if find.ID != 0 {
-		err = db.WithContext(ctx).Model(&Cart{}).Where(&Cart{UserId: item.UserId, ProductId: item.ProductId}).UpdateColumn("qty", gorm.Expr("qty+?", item.Qty)).Error
+		err = db.WithContext(ctx).Model(&Cart{}).Where(&Cart{
+			UserId: item.UserId,
+			SpuId:  item.SpuId,
+			SkuId:  item.SkuId}).UpdateColumn("qty", gorm.Expr("qty+?", item.Qty)).Error
 	} else {
 		err = db.WithContext(ctx).Model(&Cart{}).Create(item).Error
 	}

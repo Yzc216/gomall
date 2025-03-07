@@ -50,31 +50,38 @@
                     {{ end }}
 
                     <!-- 价格显示 -->
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="h3 text-danger fw-bold">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="h3 text-danger fw-bold" id="priceDisplay">
                             ¥{{ printf "%.2f" (index .SPU.Skus 0).Price }}
                         </span>
                         {{ if gt (len .SPU.Skus) 1 }}
-                            <span class="text-muted small">起</span>
+                            <span class="text-muted small" id="priceSuffix">起</span>
                         {{ end }}
                     </div>
 
                     <!-- 规格选择 -->
-                    {{ range .SPU.Skus }}
-                        <div class="spec-group">
-                            <div class="d-flex flex-wrap gap-2">
-                                    <button type="button"
-                                            class="btn btn-outline-dark btn-sm spec-item">
-{{/*                                                data-spec="{{ $specName }}"*/}}
-{{/*                                                data-value="{{ $specValue }}">*/}}
-                                        {{ range $specName, $specValue := .Specs }}
-                                        {{ $specName }}:{{ $specValue }}
-                                        {{end}}
-                                    </button>
-                            </div>
+                    <div class="spec-group mb-4">
+                        <div class="d-flex flex-wrap gap-2">
+                            {{ range $index, $sku := .SPU.Skus }}
+                                <button type="button"
+                                        class="btn btn-outline-dark btn-sm spec-item {{ if eq $index 0 }}active{{ end }}"
+                                        data-sku-id="{{ $sku.Id }}">
+                                    {{ range $specName, $specValue := $sku.Specs }}
+                                        <span class="spec-name">{{ $specName }}</span>:<span class="spec-value">{{ $specValue }}</span>
+                                    {{ end }}
+                                    <span class="badge bg-light text-dark ms-2">
+                                        {{ if gt .Stock 0 }}
+                                            库存 {{ .Stock }}
+                                        {{ else }}
+                                            缺货
+                                        {{ end }}
+                                    </span>
+
+                                </button>
+                            {{ end }}
                         </div>
-                    {{ end }}
-                    <!-- 商品详情 -->
+                    </div>
+
                     <!-- 商品详情 -->
                     <div class="row mt-4">  <!-- 减少容器上边距 -->
                         <div class="col-12">
@@ -137,8 +144,8 @@
 
                     <!-- 购买表单 -->
                     <form action="/cart" method="post" class="mt-4">
-                        <input type="hidden" name="productId" value="{{ .SPU.Id }}">
-{{/*                        <input type="hidden" name="skuId" value="{{ (index .SPU.Skus 0).Id }}">*/}}
+                        <input type="hidden" name="spuId" value="{{ .SPU.Id }}">
+                        <input type="hidden" name="skuId" id="selectedSkuId" value="{{ (index .SPU.Skus 0).Id }}">
 
                         <div class="row g-3 align-items-center">
                             <div class="col-auto">
@@ -177,9 +184,92 @@
                 </div>
             </div>
         </div>
-
-
     </div>
+
+    <script>
+        // 初始化SKU数据
+        const skuData = {{ .SPU.Skus | toJson }};//
+        console.log('SKU Data:', {{ .SPU.Skus | toJson }});
+
+        // 绑定规格点击事件
+        document.querySelectorAll('.spec-item').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // 移除所有激活状态
+                document.querySelectorAll('.spec-item').forEach(item => {
+                    item.classList.remove('active', 'btn-primary');
+                    item.classList.add('btn-outline-dark');
+                });
+
+                // 设置当前选中状态
+                this.classList.add('active', 'btn-primary');
+                this.classList.remove('btn-outline-dark');
+
+                // 获取选中的SKU ID
+                const skuId = this.dataset.skuId;
+                document.getElementById('selectedSkuId').value = skuId;
+
+
+                const currentSku = skuData.find(sku =>{
+                    console.log('遍历的 SKU:', sku); // 打印所有遍历的 SKU
+                    console.log('遍历的 id:', skuId); // 打印所有遍历的 SKU
+                    return Number(sku.id) === Number(skuId);
+                });
+
+                console.log('匹配的 currentSku:', currentSku); // 打印结果
+                console.log('完整的 skuData:', skuData); // 打印全部数据
+
+                // 更新价格显示
+                const priceDisplay = document.getElementById('priceDisplay');
+                if (priceDisplay && currentSku.price) {
+                    priceDisplay.textContent = `¥${currentSku.price.toFixed(2)}`;
+                }
+
+                // 更新"起"显示状态
+                const priceSuffix = document.getElementById('priceSuffix');
+                if (priceSuffix) {
+                    priceSuffix.style.display = skuData.length > 1 ? 'inline' : 'none';
+                }
+
+                // 更新库存输入框
+                const productNum = document.getElementById('productNum');
+                if (productNum && currentSku.stock) {
+                    productNum.max = currentSku.stock;
+                    productNum.value = Math.min(productNum.value, currentSku.stock);
+                }
+            });
+        });
+    </script>
+
+    <style>
+        /* 添加选中状态样式 */
+        .spec-item.active {
+            border-color: #0d6efd !important;
+            background-color: rgba(13, 110, 253, 0.1) !important;
+            color: #0d6efd !important;
+            position: relative;
+        }
+        .spec-item.active::after {
+            content: "✓";
+            position: absolute;
+            right: 5px;
+            top: 2px;
+            font-size: 0.8em;
+            color: #0d6efd;
+        }
+
+        /* 添加悬停状态样式 */
+        .btn-outline-dark.spec-item:hover {
+            border-color: #0d6efd !important;
+            color: #0d6efd !important;
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+
+        /* 激活状态覆盖 */
+        .btn-outline-dark.spec-item.active:hover {
+            background-color: rgba(13, 110, 253, 0.15) !important;
+        }
+
+    </style>
 
     {{ template "footer" . }}
 {{ end }}

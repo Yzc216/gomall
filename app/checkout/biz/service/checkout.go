@@ -48,25 +48,37 @@ func (s *CheckoutService) Run(req *checkout.CheckoutReq) (resp *checkout.Checkou
 		err = errors.New("cart is empty")
 		return
 	}
+
+	// calculate cart
 	var (
 		oi    []*order.OrderItem
 		total float64
 	)
+	spuIDs := make([]uint64, 0, len(cartResult.Cart.Items))
+	for _, item := range cartResult.Cart.Items {
+		spuIDs = append(spuIDs, item.SpuId)
+	}
+	productRes, err := rpc.ProductClient.BatchGetProducts(s.ctx, &product.BatchGetProductsReq{Ids: spuIDs})
+	if err != nil {
+		return nil, fmt.Errorf("批量获取商品失败: %v", err)
+	}
+	spuMap := productRes.Products
+
 	for _, cartItem := range cartResult.Cart.Items {
-		productResp, resultErr := rpc.ProductClient.GetProduct(s.ctx, &product.GetProductReq{Id: cartItem.ProductId})
-		if resultErr != nil {
-			klog.Error(resultErr)
-			err = resultErr
-			return
+		spu, exists := spuMap[cartItem.SpuId]
+		if !exists {
+			return nil, fmt.Errorf("商品信息未找到: spu_id=%d", cartItem.SpuId)
 		}
-		if productResp.Product == nil {
-			continue
+
+		targetSku := findSkuByID(spu.Skus, cartItem.SkuId)
+		if targetSku == nil {
+			return nil, fmt.Errorf("规格信息未找到: spu_id=%d, sku_id=%d", cartItem.SpuId, cartItem.SkuId)
 		}
-		p := productResp.Product
-		cost := p.Skus[0].Price * float64(cartItem.Quantity)
+
+		cost := targetSku.Price * float64(cartItem.Quantity)
 		total += cost
 		oi = append(oi, &order.OrderItem{
-			Item: &cart.CartItem{ProductId: cartItem.ProductId, Quantity: cartItem.Quantity},
+			Item: &cart.CartItem{SpuId: cartItem.SpuId, SkuId: cartItem.SkuId, Quantity: cartItem.Quantity},
 			Cost: cost,
 		})
 	}
@@ -93,7 +105,7 @@ func (s *CheckoutService) Run(req *checkout.CheckoutReq) (resp *checkout.Checkou
 		err = fmt.Errorf("PlaceOrder.err:%v", err)
 		return
 	}
-	klog.Info("orderResult", orderResult)
+	klog.Info("orderResult: ", orderResult)
 
 	// empty cart
 	emptyResult, err := rpc.CartClient.EmptyCart(s.ctx, &cart.EmptyCartReq{UserId: req.UserId})
@@ -142,10 +154,17 @@ func (s *CheckoutService) Run(req *checkout.CheckoutReq) (resp *checkout.Checkou
 
 	// change order state
 	klog.Info(orderResult)
-	_, err = rpc.OrderClient.UpdateOrderState(s.ctx, &order.UpdateOrderStateReq{UserId: req.UserId, OrderId: orderId})
+	res, err := rpc.OrderClient.UpdateOrderState(s.ctx, &order.UpdateOrderStateReq{
+		UserId:  req.UserId,
+		OrderId: orderId,
+		State:   order.OrderState_OrderStatePaid,
+	})
 	if err != nil {
 		klog.Error(err)
 		return
+	}
+	if !res.Success {
+		klog.Info(res.Error)
 	}
 
 	resp = &checkout.CheckoutResp{
@@ -153,4 +172,13 @@ func (s *CheckoutService) Run(req *checkout.CheckoutReq) (resp *checkout.Checkou
 		TransactionId: paymentResult.TransactionId,
 	}
 	return
+}
+
+func findSkuByID(skus []*product.SKU, skuID uint64) *product.SKU {
+	for _, sku := range skus {
+		if sku.Id == skuID {
+			return sku
+		}
+	}
+	return nil
 }

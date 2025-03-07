@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	frontendUtils "github.com/Yzc216/gomall/app/frontend/biz/utils"
 	"github.com/Yzc216/gomall/app/frontend/infra/mtl"
 	"github.com/Yzc216/gomall/app/frontend/infra/rpc"
@@ -15,6 +16,7 @@ import (
 	"github.com/hertz-contrib/sessions/redis"
 	"github.com/joho/godotenv"
 	oteltrace "go.opentelemetry.io/otel/trace"
+	"html/template"
 	"os"
 	"time"
 
@@ -38,6 +40,14 @@ import (
 )
 
 var ServiceName = frontendutils.ServiceName
+
+var funcMap = template.FuncMap{
+	"sub": func(a, b int) int { return a - b },
+	"toJson": func(v interface{}) (template.JS, error) {
+		b, err := json.Marshal(v)
+		return template.JS(b), err
+	},
+}
 
 func main() {
 
@@ -74,8 +84,20 @@ func main() {
 	})
 
 	router.GeneratedRegister(h)
-	h.LoadHTMLGlob("template/*")
-	h.Delims("{{", "}}")
+	// 初始化模板引擎
+	t := template.New("")
+	t.Funcs(funcMap) // 注册自定义函数
+
+	// 加载模板文件（需要先注册函数再解析模板）
+	t, err := t.ParseGlob("template/*.tmpl")
+	if err != nil {
+		panic(err)
+	}
+	// 设置模板引擎到 Hertz
+	h.SetHTMLTemplate(t)
+
+	//h.LoadHTMLGlob("template/*")
+	//h.Delims("{{", "}}")
 	h.Static("/static", "./")
 
 	h.GET("/about", middleware.Auth(), func(c context.Context, ctx *app.RequestContext) {

@@ -11,8 +11,9 @@ service CartService {
 }
 
 message CartItem {
-  uint64 product_id = 1;
-  uint32 quantity = 2;
+  uint64 spu_id = 1;
+  uint64 sku_id = 2;
+  uint32 quantity = 3;
 }
 
 message AddItemReq {

@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"fmt"
 	jwtUtils "github.com/Yzc216/gomall/app/frontend/biz/utils"
 	frontendUtils "github.com/Yzc216/gomall/app/frontend/utils"
 	"github.com/cloudwego/hertz/pkg/app"
@@ -54,7 +53,6 @@ func Auth() app.HandlerFunc {
 		s := sessions.Default(c)
 		userId := s.Get("user_id")
 		if userId == nil {
-			fmt.Println(c.FullPath())
 			c.Redirect(consts.StatusFound, []byte("/sign-in?next="+c.FullPath()))
 			c.Abort()
 			return
