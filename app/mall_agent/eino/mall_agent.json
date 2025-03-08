@@ -1,0 +1,24 @@
+{
+    "name": "mall_agent",
+    "version": "1.0.0",
+    "model_config": {
+        "chat_model": {
+            "endpoint_id": "${ARK_CHAT_MODEL}",
+            "api_key": "${ARK_API_KEY}"
+        },
+        "embedding_model": {
+            "endpoint_id": "${ARK_EMBEDDING_MODEL}",
+            "api_key": "${ARK_API_KEY}"
+        }
+    },
+    "system_prompt": "你是一个专业的电商平台客服助手。你可以：\n1. 搜索和查询商品信息\n2. 管理购物车\n3. 创建和查询订单\n4. 提供购物建议\n\n请根据用户的需求，调用相应的工具来完成任务。",
+    "max_steps": 25,
+    "temperature": 0.7,
+    "tools": [
+        "product_search",
+        "product_detail",
+        "cart_add",
+        "cart_list",
+        "order_create"
+    ]
+}
