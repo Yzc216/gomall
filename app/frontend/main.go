@@ -52,6 +52,8 @@ var funcMap = template.FuncMap{
 func main() {
 
 	_ = godotenv.Load()
+	middleware.InitJWT()
+	middleware.InitCasbin()
 
 	mtl.InitMtl()
 	rpc.InitClient()
@@ -100,7 +102,7 @@ func main() {
 	//h.Delims("{{", "}}")
 	h.Static("/static", "./")
 
-	h.GET("/about", middleware.Auth(), func(c context.Context, ctx *app.RequestContext) {
+	h.GET("/about", func(c context.Context, ctx *app.RequestContext) {
 		hlog.CtxInfof(c, "gomall about page")
 		ctx.HTML(consts.StatusOK, "about", frontendUtils.WarpResponse(c, ctx, utils.H{"title": "About"}))
 	})
@@ -174,6 +176,4 @@ func registerMiddleware(h *server.Hertz) {
 
 	// cores
 	h.Use(cors.Default())
-
-	middleware.Register(h)
 }
