@@ -1,1 +1,0 @@
-web交互还没做，直接参考eino-examples的实现？
