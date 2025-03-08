@@ -1,0 +1,32 @@
+<!-- 分类树子模板 -->
+{{ define "category-tree" }}
+    {{ range . }}
+        <div class="tree-node" data-id="{{ .Category.Id }} ">
+            <div class="d-flex align-items-center">
+                <span class="toggle-icon me-2">
+                    {{ if .Children }}▶{{ end }}
+                </span>
+                <span class="node-name flex-grow-1"
+                      onclick="selectCategory({
+                              id: {{ .Category.Id }},
+                              name: '{{ .Category.Name }}',
+                              parentId: {{ .Category.ParentId }},
+                              description:'{{.Category.Description}}',
+                              level: {{ .Category.Level }},
+                              isLeaf: {{ .Category.IsLeaf }},
+                              sort: {{ .Category.Sort }},
+                              imageUrl: '{{ .Category.ImageUrl }}',
+                              spuCount: {{ .SpuCount }}
+                              })">
+                    {{ .Category.Name }}
+                </span>
+                <span class="badge bg-primary rounded-pill">{{ .SpuCount }}</span>
+            </div>
+            {{ if .Children }}
+                <div class="tree-children collapse">
+                    {{ template "category-tree" .Children }}
+                </div>
+            {{ end }}
+        </div>
+    {{ end }}
+{{end}}

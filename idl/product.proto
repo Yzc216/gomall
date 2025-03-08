@@ -2,76 +2,173 @@ syntax = "proto3";
 
 package product;
 
-option go_package ="/product";
+option go_package = "/product";
 
-service ProductCatalogService {
-  rpc CreateProduct(CreateProductsReq) returns (CreateProductsResp);
-  rpc UpdateProduct(UpdateProductsReq) returns (UpdateProductsResp);
-  rpc RemoveProduct(RemoveProductsReq) returns (RemoveProductsResp);
-  rpc ListProducts(ListProductsReq) returns (ListProductsResp) {} ;
-  rpc GetProduct(GetProductReq) returns (GetProductResp) {};
-  rpc BatchGetProductsReq (BatchGetProductReq) returns (BatchGetProductResp) {};
-  rpc SearchProducts (SearchProductsReq) returns (SearchProductsResp) {} ;
+import "common.proto";
+
+// ================== 数据结构 ==================
+message Pagination {
+  int32 Page = 1;
+  int32 PageSize = 2;
 }
 
-message Product {
-  uint32 id = 1;
+message SKU {
+  uint64 id = 1;
+  string title = 2;
+  double price = 3;
+  uint64 spu_id = 4;
+  bool is_active = 5;
+  map<string, string> specs = 6;
+  uint32 stock = 7;
+  uint32 sales = 8;
+}
+
+message SPU {
+  uint64 id = 1;
+  SPUBasicInfo basic_info = 2;
+  SPUMedia media = 3;
+  CategoryRelation category_relation = 5;
+  repeated SKU skus = 6;
+}
+
+message SPUBasicInfo {
+  string title = 1 ;
+  string sub_title = 2 ;
+  string description = 3 ;
+  uint64 shop_id = 4 ;
+  string brand = 5 ;
+  SPUStatus status = 6 ;
+}
+
+message SPUMedia {
+  repeated string main_images = 1;
+  string video_url = 2 ;
+}
+
+message ProductFilter {
+  string keywords = 1;
+  uint64 category_id = 2 ;
+  string brand = 3;
+  double min_price = 4;
+  double max_price = 5;
+  SPUStatus status = 6 ;
+  Pagination pagination = 7;
+}
+
+
+message CategoryRelation {
+  repeated uint64 category_ids = 1 ;
+}
+
+enum SPUStatus {
+  DRAFT = 0;  // 草稿状态
+  PENDING_REVIEW = 1;  // 待审核
+  APPROVED = 2;  // 审核通过
+  REJECTED = 3;  // 审核拒绝
+  ONLINE = 4;  // 已上架
+  OFFLINE = 5;  // 已下架
+}
+
+message Category {
+  uint64 id = 1;
   string name = 2;
   string description = 3;
-  string picture = 4;
-  float price = 5;
-
-  repeated string categories = 6;
+  uint64 parent_id = 4;
+  int32 level = 5;
+  bool is_leaf = 6;
+  int32 sort = 7;
+  string image_url = 8;
 }
 
-message CreateProductsReq {
-  Product product = 1;
+// 树形节点结构
+message CategoryNode {
+  Category category = 1;
+  repeated CategoryNode children = 2;
+  uint32 spu_count = 3;  // 关联商品数量
 }
 
-message CreateProductsResp {
-  uint32 id = 1;
+// ================== 服务定义 ==================
+service ProductCatalogService {
+  //商品管理
+  rpc CreateProduct (CreateProductReq) returns (ProductResp);
+  rpc UpdateProduct (UpdateProductReq) returns (ProductResp);
+  rpc DeleteProduct (DeleteProductReq) returns (common.Empty);
+  //商品查询
+  rpc ListProducts(ListProductsReq) returns (ListProductsResp) {} ;
+  rpc GetProduct(GetProductReq) returns (GetProductResp) {};
+  rpc BatchGetProducts(BatchGetProductsReq) returns (BatchGetProductsResp) {};
+  rpc SearchProducts (SearchProductsReq) returns (SearchProductsResp) {} ;
+
+  //分类管理和查询
+  rpc CreateCategory(CreateCategoryReq) returns (Category);
+  rpc UpdateCategory(UpdateCategoryReq) returns (Category);
+  rpc DeleteCategory(DeleteCategoryReq) returns (common.Empty);
+  rpc ListCategories(ListCategoriesReq) returns (CategoryNode);
+  rpc GetCategoryTree(GetCategoryTreeReq) returns (CategoryTreeResp);
+  //  rpc ListCategoriesByParent(ListByParentReq) returns (CategoryTreeResp);
 }
 
-message UpdateProductsReq {
-  Product product = 1;
+// 商品管理
+message CreateProductReq {
+  message SKUData {
+    string title = 1 ;
+    double price = 2 ;
+    uint32 stock = 3 ;
+    map<string, string> specs = 4;
+  }
+
+  SPUBasicInfo basic_info = 3;
+  SPUMedia media = 4;
+  CategoryRelation category_relation = 5;
+  repeated SKUData SKUs = 6 ;
 }
 
-message UpdateProductsResp {
+message UpdateProductReq {
+  // 主标识
+  uint64 id = 1 ;
+  // 要更新的字段掩码（客户端指定需要更新的路径）
+  string update_mask = 2;
+  SPUBasicInfo basic_info = 3;
+  SPUMedia media = 4;
+  CategoryRelation category_relation = 5;
+}
+
+message DeleteProductReq{
+  uint64 id = 1;
+  //强制删除模式 (true)：允许删除有关联的SPU及其关联的SKU
+  //安全模式 (false)：默认模式，阻止删除有关联的SPU
+  bool force = 2;
+}
+
+message ProductResp{
   bool success = 1;
+  string error = 2;
 }
 
-message RemoveProductsReq {
-  uint32 id = 1;
-}
-
-message RemoveProductsResp {
-  bool success = 1;
-}
-
+// 商品查询
 message ListProductsReq {
-  int32 page = 1;
-  int32 page_size = 2;
-  string category_name = 3;
+  ProductFilter filter = 1;
 }
 
 message ListProductsResp {
-  repeated Product products = 1;
+  repeated SPU products = 1;
 }
 
 message GetProductReq {
-  uint32 id = 1;
+  uint64 id = 1;
 }
 
 message GetProductResp {
-  Product product = 1;
+  SPU product = 1;
 }
 
-message BatchGetProductReq {
-  repeated uint32 ids = 1;
+message BatchGetProductsReq{
+  repeated uint64 ids = 1;
 }
 
-message BatchGetProductResp {
-  repeated Product products = 1;
+message BatchGetProductsResp{
+  map<uint64, SPU> products = 1;
+  repeated uint64 failed_ids = 2;
 }
 
 message SearchProductsReq {
@@ -79,5 +176,49 @@ message SearchProductsReq {
 }
 
 message SearchProductsResp {
-  repeated Product results = 1;
+  repeated SPU results = 1;
 }
+
+
+// 分类管理
+message CreateCategoryReq {
+  string name = 1 ;
+  string description = 2;
+  uint64 parent_id = 3;  // 0表示根分类
+  optional string image_url = 4 ;
+}
+
+message UpdateCategoryReq {
+  uint64 id = 1 ;
+  optional string name = 2 ;
+  optional string description = 3;
+  optional int32 sort = 4;
+  optional string image_url = 5 ;
+}
+
+message DeleteCategoryReq {
+  uint64 id = 1 ;
+  //强制删除模式 (true)：允许删除有关联 SPU 的分类
+  //安全模式 (false)：默认模式，阻止删除有关联的分类
+  bool force = 2;
+}
+
+message ListCategoriesReq {
+  uint64 id = 1 ;
+  bool with_children = 2;  // 是否包含直接子分类
+  bool with_spus = 3;  // 是否包含关联商品概要
+}
+
+message GetCategoryTreeReq {
+  bool include_spu_count = 1;  // 是否包含商品数量统计
+}
+
+message CategoryTreeResp {
+  repeated CategoryNode tree = 1;
+}
+
+//message ListByParentReq {
+//  uint64 parent_id = 1;
+//  bool recursive = 2;  // 是否递归获取所有子分类
+//  int32 depth = 3;  // 递归深度限制
+//}

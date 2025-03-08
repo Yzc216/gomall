@@ -33,7 +33,7 @@ func (h *OrderListService) Run(req *common.Empty) (resp map[string]any, err erro
 	var list []types.Order
 	for _, v := range orderResp.Orders {
 		var (
-			total float32
+			total float64
 			items []types.OrderItem
 		)
 
@@ -41,7 +41,7 @@ func (h *OrderListService) Run(req *common.Empty) (resp map[string]any, err erro
 			total += v.Cost
 			i := v.Item
 			//应该批量获取，然后组装成map[id]product
-			productResp, err := rpc.ProductClient.GetProduct(h.Context, &product.GetProductReq{Id: i.ProductId})
+			productResp, err := rpc.ProductClient.GetProduct(h.Context, &product.GetProductReq{Id: i.SpuId})
 			if err != nil {
 				return nil, err
 			}
@@ -51,8 +51,8 @@ func (h *OrderListService) Run(req *common.Empty) (resp map[string]any, err erro
 			p := productResp.Product
 
 			items = append(items, types.OrderItem{
-				ProductName: p.Name,
-				Picture:     p.Picture,
+				ProductName: p.BasicInfo.Title,
+				Picture:     p.Media.MainImages[0],
 				Cost:        v.Cost,
 				Qty:         i.Quantity,
 			})

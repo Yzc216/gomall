@@ -13,6 +13,7 @@ import (
 type Client interface {
 	PlaceOrder(ctx context.Context, Req *order.PlaceOrderReq, callOptions ...callopt.Option) (r *order.PlaceOrderResp, err error)
 	ListOrder(ctx context.Context, Req *order.ListOrderReq, callOptions ...callopt.Option) (r *order.ListOrderResp, err error)
+	UpdateOrderState(ctx context.Context, Req *order.UpdateOrderStateReq, callOptions ...callopt.Option) (r *order.UpdateOrderStateResp, err error)
 }
 
 // NewClient creates a client for the service defined in IDL.
@@ -52,4 +53,9 @@ func (p *kOrderServiceClient) PlaceOrder(ctx context.Context, Req *order.PlaceOr
 func (p *kOrderServiceClient) ListOrder(ctx context.Context, Req *order.ListOrderReq, callOptions ...callopt.Option) (r *order.ListOrderResp, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.ListOrder(ctx, Req)
+}
+
+func (p *kOrderServiceClient) UpdateOrderState(ctx context.Context, Req *order.UpdateOrderStateReq, callOptions ...callopt.Option) (r *order.UpdateOrderStateResp, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.UpdateOrderState(ctx, Req)
 }

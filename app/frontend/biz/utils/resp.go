@@ -29,7 +29,7 @@ func WarpResponse(ctx context.Context, c *app.RequestContext, content map[string
 			UserId: userId,
 		})
 		if err == nil && cartResp != nil {
-			content["cart_num"] = len(cartResp.Items)
+			content["cart_num"] = len(cartResp.Cart.Items)
 		}
 	}
 	return content

@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/Yzc216/gomall/app/checkout/infra/mq"
 	"github.com/Yzc216/gomall/app/checkout/infra/rpc"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/cart"
@@ -10,7 +12,6 @@ import (
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/order"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/payment"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
-	"github.com/cloudwego/kitex/pkg/kerrors"
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/nats-io/nats.go"
 	"go.opentelemetry.io/otel"
@@ -39,111 +40,145 @@ func (s *CheckoutService) Run(req *checkout.CheckoutReq) (resp *checkout.Checkou
 	// get cart
 	cartResult, err := rpc.CartClient.GetCart(s.ctx, &cart.GetCartReq{UserId: req.UserId})
 	if err != nil {
-		return nil, kerrors.NewGRPCBizStatusError(5005001, err.Error())
+		klog.Error(err)
+		err = fmt.Errorf("GetCart.err:%v", err)
+		return
 	}
-	if cartResult == nil || cartResult.Items == nil {
-		return nil, kerrors.NewGRPCBizStatusError(5004001, "cart is empty")
+	if cartResult == nil || cartResult.Cart == nil || len(cartResult.Cart.Items) == 0 {
+		err = errors.New("cart is empty")
+		return
 	}
 
+	// calculate cart
 	var (
-		total float32
 		oi    []*order.OrderItem
+		total float64
 	)
+	spuIDs := make([]uint64, 0, len(cartResult.Cart.Items))
+	for _, item := range cartResult.Cart.Items {
+		spuIDs = append(spuIDs, item.SpuId)
+	}
+	productRes, err := rpc.ProductClient.BatchGetProducts(s.ctx, &product.BatchGetProductsReq{Ids: spuIDs})
+	if err != nil {
+		return nil, fmt.Errorf("批量获取商品失败: %v", err)
+	}
+	spuMap := productRes.Products
 
-	for _, cartItem := range cartResult.Items {
-		productResp, resultErr := rpc.ProductClient.GetProduct(s.ctx, &product.GetProductReq{
-			Id: cartItem.ProductId,
-		})
-
-		if resultErr != nil {
-			return nil, resultErr
+	for _, cartItem := range cartResult.Cart.Items {
+		spu, exists := spuMap[cartItem.SpuId]
+		if !exists {
+			return nil, fmt.Errorf("商品信息未找到: spu_id=%d", cartItem.SpuId)
 		}
 
-		if productResp.Product == nil {
-			continue
+		targetSku := findSkuByID(spu.Skus, cartItem.SkuId)
+		if targetSku == nil {
+			return nil, fmt.Errorf("规格信息未找到: spu_id=%d, sku_id=%d", cartItem.SpuId, cartItem.SkuId)
 		}
 
-		p := productResp.Product.Price
-
-		cost := p * float32(cartItem.Quantity)
+		cost := targetSku.Price * float64(cartItem.Quantity)
 		total += cost
-
 		oi = append(oi, &order.OrderItem{
-			Item: &cart.CartItem{
-				ProductId: cartItem.ProductId,
-				Quantity:  cartItem.Quantity,
-			},
+			Item: &cart.CartItem{SpuId: cartItem.SpuId, SkuId: cartItem.SkuId, Quantity: cartItem.Quantity},
 			Cost: cost,
 		})
 	}
 
 	// create order
-	var orderId string
-
-	orderResp, err := rpc.OrderClient.PlaceOrder(s.ctx, &order.PlaceOrderReq{
-		UserId: req.UserId,
-		Email:  req.Email,
-		Address: &order.Address{
-			StreetAddress: req.Address.StreetAddress,
-			City:          req.Address.City,
-			State:         req.Address.State,
-			Country:       req.Address.Country,
-			ZipCode:       req.Address.ZipCode,
-		},
-		Items: oi,
-	})
+	orderReq := &order.PlaceOrderReq{
+		UserId:       req.UserId,
+		UserCurrency: "USD",
+		Items:        oi,
+		Email:        req.Email,
+	}
+	if req.Address != nil {
+		addr := req.Address
+		orderReq.Address = &order.Address{
+			StreetAddress: addr.StreetAddress,
+			City:          addr.City,
+			Country:       addr.Country,
+			State:         addr.State,
+			ZipCode:       addr.ZipCode,
+		}
+	}
+	orderResult, err := rpc.OrderClient.PlaceOrder(s.ctx, orderReq)
 	if err != nil {
-		return nil, kerrors.NewGRPCBizStatusError(5004002, err.Error())
+		err = fmt.Errorf("PlaceOrder.err:%v", err)
+		return
 	}
+	klog.Info("orderResult: ", orderResult)
 
-	if orderResp != nil && orderResp.Order != nil {
-		orderId = orderResp.Order.OrderId
+	// empty cart
+	emptyResult, err := rpc.CartClient.EmptyCart(s.ctx, &cart.EmptyCartReq{UserId: req.UserId})
+	if err != nil {
+		err = fmt.Errorf("EmptyCart.err:%v", err)
+		return
 	}
+	klog.Info(emptyResult)
 
+	// charge
+	var orderId uint64
+	if orderResult != nil || orderResult.Order != nil {
+		orderId = orderResult.Order.OrderId
+	}
 	payReq := &payment.ChargeReq{
 		UserId:  req.UserId,
 		OrderId: orderId,
 		Amount:  total,
 		CreditCard: &payment.CreditCardInfo{
 			CreditCardNumber:          req.CreditCard.CreditCardNumber,
-			CreditCardCvv:             req.CreditCard.CreditCardCvv,
-			CreditCardExpirationMonth: req.CreditCard.CreditCardExpirationMonth,
 			CreditCardExpirationYear:  req.CreditCard.CreditCardExpirationYear,
+			CreditCardExpirationMonth: req.CreditCard.CreditCardExpirationMonth,
+			CreditCardCvv:             req.CreditCard.CreditCardCvv,
 		},
 	}
-
-	_, err = rpc.CartClient.EmptyCart(s.ctx, &cart.EmptyCartReq{UserId: req.UserId})
-	if err != nil {
-		klog.Error(err.Error())
-	}
-
 	paymentResult, err := rpc.PaymentClient.Charge(s.ctx, payReq)
 	if err != nil {
-		return nil, err
+		err = fmt.Errorf("Charge.err:%v", err)
+		return
 	}
-
 	data, _ := proto.Marshal(&email.EmailReq{
 		From:        "from@example.com",
 		To:          req.Email,
 		ContentType: "text/plain",
-		Subject:     "You just created an order in GoMall shop",
-		Content:     "You just created an order in GoMall shop",
+		Subject:     "You just created an order in CloudWeGo shop",
+		Content:     "You just created an order in CloudWeGo shop",
 	})
 	msg := &nats.Msg{Subject: "email", Data: data, Header: make(nats.Header)}
 
 	// otel inject
 	otel.GetTextMapPropagator().Inject(s.ctx, propagation.HeaderCarrier(msg.Header))
 
-	err = mq.Nc.PublishMsg(msg)
-	if err != nil {
-		klog.Error(err.Error())
-	}
+	_ = mq.Nc.PublishMsg(msg)
 
 	klog.Info(paymentResult)
+
+	// change order state
+	klog.Info(orderResult)
+	res, err := rpc.OrderClient.UpdateOrderState(s.ctx, &order.UpdateOrderStateReq{
+		UserId:  req.UserId,
+		OrderId: orderId,
+		State:   order.OrderState_OrderStatePaid,
+	})
+	if err != nil {
+		klog.Error(err)
+		return
+	}
+	if !res.Success {
+		klog.Info(res.Error)
+	}
 
 	resp = &checkout.CheckoutResp{
 		OrderId:       orderId,
 		TransactionId: paymentResult.TransactionId,
 	}
 	return
+}
+
+func findSkuByID(skus []*product.SKU, skuID uint64) *product.SKU {
+	for _, sku := range skus {
+		if sku.Id == skuID {
+			return sku
+		}
+	}
+	return nil
 }

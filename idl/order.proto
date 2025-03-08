@@ -9,6 +9,7 @@ option go_package = "/order";
 service OrderService {
   rpc PlaceOrder (PlaceOrderReq) returns (PlaceOrderResp) {}
   rpc ListOrder (ListOrderReq) returns (ListOrderResp) {}
+  rpc UpdateOrderState(UpdateOrderStateReq) returns (UpdateOrderStateResp) {}
 }
 
 message Address {
@@ -16,16 +17,17 @@ message Address {
   string city = 2;
   string state = 3;
   string country = 4;
-  string zip_code = 5;
+  int32 zip_code = 5;
 }
 
 message OrderItem {
   cart.CartItem item = 1;
-  float cost = 2;
+  double cost = 2;
 }
 
 message PlaceOrderReq {
   uint64 user_id = 1;
+  string user_currency = 2;
 
   Address address = 3;
   string email = 4;
@@ -33,7 +35,7 @@ message PlaceOrderReq {
 }
 
 message OrderResult {
-  string order_id = 1;
+  uint64 order_id = 1;
 }
 
 message PlaceOrderResp {
@@ -46,7 +48,7 @@ message ListOrderReq {
 
 message Order {
   repeated OrderItem items = 1;
-  string order_id = 2;
+  uint64 order_id = 2;
   uint64 user_id = 3;
   Address address = 4;
   string email = 5;
@@ -55,4 +57,20 @@ message Order {
 
 message ListOrderResp {
   repeated Order orders = 1;
+}
+
+enum OrderState {
+  OrderStatePlaced = 0;
+  OrderStatePaid = 1;
+  OrderStateCanceled = 2;
+}
+message UpdateOrderStateReq {
+  uint64 user_id = 1;
+  uint64 order_id = 2;
+  OrderState state = 3;
+}
+
+message UpdateOrderStateResp {
+  bool success = 1;
+  string error = 2;
 }

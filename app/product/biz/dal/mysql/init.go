@@ -31,8 +31,9 @@ func Init() {
 	if err = DB.Use(tracing.NewPlugin(tracing.WithoutMetrics(), tracing.WithTracerProvider(mtl.TracerProvider))); err != nil {
 		panic(err)
 	}
-	err = DB.AutoMigrate( //nolint:errcheck
-		&model.Product{},
+	err = DB.AutoMigrate(
+		&model.SPU{},
+		&model.SKU{},
 		&model.Category{},
 	)
 	if err != nil {

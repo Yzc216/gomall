@@ -1,3 +1,4 @@
+<!-- 根据某个种类获取到的商品列表 -->
 {{ define "category" }}
     {{ template "header" . }}
     <div class="container-fluid px-4 px-lg-5 my-5">
@@ -10,22 +11,34 @@
         </div>
         <!-- 商品列表 -->
         <div class="row g-4 g-lg-5">
-            {{ range .items }}
+            {{range .items}}
                 <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
                     <div class="card h-100 shadow-sm hover-card" style="border: none !important;">
                         <a href="/product?id={{ .Id }}" class="text-decoration-none position-relative">
                             <div class="ratio ratio-4x3 bg-light overflow-hidden">
-                                <img src="{{.Picture}}"
+                                <img src="{{index .Media.MainImages 0}}"
                                      class="card-img-top object-fit-cover p-2 transition-scale"
-                                     alt="{{ .Name}}">
+                                     alt="{{ .BasicInfo.Title}}">
                             </div>
 
                             <div class="card-body p-3">
                                 <h6 class="card-title text-dark mb-2 line-clamp-2" style="height: 3em;">
-                                    {{ .Name}}
+                                    <div class="line-clamp-1 fw-medium">{{ .BasicInfo.Title }}</div>
+                                    {{if .BasicInfo.SubTitle}}
+                                        <div class="line-clamp-1 text-muted small">{{ .BasicInfo.SubTitle }}</div>
+                                    {{end}}
                                 </h6>
                                 <div class="d-flex align-items-end justify-content-between">
-                                    <div class="text-primary fs-5 fw-bold">¥{{ .Price}}</div>
+                                    <div class="text-primary fs-5 fw-bold">
+                                        {{range $index, $sku := .Skus}}  <!-- SKUs大写 -->
+                                        {{/*                                            {{if $sku.IsActive}}  <!-- IsActive大写 -->*/}}
+                                        ¥{{printf "%.2f" $sku.Price}}  <!-- Price大写 -->
+                                        {{break}}
+                                        {{/*                                            {{end}}*/}}
+                                        {{else}}
+                                            ¥0.00
+                                        {{end}}
+                                    </div>
                                     <button class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                         <i class="fas fa-cart-plus me-1"></i>购买
                                     </button>
@@ -34,7 +47,7 @@
                         </a>
                     </div>
                 </div>
-            {{ end }}
+            {{end}}
         </div>
     </div>
     {{ template "footer" }}

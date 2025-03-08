@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/Yzc216/gomall/app/frontend/infra/rpc"
 	frontendutils "github.com/Yzc216/gomall/app/frontend/utils"
 	rpccart "github.com/Yzc216/gomall/rpc_gen/kitex_gen/cart"
@@ -23,38 +24,50 @@ func NewCheckoutService(Context context.Context, RequestContext *app.RequestCont
 }
 
 func (h *CheckoutService) Run(req *common.Empty) (resp map[string]any, err error) {
-	var items []map[string]string
-	userId := frontendutils.GetUserIdFromCtx(h.Context)
 
-	carts, err := rpc.CartClient.GetCart(h.Context, &rpccart.GetCartReq{UserId: userId})
+	userId := frontendutils.GetUserIdFromCtx(h.Context)
+	cartResp, err := rpc.CartClient.GetCart(h.Context, &rpccart.GetCartReq{UserId: userId})
 	if err != nil {
 		return nil, err
 	}
-	var total float32
 
-	for _, v := range carts.Items {
-		productResp, err := rpc.ProductClient.GetProduct(h.Context, &rpcproduct.GetProductReq{
-			Id: v.ProductId,
-		})
-		if err != nil {
-			return nil, err
+	spuIDs := make([]uint64, 0, len(cartResp.Cart.Items))
+	for _, item := range cartResp.Cart.Items {
+		spuIDs = append(spuIDs, item.SpuId)
+	}
+	productRes, err := rpc.ProductClient.BatchGetProducts(h.Context, &rpcproduct.BatchGetProductsReq{Ids: spuIDs})
+	if err != nil {
+		return nil, fmt.Errorf("批量获取商品失败: %v", err)
+	}
+	spuMap := productRes.Products
+
+	var items []map[string]any
+	var total float64
+	for _, item := range cartResp.Cart.Items {
+		spu, exists := spuMap[item.SpuId]
+		if !exists {
+			return nil, fmt.Errorf("商品信息未找到: spu_id=%d", item.SpuId)
 		}
-		if productResp.Product == nil {
-			continue
+
+		targetSku := findSkuByID(spu.Skus, item.SkuId)
+		if targetSku == nil {
+			return nil, fmt.Errorf("规格信息未找到: spu_id=%d, sku_id=%d", item.SpuId, item.SkuId)
 		}
-		p := productResp.Product
-		items = append(items, map[string]string{
-			"Name":    p.Name,
-			"Price":   strconv.FormatFloat(float64(p.Price), 'f', 2, 64),
-			"Picture": p.Picture,
-			"Qty":     strconv.Itoa(int(v.Quantity)),
+
+		items = append(items, map[string]any{
+			"Name":        spu.BasicInfo.Title,
+			"Price":       strconv.FormatFloat(targetSku.Price, 'f', 2, 64),
+			"Specs":       targetSku.Specs, // 使用目标SKU的规格
+			"Description": spu.BasicInfo.Description,
+			"Picture":     getMainImage(spu.Media.MainImages),
+			"Quantity":    item.Quantity,
 		})
-		total += float32(v.Quantity) * p.Price
+		total += targetSku.Price * float64(item.Quantity)
 	}
 
 	return utils.H{
 		"title": "Checkout",
 		"items": items,
-		"total": strconv.FormatFloat(float64(total), 'f', 2, 64),
+		"total": strconv.FormatFloat(total, 'f', 2, 64),
 	}, nil
 }

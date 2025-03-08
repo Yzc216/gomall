@@ -4,9 +4,9 @@ import (
 	"context"
 	"github.com/Yzc216/gomall/app/order/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/order/biz/model"
+	"github.com/Yzc216/gomall/common/utils"
 	order "github.com/Yzc216/gomall/rpc_gen/kitex_gen/order"
 	"github.com/cloudwego/kitex/pkg/kerrors"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -24,14 +24,16 @@ func (s *PlaceOrderService) Run(req *order.PlaceOrderReq) (resp *order.PlaceOrde
 		return
 	}
 	err = mysql.DB.Transaction(func(tx *gorm.DB) error {
-		orderId, _ := uuid.NewUUID()
+		orderId := utils.GenID()
 
 		o := &model.Order{
-			OrderId: orderId.String(),
-			UserId:  req.UserId,
+			OrderId:      orderId,
+			UserId:       req.UserId,
+			UserCurrency: req.UserCurrency,
 			Consignee: model.Consignee{
 				Email: req.Email,
 			},
+			OrderState: model.OrderStatePlaced,
 		}
 		if req.Address != nil {
 			a := req.Address
@@ -46,8 +48,9 @@ func (s *PlaceOrderService) Run(req *order.PlaceOrderReq) (resp *order.PlaceOrde
 		var items []model.OrderItem
 		for _, v := range req.Items {
 			items = append(items, model.OrderItem{
-				OrderIdRefer: orderId.String(),
-				ProductId:    v.Item.ProductId,
+				OrderIdRefer: orderId,
+				SpuId:        v.Item.SpuId,
+				SkuId:        v.Item.SkuId,
 				Quantity:     v.Item.Quantity,
 				Cost:         v.Cost,
 			})
@@ -58,7 +61,7 @@ func (s *PlaceOrderService) Run(req *order.PlaceOrderReq) (resp *order.PlaceOrde
 
 		resp = &order.PlaceOrderResp{
 			Order: &order.OrderResult{
-				OrderId: orderId.String(),
+				OrderId: orderId,
 			},
 		}
 

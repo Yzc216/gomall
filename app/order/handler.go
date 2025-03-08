@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"github.com/Yzc216/gomall/app/order/biz/service"
-	order "github.com/Yzc216/gomall/rpc_gen/kitex_gen/order"
+	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/order"
 )
 
 // OrderServiceImpl implements the last service interface defined in the IDL.
@@ -19,6 +19,13 @@ func (s *OrderServiceImpl) PlaceOrder(ctx context.Context, req *order.PlaceOrder
 // ListOrder implements the OrderServiceImpl interface.
 func (s *OrderServiceImpl) ListOrder(ctx context.Context, req *order.ListOrderReq) (resp *order.ListOrderResp, err error) {
 	resp, err = service.NewListOrderService(ctx).Run(req)
+
+	return resp, err
+}
+
+// UpdateOrderState implements the OrderServiceImpl interface.
+func (s *OrderServiceImpl) UpdateOrderState(ctx context.Context, req *order.UpdateOrderStateReq) (resp *order.UpdateOrderStateResp, err error) {
+	resp, err = service.NewUpdateOrderStateService(ctx).Run(req)
 
 	return resp, err
 }

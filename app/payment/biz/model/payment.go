@@ -9,9 +9,9 @@ import (
 type PaymentLog struct {
 	gorm.Model
 	UserId        uint64    `json:"user_id"`
-	OrderId       string    `json:"order_id"`
+	OrderId       uint64    `json:"order_id"`
 	TransactionId string    `json:"transaction_id"`
-	Amount        float32   `json:"amount"`
+	Amount        float64   `json:"amount"`
 	PayAt         time.Time `json:"pay_at"`
 }
 

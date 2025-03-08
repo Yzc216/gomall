@@ -29,8 +29,9 @@ func (s *ListOrderService) Run(req *order.ListOrderReq) (resp *order.ListOrderRe
 		for _, oi := range v.OrderItems {
 			items = append(items, &order.OrderItem{
 				Item: &cart.CartItem{
-					ProductId: oi.ProductId,
-					Quantity:  oi.Quantity,
+					SpuId:    oi.SpuId,
+					SkuId:    oi.SkuId,
+					Quantity: oi.Quantity,
 				},
 				Cost: oi.Cost,
 			})

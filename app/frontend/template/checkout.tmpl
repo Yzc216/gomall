@@ -109,8 +109,13 @@
                             </div>
                             <div class="col-8">
                                 <div class="mt-1">{{ .Name }}</div>
-                                <div class="mt-1">Single Price: ${{ .Price }}</div>
-                                <div class="mt-1">Qty: {{ .Qty }}</div>
+                                <div class="mt-1">Specification:
+                                    {{ range $specName, $specValue := .Specs }}
+                                        {{ $specName }}:{{ $specValue }}
+                                    {{end}}
+                                </div>
+                                <div class="mt-1">Single Price: ￥{{ .Price }}</div>
+                                <div class="mt-1">Quantity: {{ .Quantity }}</div>
                             </div>
                         </div>
                     </div>

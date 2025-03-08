@@ -22,13 +22,13 @@ message QueryStockReq{
 }
 
 message QueryStockResp{
-  map<uint64,uint32> current_stock = 3;  //map[sku_id]stock
+  map<uint64, uint32> current_stock = 3;  //map[sku_id]stock
 }
 
 message InventoryReq{
   string order_id = 1;   // 订单号（全局唯一）
   repeated Item items = 2;
-  bool force =3;        //管理员强制操作
+  bool force = 3;        //管理员强制操作
 
   message Item {
     uint64 sku_id = 1;    // SKU ID
@@ -68,7 +68,19 @@ message InventoryResp{
 message ProductCreatedEvent {
   uint64 sku_id = 1;
   string sku_name = 2;
-  int32 initial_stock = 3;
+  uint32 initial_stock = 3;
   string operator = 4;
-//  google.protobuf.Timestamp event_time = 5;
+}
+
+message ProductUpdateEvent {
+  uint64 sku_id = 1;
+  string sku_name = 2;
+  uint32 updated_stock = 3;
+  string operator = 4;
+}
+
+message ProductDeleteEvent {
+  uint64 sku_id = 1;
+  string sku_name = 2;
+  string operator = 4;
 }

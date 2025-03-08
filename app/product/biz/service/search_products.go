@@ -8,27 +8,38 @@ import (
 )
 
 type SearchProductsService struct {
-	ctx context.Context
+	ctx  context.Context
+	repo *model.SPURepo
 } // NewSearchProductsService new SearchProductsService
 func NewSearchProductsService(ctx context.Context) *SearchProductsService {
-	return &SearchProductsService{ctx: ctx}
+	return &SearchProductsService{ctx: ctx, repo: model.NewSPURepo(mysql.DB)}
 }
 
 // Run create note info
 func (s *SearchProductsService) Run(req *product.SearchProductsReq) (resp *product.SearchProductsResp, err error) {
-	productQuery := model.NewProductQuery(s.ctx, mysql.DB)
-
-	products, _ := productQuery.SearchProducts(req.Query)
-
-	var result []*product.Product
-	for _, v1 := range products {
-		result = append(result, &product.Product{
-			Id:          uint32(v1.ID),
-			Name:        v1.Name,
-			Price:       v1.Price,
-			Picture:     v1.Picture,
-			Description: v1.Description,
-		})
+	filter := &model.SPUFilter{
+		Keyword: req.Query,
 	}
-	return &product.SearchProductsResp{Results: result}, nil
+	var page = &model.Pagination{}
+	// TODO 分页待proto补充
+	//if req.page != nil {
+	//	page = &model.Pagination{
+	//		Page:     int(req.Filter.Pagination.Page),
+	//		PageSize: int(req.Filter.Pagination.PageSize),
+	//	}
+	//}
+
+	products, _, err := s.repo.List(s.ctx, filter, page)
+	if err != nil {
+		return nil, err
+	}
+	var SPUs []*product.SPU
+	for _, v := range products {
+		spu, err := convertToProtoSPU(v)
+		if err != nil {
+			return nil, err
+		}
+		SPUs = append(SPUs, spu)
+	}
+	return &product.SearchProductsResp{Results: SPUs}, nil
 }

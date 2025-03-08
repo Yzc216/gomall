@@ -2,9 +2,13 @@ package redis
 
 import (
 	"context"
+	"github.com/Yzc216/gomall/common/mtl"
+	"github.com/cloudwego/kitex/pkg/klog"
+	"github.com/redis/go-redis/extra/redisotel/v9"
+	"github.com/redis/go-redis/extra/redisprometheus/v9"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/Yzc216/gomall/app/product/conf"
+	"github.com/redis/go-redis/v9"
 )
 
 var (
@@ -20,5 +24,12 @@ func Init() {
 	})
 	if err := RedisClient.Ping(context.Background()).Err(); err != nil {
 		panic(err)
+	}
+
+	if err := redisotel.InstrumentTracing(RedisClient); err != nil {
+		klog.Error("redis tracing collect error ", err)
+	}
+	if err := mtl.Registry.Register(redisprometheus.NewCollector("default", "product", RedisClient)); err != nil {
+		klog.Error("redis metric collect error ", err)
 	}
 }

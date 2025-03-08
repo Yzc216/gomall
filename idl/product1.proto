@@ -1,0 +1,224 @@
+syntax = "proto3";
+
+package product;
+
+option go_package = "/product";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+import "third_party/validate.proto";
+
+// ================== 数据结构 ==================
+message Pagination {
+  int32 Page = 1[(validate.rules).int32 = {gt: 0}];
+  int32 PageSize = 2[(validate.rules).int32 = {gt: 0}];
+}
+
+message SKU {
+  uint64 id = 1;
+  string title = 2;
+  double price = 3;
+  uint64 spu_id = 4;
+  bool is_active = 5;
+  map<string, string> specs = 6;
+  uint32 stock = 7;
+  uint32 sales = 8;
+}
+
+message SPU {
+  uint64 id = 1;
+  SPUBasicInfo basic_info = 2;
+  SPUMedia media = 3;
+  SPUStatus status = 4;
+  CategoryRelation category_relation = 5;
+  repeated SKU skus = 6;
+}
+
+message SPUBasicInfo {
+  string title = 1 [(validate.rules).string = {min_len: 1, max_len: 255}];
+  string sub_title = 2 [(validate.rules).string = {max_len: 255}];
+  string description = 3 [(validate.rules).string = {max_len: 5000}];
+  uint64 shop_id = 4 [(validate.rules).uint64 = {gt: 0}];
+  uint64 brand_id = 5 [(validate.rules).uint64 = {gt: 0}];
+  SPUStatus status = 6 [(validate.rules).int32 = {in: [0, 1, 2, 3, 4, 5]}];
+}
+
+message SPUMedia {
+  repeated string main_images = 1 [(validate.rules).repeated = {
+    max_items: 5,
+    items: {string: {uri: true}}
+  }];
+  string video_url = 2 [(validate.rules).string = {uri: true}];
+}
+
+message ProductFilter {
+  string keywords = 1;
+  uint64 category_id = 2 [(validate.rules).uint64 = {gt: 0}];
+  string brand = 3;
+  double min_price = 4[(validate.rules).double = {gt: 0}];
+  double max_price = 5[(validate.rules).double = {gt: 0}];
+  SPUStatus status = 6 [(validate.rules).int32 = {in: [0, 1, 2, 3, 4, 5]}];
+  Pagination pagination = 7;
+}
+
+
+message CategoryRelation {
+  repeated uint64 category_ids = 1 [(validate.rules).repeated = {
+    min_items: 1,
+    max_items: 5,
+    items: {uint64: {gt: 0}}
+  }];
+}
+
+enum SPUStatus {
+  DRAFT = 0;  // 草稿状态
+  PENDING_REVIEW = 1;  // 待审核
+  APPROVED = 2;  // 审核通过
+  REJECTED = 3;  // 审核拒绝
+  ONLINE = 4;  // 已上架
+  OFFLINE = 5;  // 已下架
+}
+
+message Category {
+  uint64 id = 1;
+  string name = 2;
+  string description = 3;
+  uint64 parent_id = 4;
+  int32 level = 5;
+  bool is_leaf = 6;
+  int32 sort = 7;
+  string image_url = 8;
+}
+
+// 树形节点结构
+message CategoryNode {
+  Category category = 1;
+  repeated CategoryNode children = 2;
+  uint32 spu_count = 3;  // 关联商品数量
+}
+
+// ================== 服务定义 ==================
+service ProductCatalogService {
+  //商品管理
+  rpc CreateProduct (CreateProductReq) returns (ProductResp);
+  rpc UpdateProduct (UpdateProductReq) returns (ProductResp);
+  rpc DeleteProduct (DeleteProductReq) returns (google.protobuf.Empty);
+  //商品查询
+  rpc ListProducts(ListProductsReq) returns (ListProductsResp) {} ;
+  rpc GetProduct(GetProductReq) returns (GetProductResp) {};
+  rpc SearchProducts (SearchProductsReq) returns (SearchProductsResp) {} ;
+
+  //分类管理和查询
+  rpc CreateCategory(CreateCategoryReq) returns (Category);
+  rpc UpdateCategory(UpdateCategoryReq) returns (Category);
+  rpc DeleteCategory(DeleteCategoryReq) returns (google.protobuf.Empty);
+  rpc ListCategories(ListCategoriesReq) returns (CategoryDetailResp);
+  //  rpc GetCategoryTree(GetCategoryTreeReq) returns (CategoryTreeResp);
+  //  rpc ListCategoriesByParent(ListByParentReq) returns (CategoryTreeResp);
+}
+
+// 商品管理
+message CreateProductReq {
+  message SKUData {
+    string title = 1 [(validate.rules).string = {min_len: 1, max_len: 50}];
+    double price = 2 [(validate.rules).double = {gt: 0}];
+    uint32 stock = 3 [(validate.rules).uint32 = {gt: 0}];
+    map<string, string> specs = 4;
+  }
+
+  SPUBasicInfo basic_info = 3;
+  SPUMedia media = 4;
+  CategoryRelation category_relation = 5;
+  repeated SKUData SKUs = 6 [(validate.rules).repeated = {min_items: 1}];
+}
+
+message UpdateProductReq {
+  // 主标识
+  uint64 id = 1 [(validate.rules).uint64 = {gt: 0}];
+  // 要更新的字段掩码（客户端指定需要更新的路径）
+  google.protobuf.FieldMask update_mask = 2;
+  SPUBasicInfo basic_info = 3;
+  SPUMedia media = 4;
+  CategoryRelation category_relation = 5;
+}
+
+message DeleteProductReq{
+  uint64 id = 1[(validate.rules).uint64.gt = 0];
+}
+
+message ProductResp{
+  bool success = 1;
+  string error = 2;
+}
+
+// 商品查询
+message ListProductsReq {
+  ProductFilter filter = 1;
+}
+
+message ListProductsResp {
+  repeated SPU products = 1;
+}
+
+message GetProductReq {
+  uint64 id = 1;
+}
+
+message GetProductResp {
+  SPU product = 1;
+}
+
+message SearchProductsReq {
+  string query = 1;
+}
+
+message SearchProductsResp {
+  repeated SPU results = 1;
+}
+
+
+// 分类管理
+message CreateCategoryReq {
+  string name = 1 [(validate.rules).string = {min_len: 2, max_len: 50}];
+  string description = 2;
+  uint64 parent_id = 3;  // 0表示根分类
+  optional string image_url = 4 [(validate.rules).string.uri = true];
+}
+
+message UpdateCategoryReq {
+  uint64 id = 1 [(validate.rules).uint64.gt = 0];
+  optional string name = 2 [(validate.rules).string = {min_len: 2, max_len: 50}];
+  optional string description = 3;
+  optional int32 sort = 4;
+  optional string image_url = 5 [(validate.rules).string.uri = true];
+}
+
+message DeleteCategoryReq {
+  uint64 id = 1 [(validate.rules).uint64.gt = 0];
+}
+
+message ListCategoriesReq {
+  uint64 id = 1 [(validate.rules).uint64.gt = 0];
+  bool with_children = 2;  // 是否包含直接子分类
+  bool with_spus = 3;  // 是否包含关联商品概要
+}
+
+message CategoryDetailResp {
+  Category category = 1;
+  repeated Category children = 2;  // 直接子分类
+  uint32 spu_count = 3;  // 关联商品总数
+}
+
+//message GetCategoryTreeReq {
+//  bool include_spu_count = 1;  // 是否包含商品数量统计
+//}
+//
+//message CategoryTreeResp {
+//  repeated CategoryNode tree = 1;
+//}
+
+//message ListByParentReq {
+//  uint64 parent_id = 1;
+//  bool recursive = 2;  // 是否递归获取所有子分类
+//  int32 depth = 3;  // 递归深度限制
+//}

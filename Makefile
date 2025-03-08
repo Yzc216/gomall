@@ -6,7 +6,15 @@ gen-demo-proto:
 
 .PHONY: gen-frontend
 gen-frontend:
-	@cd app/frontend && cwgo server --type HTTP --idl ../../idl/frontend/order_page.proto --service frontend -I ../../idl --module ${ROOT_MOD}/app/frontend
+	@cd app/frontend && cwgo server --type HTTP --idl ../../idl/frontend/cart_page.proto --service frontend -I ../../idl --module ${ROOT_MOD}/app/frontend
+
+.PHONY: gen-frontend_category
+gen-frontend_category:
+	@cd app/frontend && cwgo server --type HTTP --idl ../../idl/frontend/category_page.proto --service frontend -I ../../idl --module ${ROOT_MOD}/app/frontend
+
+.PHONY: gen-frontend_product
+gen-frontend_product:
+	@cd app/frontend && cwgo server --type HTTP --idl ../../idl/frontend/product_page.proto --service frontend -I ../../idl --module ${ROOT_MOD}/app/frontend
 
 .PHONY: gen-user
 gen-user:

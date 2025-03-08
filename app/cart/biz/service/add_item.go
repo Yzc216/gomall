@@ -19,7 +19,7 @@ func NewAddItemService(ctx context.Context) *AddItemService {
 
 // Run create note info
 func (s *AddItemService) Run(req *cart.AddItemReq) (resp *cart.AddItemResp, err error) {
-	getProduct, err := rpc.ProductClient.GetProduct(s.ctx, &product.GetProductReq{Id: req.Item.ProductId})
+	getProduct, err := rpc.ProductClient.GetProduct(s.ctx, &product.GetProductReq{Id: req.Item.SpuId})
 	if err != nil {
 		return nil, err
 	}
@@ -29,9 +29,10 @@ func (s *AddItemService) Run(req *cart.AddItemReq) (resp *cart.AddItemResp, err 
 	}
 
 	cartItem := &model.Cart{
-		UserId:    req.UserId,
-		ProductId: req.Item.ProductId,
-		Qty:       req.Item.Quantity,
+		UserId: req.UserId,
+		SpuId:  req.Item.SpuId,
+		SkuId:  req.Item.SkuId,
+		Qty:    req.Item.Quantity,
 	}
 	err = model.AddItem(s.ctx, mysql.DB, cartItem)
 	if err != nil {

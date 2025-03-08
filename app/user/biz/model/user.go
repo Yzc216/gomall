@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Yzc216/gomall/app/user/util"
+	"github.com/Yzc216/gomall/common/utils"
 	"gorm.io/gorm"
 	"time"
 )
@@ -48,7 +49,7 @@ func CreateUser(ctx context.Context, db *gorm.DB, u *User) (userInter *User, err
 		return &user, errors.New("用户名已注册")
 	}
 
-	u.ID = util.GenID()
+	u.ID = utils.GenID()
 	u.Password, err = util.BcryptHash(u.Password)
 	if err != nil {
 		return nil, errors.New("密码哈希加密错误")

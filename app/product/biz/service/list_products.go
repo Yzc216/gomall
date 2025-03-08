@@ -8,33 +8,44 @@ import (
 )
 
 type ListProductsService struct {
-	ctx context.Context
+	ctx  context.Context
+	repo *model.SPURepo
 } // NewListProductsService new ListProductsService
 func NewListProductsService(ctx context.Context) *ListProductsService {
-	return &ListProductsService{ctx: ctx}
+	return &ListProductsService{ctx: ctx, repo: model.NewSPURepo(mysql.DB)}
 }
 
 // Run create note info
 func (s *ListProductsService) Run(req *product.ListProductsReq) (resp *product.ListProductsResp, err error) {
-	categoryQuery := model.NewCategoryQuery(s.ctx, mysql.DB)
+	var filter = &model.SPUFilter{}
+	var page = &model.Pagination{}
+	if req.Filter != nil {
+		filter = &model.SPUFilter{
+			Brand:      req.Filter.Brand,
+			CategoryID: req.Filter.CategoryId,
+			Status:     int8(req.Filter.Status),
+			MinPrice:   req.Filter.MinPrice,
+			MaxPrice:   req.Filter.MaxPrice,
+			Keyword:    req.Filter.Keywords,
+		}
+		//page = &model.Pagination{
+		//	Page:     int(req.Filter.Pagination.Page),
+		//	PageSize: int(req.Filter.Pagination.PageSize),
+		//}
+	}
 
-	c, err := categoryQuery.GetProductsByCategoryName(req.CategoryName)
+	products, _, err := s.repo.List(s.ctx, filter, page)
 	if err != nil {
 		return nil, err
 	}
 
-	resp = &product.ListProductsResp{}
-	for _, v := range c {
-		for _, v1 := range v.Products {
-			resp.Products = append(resp.Products, &product.Product{
-				Id:          uint32(v1.ID),
-				Name:        v1.Name,
-				Price:       v1.Price,
-				Picture:     v1.Picture,
-				Description: v1.Description,
-			})
+	var SPUs = make([]*product.SPU, len(products))
+	for i, v := range products {
+		spu, err := convertToProtoSPU(v)
+		if err != nil {
+			return nil, err
 		}
+		SPUs[i] = spu
 	}
-
-	return
+	return &product.ListProductsResp{Products: SPUs}, nil
 }
