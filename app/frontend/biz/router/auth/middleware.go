@@ -5,7 +5,6 @@ package auth
 import (
 	"github.com/Yzc216/gomall/app/frontend/middleware"
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/hertz-contrib/casbin"
 )
 
 func rootMw() []app.HandlerFunc {
@@ -19,17 +18,16 @@ func _authMw() []app.HandlerFunc {
 }
 
 func _loginMw() []app.HandlerFunc {
-	// your code...
 	return []app.HandlerFunc{
-		middleware.JwtMiddleware.MiddlewareFunc(),
-		// 1:管理员 2:普通用户 3:商家
-		middleware.Casbinauth.RequiresRoles("1 2 3", casbin.WithLogic(casbin.OR), casbin.WithUnauthorized(middleware.UnAuthorization), casbin.WithForbidden(middleware.UnAuthorization)),
+		middleware.JwtMiddleware.LoginHandler,
 	}
 }
 
 func _logoutMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		middleware.JwtMiddleware.LogoutHandler,
+	}
 }
 
 func _registerMw() []app.HandlerFunc {

@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-
 	auth "github.com/Yzc216/gomall/app/frontend/hertz_gen/frontend/auth"
 	"github.com/Yzc216/gomall/app/frontend/infra/rpc"
+	frontendutils "github.com/Yzc216/gomall/app/frontend/utils"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/user"
 	"github.com/cloudwego/hertz/pkg/app"
 )
@@ -19,11 +19,6 @@ func NewLoginService(Context context.Context, RequestContext *app.RequestContext
 }
 
 func (h *LoginService) Run(req *auth.LoginReq) (redirect string, err error) {
-	//defer func() {
-	// hlog.CtxInfof(h.Context, "req = %+v", req)
-	// hlog.CtxInfof(h.Context, "resp = %+v", resp)
-	//}()
-
 	// user服务
 	resp, err := rpc.UserClient.Login(h.Context, &user.LoginReq{
 		LoginInfo: req.LoginInfo,
@@ -32,11 +27,15 @@ func (h *LoginService) Run(req *auth.LoginReq) (redirect string, err error) {
 	if err != nil {
 		return "", err
 	}
+	frontendutils.MustHandleError(err)
+
+	h.RequestContext.Set("user_id", resp.UserId)
 	h.RequestContext.Set("role", resp.Role)
 
 	redirect = "/"
 	if req.Next != "" {
 		redirect = req.Next
+		//h.RequestContext.Set("redirect", req.Next)
 	}
 	return
 }

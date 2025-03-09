@@ -3,12 +3,15 @@
 package home
 
 import (
+	"github.com/Yzc216/gomall/app/frontend/middleware"
 	"github.com/cloudwego/hertz/pkg/app"
 )
 
 func rootMw() []app.HandlerFunc {
 	// your code...
-	return nil
+	return []app.HandlerFunc{
+		middleware.JwtOnlyParseMiddleware(),
+	}
 }
 
 func _homeMw() []app.HandlerFunc {

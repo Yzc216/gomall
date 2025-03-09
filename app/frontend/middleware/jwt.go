@@ -3,6 +3,10 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"github.com/Yzc216/gomall/app/frontend/types"
+	"github.com/Yzc216/gomall/app/frontend/utils"
+	"github.com/cloudwego/hertz/pkg/common/hlog"
+	"strconv"
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
@@ -13,50 +17,65 @@ import (
 var (
 	JwtMiddleware *jwt.HertzJWTMiddleware
 	err           error
-	identity      = "privilege"
 )
 
 func InitJWT() {
 	JwtMiddleware, err = jwt.New(
 		&jwt.HertzJWTMiddleware{
-			Realm:       "govall",
+			Realm:       "Gomall",
 			Key:         []byte("secret key"),
 			Timeout:     time.Minute * 1,
 			MaxRefresh:  time.Hour,
-			IdentityKey: identity,
+			IdentityKey: utils.IdentityKey,
 			Authenticator: func(ctx context.Context, c *app.RequestContext) (interface{}, error) {
 				// 用于验证登陆信息的函数
-				c.Next(ctx) // 先走逻辑后再处理
-				role, exits := c.Get("role")
-				fmt.Println("auth: ", role, exits)
-				if !exits {
+				c.Next(ctx) // 先走登录逻辑拿到id和role
+
+				userId, exists := c.Get("user_id")
+				if !exists {
 					return "", jwt.ErrFailedAuthentication
 				}
 
-				return role, nil
+				role, exists := c.Get("role")
+				if !exists {
+					return "", jwt.ErrFailedAuthentication
+				}
+
+				return &types.User{
+					UserId: strconv.FormatUint(userId.(uint64), 10),
+					Role:   role.([]uint32),
+				}, nil
 			},
 			PayloadFunc: func(data interface{}) jwt.MapClaims {
-				return jwt.MapClaims{
-					identity: data,
+				if u, ok := data.(*types.User); ok {
+					return jwt.MapClaims{
+						utils.IdentityKey: u,
+					}
 				}
+				return jwt.MapClaims{}
 			},
 			LoginResponse: func(ctx context.Context, c *app.RequestContext, code int, token string, expire time.Time) {
-				c.Redirect(consts.StatusFound, []byte("/sign-up"))
+				hlog.Info("LoginToken: ", token)
+				hlog.Info("ExpireTime: ", expire.Format(time.RFC3339))
 			},
-			// Authorizator: func(data interface{}, ctx context.Context, c *app.RequestContext) bool {
-			// 	role := data.([]interface{})[0]
-			// 	allpath := c.HandlerName()
-			// 	index := strings.LastIndex(allpath, "/")
-			// 	if index != -1 {
-			// 		allpath = allpath[index+1:]
-			// 	}
-			// 	fmt.Println(role, allpath)
-			// 	// 拿到了role和调用的方法,开始鉴权
-			// 	return true
-			// },
+			IdentityHandler: func(ctx context.Context, c *app.RequestContext) interface{} {
+				claims := jwt.ExtractClaims(ctx, c)
+				user := claims[utils.IdentityKey].(map[string]interface{})
+				return &types.User{
+					UserId: user[utils.UserIdKey].(string),
+				}
+			},
 			Unauthorized: func(ctx context.Context, c *app.RequestContext, code int, message string) {
 				fmt.Println("Unauthorized: ", message)
-				c.Redirect(consts.StatusFound, []byte("/sign-in"))
+				byteRef := c.GetHeader("Referer")
+				ref := string(byteRef)
+				next := "/sign-in"
+				if ref != "" {
+					if utils.ValidateNext(ref) {
+						next = fmt.Sprintf("%s?next=%s", next, ref)
+					}
+				}
+				c.Redirect(consts.StatusFound, []byte(next))
 			},
 			SendCookie:     true,
 			TokenLookup:    "cookie: jwt-cookie",

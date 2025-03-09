@@ -12,8 +12,6 @@ import (
 	frontendutils "github.com/Yzc216/gomall/app/frontend/utils"
 	hertzprom "github.com/hertz-contrib/monitor-prometheus"
 	hertzotelprovider "github.com/hertz-contrib/obs-opentelemetry/provider"
-	"github.com/hertz-contrib/sessions"
-	"github.com/hertz-contrib/sessions/redis"
 	"github.com/joho/godotenv"
 	oteltrace "go.opentelemetry.io/otel/trace"
 	"html/template"
@@ -102,7 +100,7 @@ func main() {
 	//h.Delims("{{", "}}")
 	h.Static("/static", "./")
 
-	h.GET("/about", func(c context.Context, ctx *app.RequestContext) {
+	h.GET("/about", middleware.JwtOnlyParseMiddleware(), func(c context.Context, ctx *app.RequestContext) {
 		hlog.CtxInfof(c, "gomall about page")
 		ctx.HTML(consts.StatusOK, "about", frontendUtils.WarpResponse(c, ctx, utils.H{"title": "About"}))
 	})
@@ -124,11 +122,11 @@ func main() {
 
 func registerMiddleware(h *server.Hertz) {
 	//session
-	store, _ := redis.NewStore(10, "tcp",
-		conf.GetConf().Redis.Address,
-		"",
-		[]byte(os.Getenv("SESSION_SECRET")))
-	h.Use(sessions.New("gomall-shop", store))
+	//store, _ := redis.NewStore(10, "tcp",
+	//	conf.GetConf().Redis.Address,
+	//	"",
+	//	[]byte(os.Getenv("SESSION_SECRET")))
+	//h.Use(sessions.New("gomall-shop", store))
 
 	// log
 	logger := hertzobslogrus.NewLogger(hertzobslogrus.WithLogger(hertzlogrus.NewLogger().Logger()))

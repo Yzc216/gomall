@@ -48,7 +48,7 @@ func Register(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	c.Redirect(consts.StatusFound, []byte("/"))
+	c.Redirect(consts.StatusFound, []byte("/sign-in"))
 
 }
 

@@ -7,7 +7,6 @@ import (
 	"github.com/Yzc216/gomall/app/frontend/infra/rpc"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/user"
 	"github.com/cloudwego/hertz/pkg/app"
-	"github.com/hertz-contrib/sessions"
 )
 
 type RegisterService struct {
@@ -20,13 +19,9 @@ func NewRegisterService(Context context.Context, RequestContext *app.RequestCont
 }
 
 func (h *RegisterService) Run(req *auth.RegisterReq) (resp *common.Empty, err error) {
-	//defer func() {
-	// hlog.CtxInfof(h.Context, "req = %+v", req)
-	// hlog.CtxInfof(h.Context, "resp = %+v", resp)
-	//}()
 
 	// user服务
-	userResp, err := rpc.UserClient.Register(h.Context, &user.RegisterReq{
+	_, err = rpc.UserClient.Register(h.Context, &user.RegisterReq{
 		UserInfo: &user.User{
 			Username: req.Username,
 			Password: req.Password,
@@ -40,11 +35,13 @@ func (h *RegisterService) Run(req *auth.RegisterReq) (resp *common.Empty, err er
 		return nil, err
 	}
 
-	session := sessions.Default(h.RequestContext)
-	session.Set("user_id", uint64(userResp.UserId))
-	err = session.Save()
-	if err != nil {
-		return nil, err
-	}
-	return
+	//h.RequestContext.Set("user_id", userResp.UserId)
+	//h.RequestContext.Set("role", []uint32{req.Role})
+	//session := sessions.Default(h.RequestContext)
+	//session.Set("user_id", uint64(userResp.UserId))
+	//err = session.Save()
+	//if err != nil {
+	//	return nil, err
+	//}
+	return nil, err
 }

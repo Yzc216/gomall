@@ -12,6 +12,7 @@ func rootMw() []app.HandlerFunc {
 	// your code...
 	return []app.HandlerFunc{
 		middleware.JwtMiddleware.MiddlewareFunc(),
+		middleware.JwtOnlyParseMiddleware(),
 		// 1:管理员 2:普通用户 3:商家
 		middleware.Casbinauth.RequiresRoles("1 2 3", casbin.WithLogic(casbin.OR), casbin.WithUnauthorized(middleware.UnAuthorization), casbin.WithForbidden(middleware.UnAuthorization)),
 	}
@@ -33,16 +34,6 @@ func _createcategoryMw() []app.HandlerFunc {
 }
 
 func _listcategoryMw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _category1Mw() []app.HandlerFunc {
-	// your code...
-	return nil
-}
-
-func _createcategorypageMw() []app.HandlerFunc {
 	// your code...
 	return nil
 }

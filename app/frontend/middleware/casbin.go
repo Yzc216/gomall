@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"github.com/Yzc216/gomall/app/frontend/utils"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
@@ -17,23 +18,23 @@ var (
 
 func InitCasbin() {
 	Casbinauth, casbinErr = casbin.NewCasbinMiddleware(
-		"/home/wuu/vvmall/gomall/app/frontend/middleware/casbin/model.conf",
-		"/home/wuu/vvmall/gomall/app/frontend/middleware/casbin/policy.csv",
-		getInfo,
+		"middleware/casbin/model.conf",
+		"middleware/casbin/policy.csv",
+		subjectFromJWT,
 	)
 	if casbinErr != nil {
 		panic(err)
 	}
 }
 
-func getInfo(ctx context.Context, c *app.RequestContext) string {
+func subjectFromJWT(ctx context.Context, c *app.RequestContext) string {
 	claims := jwt.ExtractClaims(ctx, c)
 	for k, v := range claims {
-		if k == identity {
-			vv := v.([]interface{})[0].(float64)
-			v_str := "" + fmt.Sprint(vv)
-			fmt.Println(v_str)
-			return v_str
+		if k == utils.IdentityKey {
+			userInfo := v.(map[string]interface{})
+			role := userInfo[utils.UserRole].([]interface{})
+			a := "" + fmt.Sprint(role[0].(float64))
+			return a
 		}
 	}
 	return ""

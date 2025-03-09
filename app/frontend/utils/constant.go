@@ -2,6 +2,8 @@ package utils
 
 const ServiceName = "frontend"
 
-type SessionUserIdKey string
+const UserIdKey = "user_id"
 
-const SessionUserId SessionUserIdKey = "user_id"
+const UserRole = "role"
+
+const IdentityKey = "user_info"
