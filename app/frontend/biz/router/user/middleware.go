@@ -24,8 +24,9 @@ func _userMw() []app.HandlerFunc {
 }
 
 func _adminMw() []app.HandlerFunc {
-	// your code...
-	return nil
+	return []app.HandlerFunc{
+		middleware.Casbinauth.RequiresRoles("admin", casbin.WithLogic(casbin.OR), casbin.WithUnauthorized(middleware.UnAuthorization), casbin.WithForbidden(middleware.UnAuthorization)),
+	}
 }
 
 func _user0Mw() []app.HandlerFunc {

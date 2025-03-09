@@ -14,7 +14,7 @@ func rootMw() []app.HandlerFunc {
 		middleware.JwtMiddleware.MiddlewareFunc(),
 		middleware.JwtOnlyParseMiddleware(),
 		// 1:管理员 2:普通用户 3:商家
-		middleware.Casbinauth.RequiresRoles("1 2 3", casbin.WithLogic(casbin.OR), casbin.WithUnauthorized(middleware.UnAuthorization), casbin.WithForbidden(middleware.UnAuthorization)),
+		middleware.Casbinauth.RequiresRoles("admin user merchant", casbin.WithLogic(casbin.OR), casbin.WithUnauthorized(middleware.UnAuthorization), casbin.WithForbidden(middleware.UnAuthorization)),
 	}
 }
 
