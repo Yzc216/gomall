@@ -17,9 +17,9 @@ type Consignee struct {
 type OrderState string
 
 const (
-	OrderStatePlaced   OrderState = "placed"
-	OrderStatePaid     OrderState = "paid"
-	OrderStateCanceled OrderState = "canceled"
+	OrderStatePlaced    OrderState = "placed"
+	OrderStatePaid      OrderState = "paid"
+	OrderStateCancelled OrderState = "canceled"
 )
 
 type Order struct {
@@ -43,7 +43,7 @@ func ListOrder(ctx context.Context, db *gorm.DB, userId uint64) (orders []Order,
 }
 
 func GetOrder(ctx context.Context, db *gorm.DB, userId uint64, orderId uint64) (order Order, err error) {
-	err = db.WithContext(ctx).Where(&Order{UserId: userId, OrderId: orderId}).First(&order).Error
+	err = db.WithContext(ctx).Where(&Order{UserId: userId, OrderId: orderId}).Preload("OrderItems").First(&order).Error
 	return
 }
 

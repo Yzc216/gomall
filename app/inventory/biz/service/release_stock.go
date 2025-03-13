@@ -17,7 +17,7 @@ func NewReleaseStockService(ctx context.Context) *ReleaseStockService {
 
 // Run create note info
 func (s *ReleaseStockService) Run(req *inventory.InventoryReq) (resp *inventory.InventoryResp, err error) {
-	if req.OrderId == "" {
+	if req.OrderId == 0 {
 		return nil, types.ErrInvalidOrderId
 	}
 	if len(req.Items) == 0 {

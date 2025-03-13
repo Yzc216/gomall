@@ -22,7 +22,7 @@ func NewReserveStockService(ctx context.Context) *ReserveStockService {
 
 // Run create note info
 func (s *ReserveStockService) Run(req *inventory.InventoryReq) (resp *inventory.InventoryResp, err error) {
-	if req.OrderId == "" {
+	if req.OrderId == 0 {
 		return nil, types.ErrInvalidOrderId
 	}
 	if len(req.Items) == 0 {
@@ -46,7 +46,7 @@ func (s *ReserveStockService) Run(req *inventory.InventoryReq) (resp *inventory.
 	}, nil
 }
 
-func ReserveStockWithOptimistic(ctx context.Context, db *gorm.DB, orderId string, item *inventory.InventoryReq_Item) error {
+func ReserveStockWithOptimistic(ctx context.Context, db *gorm.DB, orderId uint64, item *inventory.InventoryReq_Item) error {
 	for i := 0; i < maxRetries; i++ {
 		err := model.ReserveStockWithOptimistic(ctx, db, item.SkuId, orderId, item.Quantity, false)
 		if err == nil {

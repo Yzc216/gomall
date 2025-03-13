@@ -22,7 +22,7 @@ func TestConfirmStock_Run(t *testing.T) {
 		Quantity: 10,
 	})
 	req := &inventory.InventoryReq{
-		OrderId: "123",
+		OrderId: 123,
 		Items:   items,
 	}
 	resp, err := s.Run(req)

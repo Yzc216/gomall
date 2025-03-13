@@ -17,7 +17,7 @@ func NewConfirmStockService(ctx context.Context) *ConfirmStockService {
 
 // Run create note info
 func (s *ConfirmStockService) Run(req *inventory.InventoryReq) (resp *inventory.InventoryResp, err error) {
-	if req.OrderId == "" {
+	if req.OrderId == 0 {
 		return nil, types.ErrInvalidOrderId
 	}
 	if len(req.Items) == 0 {

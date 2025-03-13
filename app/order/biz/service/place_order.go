@@ -2,9 +2,13 @@ package service
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/Yzc216/gomall/app/order/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/order/biz/model"
+	"github.com/Yzc216/gomall/app/order/infra/rpc"
 	"github.com/Yzc216/gomall/common/utils"
+	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/inventory"
 	order "github.com/Yzc216/gomall/rpc_gen/kitex_gen/order"
 	"github.com/cloudwego/kitex/pkg/kerrors"
 	"gorm.io/gorm"
@@ -23,8 +27,11 @@ func (s *PlaceOrderService) Run(req *order.PlaceOrderReq) (resp *order.PlaceOrde
 		err = kerrors.NewBizStatusError(500001, "items is empty")
 		return
 	}
+	var orderId uint64
+	var stockItems = make([]*inventory.InventoryReq_Item, 0, len(req.Items))
+
 	err = mysql.DB.Transaction(func(tx *gorm.DB) error {
-		orderId := utils.GenID()
+		orderId = utils.GenID()
 
 		o := &model.Order{
 			OrderId:      orderId,
@@ -45,7 +52,9 @@ func (s *PlaceOrderService) Run(req *order.PlaceOrderReq) (resp *order.PlaceOrde
 		if err := tx.Create(o).Error; err != nil {
 			return err
 		}
+
 		var items []model.OrderItem
+
 		for _, v := range req.Items {
 			items = append(items, model.OrderItem{
 				OrderIdRefer: orderId,
@@ -54,19 +63,41 @@ func (s *PlaceOrderService) Run(req *order.PlaceOrderReq) (resp *order.PlaceOrde
 				Quantity:     v.Item.Quantity,
 				Cost:         v.Cost,
 			})
+			stockItems = append(stockItems, &inventory.InventoryReq_Item{
+				SkuId:    v.Item.SkuId,
+				Quantity: v.Item.Quantity,
+			})
 		}
 		if err := tx.Create(items).Error; err != nil {
 			return err
 		}
 
-		resp = &order.PlaceOrderResp{
-			Order: &order.OrderResult{
-				OrderId: orderId,
-			},
-		}
-
 		return nil
 	})
 
+	fmt.Println(stockItems)
+	//预占库存
+	stockResp, err := rpc.InventoryClient.ReserveStock(s.ctx, &inventory.InventoryReq{
+		OrderId: orderId,
+		Items:   stockItems,
+		Force:   false,
+	})
+	fmt.Println(stockResp)
+	if err != nil || !stockResp.Success {
+		// 补偿逻辑：标记订单为无效或触发回滚
+		go s.rollbackOrder(orderId)
+		return nil, errors.New("库存预留失败")
+	}
+
+	resp = &order.PlaceOrderResp{
+		Order: &order.OrderResult{
+			OrderId: orderId,
+		},
+	}
+
 	return
+}
+
+func (s *PlaceOrderService) rollbackOrder(orderId uint64) {
+	mysql.DB.Model(&model.Order{}).Where("order_id = ?", orderId).Update("order_state", model.OrderStateCancelled)
 }

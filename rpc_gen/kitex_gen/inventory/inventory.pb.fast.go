@@ -119,7 +119,7 @@ ReadFieldError:
 }
 
 func (x *InventoryReq) fastReadField1(buf []byte, _type int8) (offset int, err error) {
-	x.OrderId, offset, err = fastpb.ReadString(buf, _type)
+	x.OrderId, offset, err = fastpb.ReadUint64(buf, _type)
 	return offset, err
 }
 
@@ -279,7 +279,7 @@ func (x *ProductUpdateEvent) fastReadField2(buf []byte, _type int8) (offset int,
 }
 
 func (x *ProductUpdateEvent) fastReadField3(buf []byte, _type int8) (offset int, err error) {
-	x.UpdatedStock, offset, err = fastpb.ReadUint32(buf, _type)
+	x.AddStock, offset, err = fastpb.ReadInt32(buf, _type)
 	return offset, err
 }
 
@@ -364,7 +364,7 @@ func (x *InventoryReq_Item) fastReadField1(buf []byte, _type int8) (offset int, 
 }
 
 func (x *InventoryReq_Item) fastReadField2(buf []byte, _type int8) (offset int, err error) {
-	x.Quantity, offset, err = fastpb.ReadInt32(buf, _type)
+	x.Quantity, offset, err = fastpb.ReadUint32(buf, _type)
 	return offset, err
 }
 
@@ -459,10 +459,10 @@ func (x *InventoryReq) FastWrite(buf []byte) (offset int) {
 }
 
 func (x *InventoryReq) fastWriteField1(buf []byte) (offset int) {
-	if x.OrderId == "" {
+	if x.OrderId == 0 {
 		return offset
 	}
-	offset += fastpb.WriteString(buf[offset:], 1, x.GetOrderId())
+	offset += fastpb.WriteUint64(buf[offset:], 1, x.GetOrderId())
 	return offset
 }
 
@@ -582,10 +582,10 @@ func (x *ProductUpdateEvent) fastWriteField2(buf []byte) (offset int) {
 }
 
 func (x *ProductUpdateEvent) fastWriteField3(buf []byte) (offset int) {
-	if x.UpdatedStock == 0 {
+	if x.AddStock == 0 {
 		return offset
 	}
-	offset += fastpb.WriteUint32(buf[offset:], 3, x.GetUpdatedStock())
+	offset += fastpb.WriteInt32(buf[offset:], 3, x.GetAddStock())
 	return offset
 }
 
@@ -652,7 +652,7 @@ func (x *InventoryReq_Item) fastWriteField2(buf []byte) (offset int) {
 	if x.Quantity == 0 {
 		return offset
 	}
-	offset += fastpb.WriteInt32(buf[offset:], 2, x.GetQuantity())
+	offset += fastpb.WriteUint32(buf[offset:], 2, x.GetQuantity())
 	return offset
 }
 
@@ -737,10 +737,10 @@ func (x *InventoryReq) Size() (n int) {
 }
 
 func (x *InventoryReq) sizeField1() (n int) {
-	if x.OrderId == "" {
+	if x.OrderId == 0 {
 		return n
 	}
-	n += fastpb.SizeString(1, x.GetOrderId())
+	n += fastpb.SizeUint64(1, x.GetOrderId())
 	return n
 }
 
@@ -860,10 +860,10 @@ func (x *ProductUpdateEvent) sizeField2() (n int) {
 }
 
 func (x *ProductUpdateEvent) sizeField3() (n int) {
-	if x.UpdatedStock == 0 {
+	if x.AddStock == 0 {
 		return n
 	}
-	n += fastpb.SizeUint32(3, x.GetUpdatedStock())
+	n += fastpb.SizeInt32(3, x.GetAddStock())
 	return n
 }
 
@@ -930,7 +930,7 @@ func (x *InventoryReq_Item) sizeField2() (n int) {
 	if x.Quantity == 0 {
 		return n
 	}
-	n += fastpb.SizeInt32(2, x.GetQuantity())
+	n += fastpb.SizeUint32(2, x.GetQuantity())
 	return n
 }
 
@@ -988,7 +988,7 @@ var fieldIDToName_ProductCreatedEvent = map[int32]string{
 var fieldIDToName_ProductUpdateEvent = map[int32]string{
 	1: "SkuId",
 	2: "SkuName",
-	3: "UpdatedStock",
+	3: "AddStock",
 	4: "Operator",
 }
 

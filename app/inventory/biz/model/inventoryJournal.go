@@ -16,7 +16,7 @@ type InventoryJournal struct {
 	gorm.Model
 	SkuID    uint64          `gorm:"index:idx_sku_order"`
 	BucketID string          `gorm:"type:varchar(32)"`
-	OrderID  string          `gorm:"type:varchar(64);index:idx_sku_order"` // 联合索引
+	OrderID  uint64          `gorm:"type:bigint(10);index:idx_sku_order"` // 联合索引
 	OpType   uint8           `gorm:"comment:'0-初始化 1-预占 2-实际扣减 3-释放'"`
 	Delta    int32           `gorm:"not null;default:0"`
 	Before   json.RawMessage `gorm:"type:json;comment:'变更前状态'"` // 使用JSON类型

@@ -227,7 +227,7 @@ func GetStock(ctx context.Context, db *gorm.DB, skuIDs []uint64) ([]*Inventory, 
 }
 
 // 预占库存
-func ReserveStockWithOptimistic(ctx context.Context, db *gorm.DB, skuID uint64, orderID string, quantity int32, allowOversell bool) error {
+func ReserveStockWithOptimistic(ctx context.Context, db *gorm.DB, skuID uint64, orderID uint64, quantity uint32, allowOversell bool) error {
 	return db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 1. 获取当前库存信息
 		var inv Inventory
@@ -239,7 +239,7 @@ func ReserveStockWithOptimistic(ctx context.Context, db *gorm.DB, skuID uint64, 
 		}
 
 		// 2. 校验库存
-		if !allowOversell && inv.Available < quantity {
+		if !allowOversell && inv.Available < int32(quantity) {
 			return types.ErrAvailableStockInsufficient
 		}
 
@@ -265,7 +265,7 @@ func ReserveStockWithOptimistic(ctx context.Context, db *gorm.DB, skuID uint64, 
 			SkuID:   skuID,
 			OrderID: orderID,
 			OpType:  RESERVE,
-			Delta:   -quantity,
+			Delta:   -int32(quantity),
 		}
 		if err := tx.WithContext(ctx).Model(&InventoryJournal{}).Create(journal).Error; err != nil {
 			return err
@@ -275,7 +275,7 @@ func ReserveStockWithOptimistic(ctx context.Context, db *gorm.DB, skuID uint64, 
 	})
 }
 
-func ReserveStockWithLock(ctx context.Context, db *gorm.DB, skuID uint64, orderID string, quantity int32, allowOversell bool) error {
+func ReserveStockWithLock(ctx context.Context, db *gorm.DB, skuID uint64, orderID uint64, quantity uint32, allowOversell bool) error {
 	// 1. 获取分布式锁
 	mutex := util.GetLock(skuID)
 	err := mutex.Lock()
@@ -293,8 +293,8 @@ func ReserveStockWithLock(ctx context.Context, db *gorm.DB, skuID uint64, orderI
 			}
 			return err
 		}
-
-		if !allowOversell && inv.Available < quantity {
+		fmt.Println()
+		if !allowOversell && inv.Available < int32(quantity) {
 			return types.ErrAvailableStockInsufficient
 		}
 
@@ -315,7 +315,7 @@ func ReserveStockWithLock(ctx context.Context, db *gorm.DB, skuID uint64, orderI
 			SkuID:   skuID,
 			OrderID: orderID,
 			OpType:  RESERVE,
-			Delta:   -quantity,
+			Delta:   -int32(quantity),
 		}
 		if err = tx.WithContext(ctx).Model(&InventoryJournal{}).Create(journal).Error; err != nil {
 			return err
@@ -326,7 +326,7 @@ func ReserveStockWithLock(ctx context.Context, db *gorm.DB, skuID uint64, orderI
 }
 
 // 确认库存
-func ConfirmStockWithOptimistic(ctx context.Context, db *gorm.DB, skuID uint64, orderID string, quantity int32) error {
+func ConfirmStockWithOptimistic(ctx context.Context, db *gorm.DB, skuID uint64, orderID uint64, quantity int32) error {
 	return db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 1. 获取当前库存信息
 		var inv Inventory
@@ -378,7 +378,7 @@ func ConfirmStockWithOptimistic(ctx context.Context, db *gorm.DB, skuID uint64, 
 	})
 }
 
-func ConfirmStockWithLock(ctx context.Context, db *gorm.DB, skuID uint64, orderID string, quantity int32) error {
+func ConfirmStockWithLock(ctx context.Context, db *gorm.DB, skuID uint64, orderID uint64, quantity uint32) error {
 	// 获取分布式锁
 	mutex := util.GetLock(skuID)
 	err := mutex.Lock()
@@ -423,7 +423,7 @@ func ConfirmStockWithLock(ctx context.Context, db *gorm.DB, skuID uint64, orderI
 			SkuID:   skuID,
 			OrderID: orderID,
 			OpType:  CONFIRM,
-			Delta:   -quantity,
+			Delta:   -int32(quantity),
 		}
 		if err = tx.WithContext(ctx).Model(&InventoryJournal{}).Create(journal).Error; err != nil {
 			return err
@@ -434,7 +434,7 @@ func ConfirmStockWithLock(ctx context.Context, db *gorm.DB, skuID uint64, orderI
 }
 
 // 释放库存
-func ReleaseStockWithOptimistic(ctx context.Context, db *gorm.DB, skuID uint64, orderID string, quantity int32, force bool) error {
+func ReleaseStockWithOptimistic(ctx context.Context, db *gorm.DB, skuID uint64, orderID uint64, quantity int32, force bool) error {
 	return db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var inv Inventory
 		var total int32
@@ -497,7 +497,7 @@ func ReleaseStockWithOptimistic(ctx context.Context, db *gorm.DB, skuID uint64, 
 	})
 }
 
-func ReleaseStockWithLock(ctx context.Context, db *gorm.DB, skuID uint64, orderID string, quantity int32, force bool) error {
+func ReleaseStockWithLock(ctx context.Context, db *gorm.DB, skuID uint64, orderID uint64, quantity uint32, force bool) error {
 	// 1. 获取分布式锁
 	mutex := util.GetLock(skuID)
 	err := mutex.Lock()
@@ -533,7 +533,7 @@ func ReleaseStockWithLock(ctx context.Context, db *gorm.DB, skuID uint64, orderI
 			SkuID:   skuID,
 			OrderID: orderID,
 			OpType:  RELEASE,
-			Delta:   quantity,
+			Delta:   int32(quantity),
 		}
 		if err := tx.WithContext(ctx).Model(&InventoryJournal{}).Create(journal).Error; err != nil {
 			return err
