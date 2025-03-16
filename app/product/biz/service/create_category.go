@@ -5,20 +5,21 @@ import (
 	"fmt"
 	"github.com/Yzc216/gomall/app/product/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/product/biz/model"
+	"github.com/Yzc216/gomall/app/product/biz/repo"
 	product "github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
 	"gorm.io/gorm"
 )
 
 type CreateCategoryService struct {
 	ctx  context.Context
-	repo *model.CategoryRepo
+	repo *repo.CategoryRepo
 }
 
 // NewCreateCategoryService new CreateCategoryService
 func NewCreateCategoryService(ctx context.Context) *CreateCategoryService {
 	return &CreateCategoryService{
 		ctx:  ctx,
-		repo: model.NewCategoryRepo(mysql.DB),
+		repo: repo.NewCategoryRepo(mysql.DB),
 	}
 }
 
@@ -37,7 +38,7 @@ func (s *CreateCategoryService) Run(req *product.CreateCategoryReq) (resp *produ
 
 	var c *model.Category
 	err = s.repo.DB.Transaction(func(tx *gorm.DB) error {
-		txRepo := model.NewCategoryRepo(tx)
+		txRepo := repo.NewCategoryRepo(tx)
 
 		category := &model.Category{
 			Name:        req.Name,

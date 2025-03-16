@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/Yzc216/gomall/app/product/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/product/biz/model"
+	"github.com/Yzc216/gomall/app/product/biz/repo"
 	"github.com/Yzc216/gomall/app/product/infra/mq"
 	utils "github.com/Yzc216/gomall/common/utils"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/inventory"
@@ -20,14 +21,14 @@ import (
 
 type CreateProductService struct {
 	ctx          context.Context
-	spuRepo      *model.SPURepo
-	categoryRepo *model.CategoryRepo
+	spuRepo      *repo.SPUMutation
+	categoryRepo *repo.CategoryRepo
 } // NewCreateProductService new CreateProductService
 func NewCreateProductService(ctx context.Context) *CreateProductService {
 	return &CreateProductService{
 		ctx:          ctx,
-		spuRepo:      model.NewSPURepo(mysql.DB),
-		categoryRepo: model.NewCategoryRepo(mysql.DB),
+		spuRepo:      repo.NewSPUMutation(mysql.DB),
+		categoryRepo: repo.NewCategoryRepo(mysql.DB),
 	}
 }
 

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Yzc216/gomall/app/product/biz/dal/mysql"
-	"github.com/Yzc216/gomall/app/product/biz/model"
+	"github.com/Yzc216/gomall/app/product/biz/repo"
 	"github.com/Yzc216/gomall/app/product/biz/types"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/common"
 	product "github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
@@ -13,12 +13,12 @@ import (
 
 type DeleteCategoryService struct {
 	ctx  context.Context
-	repo *model.CategoryRepo
+	repo *repo.CategoryRepo
 } // NewDeleteCategoryService new DeleteCategoryService
 func NewDeleteCategoryService(ctx context.Context) *DeleteCategoryService {
 	return &DeleteCategoryService{
 		ctx:  ctx,
-		repo: model.NewCategoryRepo(mysql.DB),
+		repo: repo.NewCategoryRepo(mysql.DB),
 	}
 }
 

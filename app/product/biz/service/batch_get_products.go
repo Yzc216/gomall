@@ -3,16 +3,17 @@ package service
 import (
 	"context"
 	"github.com/Yzc216/gomall/app/product/biz/dal/mysql"
-	"github.com/Yzc216/gomall/app/product/biz/model"
+	"github.com/Yzc216/gomall/app/product/biz/dal/redis"
+	"github.com/Yzc216/gomall/app/product/biz/repo"
 	product "github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
 )
 
 type BatchGetProductsService struct {
 	ctx  context.Context
-	repo *model.SPURepo
+	repo *repo.CachedProductQuery
 } // NewBatchGetProductsService new BatchGetProductsService
 func NewBatchGetProductsService(ctx context.Context) *BatchGetProductsService {
-	return &BatchGetProductsService{ctx: ctx, repo: model.NewSPURepo(mysql.DB)}
+	return &BatchGetProductsService{ctx: ctx, repo: repo.NewCachedProductQuery(mysql.DB, redis.RedisClient)}
 }
 
 // Run create note info
@@ -21,7 +22,7 @@ func (s *BatchGetProductsService) Run(req *product.BatchGetProductsReq) (resp *p
 	ids := deduplicateIDs(req.GetIds())
 
 	// 获取spu
-	spuMap, err := s.repo.BatchGetByIDs(s.ctx, ids)
+	spuMap, err := s.repo.SPUQuery.BatchGetByIDs(s.ctx, ids)
 	if err != nil {
 		return nil, err
 	}

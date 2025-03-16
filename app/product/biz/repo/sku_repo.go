@@ -1,8 +1,9 @@
-package model
+package repo
 
 import (
 	"context"
 	"fmt"
+	"github.com/Yzc216/gomall/app/product/biz/model"
 	"gorm.io/gorm"
 )
 
@@ -29,18 +30,18 @@ var (
 // sku_repository.go
 type SKURepository interface {
 	// 基础CRUD
-	Create(ctx context.Context, sku *SKU) error
-	Update(ctx context.Context, sku *SKU) error
+	Create(ctx context.Context, sku *model.SKU) error
+	Update(ctx context.Context, sku *model.SKU) error
 	Delete(ctx context.Context, id uint64) error
-	GetByID(ctx context.Context, id uint64) (*SKU, error)
+	GetByID(ctx context.Context, id uint64) (*model.SKU, error)
 	ExistsByID(ctx context.Context, id uint64) (bool, error)
 
 	// 复杂查询
-	List(ctx context.Context, filter SKUFilter, page Pagination) ([]*SKU, int64, error)
+	List(ctx context.Context, filter SKUFilter, page Pagination) ([]*model.SKU, int64, error)
 
 	// 批量操作
-	BatchGetByIDs(ctx context.Context, ids []uint64) ([]*SKU, error)
-	BatchCreate(ctx context.Context, spuID uint64, skus []*SKU) error
+	BatchGetByIDs(ctx context.Context, ids []uint64) ([]*model.SKU, error)
+	BatchCreate(ctx context.Context, spuID uint64, skus []*model.SKU) error
 	BatchToggleActive(ctx context.Context, spuID uint64, active bool) error
 
 	//// 库存管理
@@ -50,13 +51,13 @@ type SKURepository interface {
 	//GetStockInfo(ctx context.Context, spuID uint64) (totalStock uint32, availableStock uint32, err error)
 
 	// 关联查询
-	GetActiveSKUs(ctx context.Context, spuID uint64) ([]*SKU, error)
+	GetActiveSKUs(ctx context.Context, spuID uint64) ([]*model.SKU, error)
 	GetSpecs(ctx context.Context, spuID uint64) (string, error)
-	GetSKUsByAttributes(ctx context.Context, attrFilters map[string]string, page Pagination) ([]*SKU, error)
+	GetSKUsByAttributes(ctx context.Context, attrFilters map[string]string, page Pagination) ([]*model.SKU, error)
 
 	// 销售统计
 	UpdateSales(ctx context.Context, skuID uint64, quantity uint32) error
-	GetTopSales(ctx context.Context, limit int) ([]*SKU, error)
+	GetTopSales(ctx context.Context, limit int) ([]*model.SKU, error)
 }
 
 type SKURepo struct {
@@ -78,7 +79,7 @@ type SKUFilter struct {
 
 // 基础CRUD
 // --------------------------------------------------
-func (r *SKURepo) Create(ctx context.Context, sku *SKU) error {
+func (r *SKURepo) Create(ctx context.Context, sku *model.SKU) error {
 	//// 检查同一SPU下标题是否重复
 	//var exist int64
 	//r.db.WithContext(ctx).Model(&SKU{}).
@@ -210,7 +211,7 @@ func (r *SKURepo) Create(ctx context.Context, sku *SKU) error {
 //	return skus, err
 //}
 
-func (r *SKURepo) BatchCreate(ctx context.Context, spuID uint64, skus []*SKU) error {
+func (r *SKURepo) BatchCreate(ctx context.Context, spuID uint64, skus []*model.SKU) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 批量创建
 		if err := tx.CreateInBatches(skus, 100).Error; err != nil {

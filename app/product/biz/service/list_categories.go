@@ -5,18 +5,19 @@ import (
 	"errors"
 	"github.com/Yzc216/gomall/app/product/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/product/biz/model"
+	"github.com/Yzc216/gomall/app/product/biz/repo"
 	"github.com/Yzc216/gomall/app/product/biz/types"
 	product "github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
 )
 
 type ListCategoriesService struct {
 	ctx  context.Context
-	repo *model.CategoryRepo
+	repo *repo.CategoryRepo
 } // NewListCategoriesService new ListCategoriesService
 func NewListCategoriesService(ctx context.Context) *ListCategoriesService {
 	return &ListCategoriesService{
 		ctx:  ctx,
-		repo: model.NewCategoryRepo(mysql.DB),
+		repo: repo.NewCategoryRepo(mysql.DB),
 	}
 }
 

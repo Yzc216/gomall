@@ -5,15 +5,16 @@ import (
 	"errors"
 	"github.com/Yzc216/gomall/app/product/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/product/biz/model"
+	"github.com/Yzc216/gomall/app/product/biz/repo"
 	product "github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
 )
 
 type GetCategoryTreeService struct {
 	ctx  context.Context
-	repo *model.CategoryRepo
+	repo *repo.CategoryRepo
 } // NewGetCategoryTreeService new GetCategoryTreeService
 func NewGetCategoryTreeService(ctx context.Context) *GetCategoryTreeService {
-	return &GetCategoryTreeService{ctx: ctx, repo: model.NewCategoryRepo(mysql.DB)}
+	return &GetCategoryTreeService{ctx: ctx, repo: repo.NewCategoryRepo(mysql.DB)}
 }
 
 // Run create note info

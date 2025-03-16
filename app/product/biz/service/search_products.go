@@ -3,24 +3,24 @@ package service
 import (
 	"context"
 	"github.com/Yzc216/gomall/app/product/biz/dal/mysql"
-	"github.com/Yzc216/gomall/app/product/biz/model"
+	"github.com/Yzc216/gomall/app/product/biz/repo"
 	product "github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
 )
 
 type SearchProductsService struct {
 	ctx  context.Context
-	repo *model.SPURepo
+	repo *repo.SPUQuery
 } // NewSearchProductsService new SearchProductsService
 func NewSearchProductsService(ctx context.Context) *SearchProductsService {
-	return &SearchProductsService{ctx: ctx, repo: model.NewSPURepo(mysql.DB)}
+	return &SearchProductsService{ctx: ctx, repo: repo.NewSPUQuery(mysql.DB)}
 }
 
 // Run create note info
 func (s *SearchProductsService) Run(req *product.SearchProductsReq) (resp *product.SearchProductsResp, err error) {
-	filter := &model.SPUFilter{
+	filter := &repo.SPUFilter{
 		Keyword: req.Query,
 	}
-	var page = &model.Pagination{}
+	var page = &repo.Pagination{}
 	// TODO 分页待proto补充
 	//if req.page != nil {
 	//	page = &model.Pagination{

@@ -6,18 +6,19 @@ import (
 	"github.com/Yzc216/gomall/app/product/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/product/biz/dal/redis"
 	"github.com/Yzc216/gomall/app/product/biz/model"
+	"github.com/Yzc216/gomall/app/product/biz/repo"
 	product "github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
 	"github.com/cloudwego/kitex/pkg/kerrors"
 )
 
 type GetProductService struct {
 	ctx  context.Context
-	repo *model.CachedProductQuery
+	repo *repo.CachedProductQuery
 } // NewGetProductService new GetProductService
 func NewGetProductService(ctx context.Context) *GetProductService {
 	return &GetProductService{
 		ctx:  ctx,
-		repo: model.NewCachedProductQuery(mysql.DB, redis.RedisClient)}
+		repo: repo.NewCachedProductQuery(mysql.DB, redis.RedisClient)}
 }
 
 // Run create note info

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Yzc216/gomall/app/product/biz/dal/mysql"
-	"github.com/Yzc216/gomall/app/product/biz/model"
+	"github.com/Yzc216/gomall/app/product/biz/repo"
 	"github.com/Yzc216/gomall/app/product/biz/types"
 	product "github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
 	"net/url"
@@ -13,14 +13,14 @@ import (
 
 type UpdateCategoryService struct {
 	ctx  context.Context
-	repo *model.CategoryRepo
+	repo *repo.CategoryRepo
 }
 
 // NewUpdateCategoryService new UpdateCategoryService
 func NewUpdateCategoryService(ctx context.Context) *UpdateCategoryService {
 	return &UpdateCategoryService{
 		ctx:  ctx,
-		repo: model.NewCategoryRepo(mysql.DB),
+		repo: repo.NewCategoryRepo(mysql.DB),
 	}
 }
 

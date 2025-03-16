@@ -3,30 +3,30 @@ package service
 import (
 	"context"
 	"github.com/Yzc216/gomall/app/product/biz/dal/mysql"
-	"github.com/Yzc216/gomall/app/product/biz/model"
+	"github.com/Yzc216/gomall/app/product/biz/dal/redis"
+	"github.com/Yzc216/gomall/app/product/biz/repo"
 	product "github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
 )
 
 type ListProductsService struct {
 	ctx  context.Context
-	repo *model.SPURepo
+	repo *repo.CachedProductQuery
 } // NewListProductsService new ListProductsService
 func NewListProductsService(ctx context.Context) *ListProductsService {
-	return &ListProductsService{ctx: ctx, repo: model.NewSPURepo(mysql.DB)}
+	return &ListProductsService{ctx: ctx, repo: repo.NewCachedProductQuery(mysql.DB, redis.RedisClient)}
 }
 
 // Run create note info
 func (s *ListProductsService) Run(req *product.ListProductsReq) (resp *product.ListProductsResp, err error) {
-	var filter = &model.SPUFilter{}
-	var page = &model.Pagination{}
+	var filter = &repo.SPUFilter{}
+	var page = &repo.Pagination{}
 	if req.Filter != nil {
-		filter = &model.SPUFilter{
-			Brand:      req.Filter.Brand,
-			CategoryID: req.Filter.CategoryId,
-			Status:     int8(req.Filter.Status),
-			MinPrice:   req.Filter.MinPrice,
-			MaxPrice:   req.Filter.MaxPrice,
-			Keyword:    req.Filter.Keywords,
+		filter = &repo.SPUFilter{
+			Brand:    req.Filter.Brand,
+			Status:   int8(req.Filter.Status),
+			MinPrice: req.Filter.MinPrice,
+			MaxPrice: req.Filter.MaxPrice,
+			Keyword:  req.Filter.Keywords,
 		}
 		//page = &model.Pagination{
 		//	Page:     int(req.Filter.Pagination.Page),
