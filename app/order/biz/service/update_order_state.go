@@ -37,7 +37,7 @@ func (s *UpdateOrderStateService) Run(req *order.UpdateOrderStateReq) (resp *ord
 		klog.Errorf("model.GetOrder.err:%v", err)
 		return nil, err
 	}
-	fmt.Println(orderRes)
+
 	if orderRes.OrderState == model.OrderStateCancelled {
 		return &order.UpdateOrderStateResp{
 			Success: false,
@@ -63,14 +63,14 @@ func (s *UpdateOrderStateService) Run(req *order.UpdateOrderStateReq) (resp *ord
 			Quantity: item.Quantity,
 		})
 	}
-	fmt.Println(invItems)
+
 	if state == model.OrderStatePaid {
 		stock, err := rpc.InventoryClient.ConfirmStock(s.ctx, &inventory.InventoryReq{
 			OrderId: req.OrderId,
 			Items:   invItems,
 			Force:   false,
 		})
-		fmt.Println(stock)
+
 		if err != nil || !stock.Success {
 			return nil, errors.New("confirm stock fail")
 		}

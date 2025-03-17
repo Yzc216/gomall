@@ -293,7 +293,7 @@ func ReserveStockWithLock(ctx context.Context, db *gorm.DB, skuID uint64, orderI
 			}
 			return err
 		}
-		fmt.Println()
+
 		if !allowOversell && inv.Available < int32(quantity) {
 			return types.ErrAvailableStockInsufficient
 		}

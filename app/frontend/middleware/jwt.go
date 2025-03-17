@@ -24,7 +24,7 @@ func InitJWT() {
 		&jwt.HertzJWTMiddleware{
 			Realm:       "Gomall",
 			Key:         []byte("secret key"),
-			Timeout:     time.Minute * 1,
+			Timeout:     time.Minute * 5,
 			MaxRefresh:  time.Hour,
 			IdentityKey: utils.IdentityKey,
 			Authenticator: func(ctx context.Context, c *app.RequestContext) (interface{}, error) {

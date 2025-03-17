@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/Yzc216/gomall/app/order/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/order/biz/model"
 	"github.com/Yzc216/gomall/app/order/infra/rpc"
@@ -11,6 +10,7 @@ import (
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/inventory"
 	order "github.com/Yzc216/gomall/rpc_gen/kitex_gen/order"
 	"github.com/cloudwego/kitex/pkg/kerrors"
+	"github.com/cloudwego/kitex/pkg/klog"
 	"gorm.io/gorm"
 )
 
@@ -75,17 +75,16 @@ func (s *PlaceOrderService) Run(req *order.PlaceOrderReq) (resp *order.PlaceOrde
 		return nil
 	})
 
-	fmt.Println(stockItems)
 	//预占库存
 	stockResp, err := rpc.InventoryClient.ReserveStock(s.ctx, &inventory.InventoryReq{
 		OrderId: orderId,
 		Items:   stockItems,
 		Force:   false,
 	})
-	fmt.Println(stockResp)
+
 	if err != nil || !stockResp.Success {
 		// 补偿逻辑：标记订单为无效或触发回滚
-		go s.rollbackOrder(orderId)
+		go s.rollbackOrder(req.UserId, orderId)
 		return nil, errors.New("库存预留失败")
 	}
 
@@ -98,6 +97,44 @@ func (s *PlaceOrderService) Run(req *order.PlaceOrderReq) (resp *order.PlaceOrde
 	return
 }
 
-func (s *PlaceOrderService) rollbackOrder(orderId uint64) {
+func (s *PlaceOrderService) rollbackOrder(userId, orderId uint64) {
+	if orderId == 0 {
+		klog.Errorf("rollbackOrder: order_id can not be empty")
+		return
+	}
+
+	//获取订单状态
+	orderRes, err := model.GetOrder(s.ctx, mysql.DB, userId, orderId)
+	if err != nil {
+		klog.Errorf("rollbackOrder: model.GetOrder.err:%v", err)
+		return
+	}
+
+	if orderRes.OrderState == model.OrderStateCancelled {
+		klog.Errorf("rollbackOrder: 订单已取消，无法再次取消")
+		return
+	}
+
+	//更新库存
+	var invItems []*inventory.InventoryReq_Item
+	items := orderRes.OrderItems
+	for _, item := range items {
+		invItems = append(invItems, &inventory.InventoryReq_Item{
+			SkuId:    item.SkuId,
+			Quantity: item.Quantity,
+		})
+	}
+
+	stock, err := rpc.InventoryClient.ReleaseStock(s.ctx, &inventory.InventoryReq{
+		OrderId: orderId,
+		Items:   invItems,
+		Force:   false,
+	})
+	if err != nil || !stock.Success {
+		klog.Errorf("rollbackOrder: release stock fail")
+		return
+	}
+
+	//更新订单状态
 	mysql.DB.Model(&model.Order{}).Where("order_id = ?", orderId).Update("order_state", model.OrderStateCancelled)
 }

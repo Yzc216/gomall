@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Yzc216/gomall/app/order/biz/dal"
+	"github.com/Yzc216/gomall/app/order/infra/rpc"
 	"github.com/Yzc216/gomall/common/mtl"
 	"github.com/Yzc216/gomall/common/serversuite"
 	"github.com/joho/godotenv"
@@ -29,7 +30,7 @@ func main() {
 	mtl.InitTracing(serviceName)
 
 	dal.Init()
-
+	rpc.InitClient()
 	opts := kitexInit()
 
 	svr := orderservice.NewServer(new(OrderServiceImpl), opts...)

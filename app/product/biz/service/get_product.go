@@ -3,10 +3,13 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/Yzc216/gomall/app/product/biz/dal/mysql"
 	"github.com/Yzc216/gomall/app/product/biz/dal/redis"
 	"github.com/Yzc216/gomall/app/product/biz/model"
 	"github.com/Yzc216/gomall/app/product/biz/repo"
+	"github.com/Yzc216/gomall/app/product/infra/rpc"
+	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/inventory"
 	product "github.com/Yzc216/gomall/rpc_gen/kitex_gen/product"
 	"github.com/cloudwego/kitex/pkg/kerrors"
 )
@@ -30,6 +33,27 @@ func (s *GetProductService) Run(req *product.GetProductReq) (resp *product.GetPr
 	if err != nil {
 		return nil, err
 	}
+
+	//查询库存
+	skus := spu.SKUs
+	var skuIds = make([]uint64, 0, len(skus))
+	for _, v := range skus {
+		skuIds = append(skuIds, v.ID)
+	}
+	stockMap, err := rpc.InventoryClient.QueryStock(s.ctx, &inventory.QueryStockReq{SkuId: skuIds})
+	if err != nil {
+		return nil, err
+	}
+	if stockMap.CurrentStock == nil {
+		return nil, errors.New("获取库存失败")
+	}
+	for i := range spu.SKUs {
+		sku := &spu.SKUs[i] // 获取元素的指针
+		if newStock, exists := stockMap.CurrentStock[sku.ID]; exists {
+			sku.Stock = newStock // 直接更新指针指向的 SKU 的库存
+		}
+	}
+
 	protoSPU, err := convertToProtoSPU(spu)
 	if err != nil {
 		return nil, err

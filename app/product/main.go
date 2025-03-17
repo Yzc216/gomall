@@ -3,8 +3,10 @@ package main
 import (
 	"github.com/Yzc216/gomall/app/product/biz/dal"
 	"github.com/Yzc216/gomall/app/product/infra/mq"
+	"github.com/Yzc216/gomall/app/product/infra/rpc"
 	"github.com/Yzc216/gomall/common/mtl"
 	"github.com/Yzc216/gomall/common/serversuite"
+	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/joho/godotenv"
 	"net"
 	"time"
@@ -12,7 +14,6 @@ import (
 	"github.com/Yzc216/gomall/app/product/conf"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/product/productcatalogservice"
 	"github.com/cloudwego/kitex/pkg/klog"
-	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
 	kitexlogrus "github.com/kitex-contrib/obs-opentelemetry/logging/logrus"
 	"go.uber.org/zap/zapcore"
@@ -32,6 +33,7 @@ func main() {
 	//数据库初始化
 	dal.Init()
 
+	rpc.InitClient()
 	mq.Init()
 	opts := kitexInit()
 

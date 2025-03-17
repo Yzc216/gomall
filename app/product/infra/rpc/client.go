@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	"github.com/Yzc216/gomall/app/checkout/conf"
+	"github.com/Yzc216/gomall/app/product/conf"
 	"github.com/Yzc216/gomall/common/clientsuite"
 	"github.com/Yzc216/gomall/rpc_gen/kitex_gen/inventory/inventoryservice"
 	"github.com/cloudwego/kitex/client"
